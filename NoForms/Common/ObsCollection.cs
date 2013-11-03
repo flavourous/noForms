@@ -4,11 +4,11 @@ using System.Text;
 
 namespace NoForms
 {
-    interface IObservable
+    public interface IObservable
     {
-        public event System.Windows.Forms.MethodInvoker collectionChanged;
+        event System.Windows.Forms.MethodInvoker collectionChanged;
     }
-    internal class ObsCollection<T> : System.Collections.ObjectModel.Collection<T>, IObservable
+    public class ObsCollection<T> : System.Collections.ObjectModel.Collection<T>, IObservable
     {
         public event System.Windows.Forms.MethodInvoker collectionChanged;
         void OnCollectionChanged() 
