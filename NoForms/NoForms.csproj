@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4CD83A41-3030-45B4-9D85-2017560D9568}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>NoForms</RootNamespace>
+    <AssemblyName>NoForms</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Common\ObsCollection.cs" />
+    <Compile Include="Common\Enums_Structs.cs" />
+    <Compile Include="Common\ComponentCollection.cs" />
+    <Compile Include="Common\Interfaces.cs" />
+    <Compile Include="Controls\Button.cs" />
+    <Compile Include="Controls\ComboBox.cs" />
+    <Compile Include="Controls\ListBox.cs" />
+    <Compile Include="Controls\MoveHandle.cs" />
+    <Compile Include="Controls\Scribble.cs" />
+    <Compile Include="Controls\Templates\Containable.cs" />
+    <Compile Include="Controls\Templates\Container.cs" />
+    <Compile Include="Controls\Templates\Focusable.cs" />
+    <Compile Include="Controls\Templates\ScrollableContainer.cs" />
+    <Compile Include="Controls\TextLabel.cs" />
+    <Compile Include="Renderers\D2DSwapChain.cs" />
+    <Compile Include="Renderers\D2DLayered.cs" />
+    <Compile Include="Controls\SizeHandle.cs" />
+    <Compile Include="NoForm.cs" />
+    <Compile Include="Controls\Textfield.cs" />
+    <Compile Include="Common\Util.cs" />
+    <Compile Include="Common\Win32.cs" />
+    <Compile Include="Renderers\UnifiedDraw.cs" />
+    <Compile Include="Renderers\UnifiedEffects.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="SharpDX">
+      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D10">
+      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct3D10.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11">
+      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9">
+      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI">
+      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
