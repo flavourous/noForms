@@ -201,8 +201,115 @@ namespace NoForms.Renderers
             else throw new Exception("Internal error, DrawRectangle cannot handle " + realRenderer.GetType().ToString());
         }
 
+        public static SharpDX.DirectWrite.Factory dwFact = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared);
+        public void DrawText(UText textObject)
+        {
+            if (realRenderer is D2D_RenderElements)
+            {
+                var rel = realRenderer as D2D_RenderElements;
+                
+            }
+            else throw new Exception("Internal error, DrawRectangle cannot handle " + realRenderer.GetType().ToString());
+        }
     }
+
     
+    public enum UHAlign_Enum { Left, Center, Right };
+    public enum UVAlign_Enum { Top, Middle, Bottom };
+    public struct UHAlign
+    {
+        UHAlign_Enum innerEnum;
+        public static implicit operator UHAlign(UHAlign_Enum enumform)
+        {
+            return new UHAlign() { innerEnum = enumform };
+        }
+        public static implicit operator SharpDX.DirectWrite.TextAlignment(UHAlign me)
+        {
+            switch (me.innerEnum)
+            {
+                case UHAlign_Enum.Left: return SharpDX.DirectWrite.TextAlignment.Leading;
+                case UHAlign_Enum.Center: return SharpDX.DirectWrite.TextAlignment.Center;
+                case UHAlign_Enum.Right: return SharpDX.DirectWrite.TextAlignment.Trailing;
+                default: return SharpDX.DirectWrite.TextAlignment.Leading;
+            }
+        }
+    }
+    public struct UVAlign
+    {
+        UVAlign_Enum innerEnum;
+        public static implicit operator UVAlign(UVAlign_Enum enumform)
+        {
+            return new UVAlign() { innerEnum = enumform };
+        }
+        public static implicit operator SharpDX.DirectWrite.ParagraphAlignment(UVAlign me)
+        {
+            switch (me.innerEnum)
+            {
+                case UVAlign_Enum.Top: return SharpDX.DirectWrite.ParagraphAlignment.Near;
+                case UVAlign_Enum.Middle: return SharpDX.DirectWrite.ParagraphAlignment.Center;
+                case UVAlign_Enum.Bottom: return SharpDX.DirectWrite.ParagraphAlignment.Far;
+                default: return SharpDX.DirectWrite.ParagraphAlignment.Near;
+            }
+        }
+    }
+    public class UText 
+    {
+        public String text;
+        public UFont font;
+        public UHAlign halign;
+        public UVAlign valign;
+        bool wrapped;
+        private float _width;
+        public float width
+        {
+            get { return _width; }
+            set { _width = value; }
+        }
+        private float _height;
+        public float height 
+        {
+            get { return _height; }
+            set { _height = value; }
+        }
+        public UText(String text, UHAlign_Enum halign, UVAlign_Enum valign, bool isWrapped, float width, float height)
+        {
+            this.text = text;
+            this.valign = valign;
+            this.halign = halign;
+            this.wrapped = isWrapped;
+            this.width = width;
+            this.height = height;
+        }
+
+        public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
+        {
+            return new SharpDX.DirectWrite.TextLayout(dwFact, text, new SharpDX.DirectWrite.TextFormat(
+                dwFact,
+                font.name,
+                font.bold ? SharpDX.DirectWrite.FontWeight.Bold : SharpDX.DirectWrite.FontWeight.Normal,
+                font.italic ? SharpDX.DirectWrite.FontStyle.Italic : SharpDX.DirectWrite.FontStyle.Normal,
+                font.size)
+            {
+             ParagraphAlignment = valign,
+             TextAlignment = halign
+            }, width, height);
+        }
+    }
+    public struct UFont
+    {
+        public String name;
+        public bool bold;
+        public bool italic;
+        public float size;
+        public UFont(String fontName, float fontSize, bool bold, bool italic)
+        {
+            this.fontName = fontName;
+            this.bold = bold;
+            this.italic = italic;
+            this.fontSize = fontSize;
+        }
+    }
+
     public class UPath
     {
         // When -1, we need to recreate the buffered Path before returning it.
