@@ -254,23 +254,58 @@ namespace NoForms.Renderers
     }
     public class UText 
     {
-        public String text;
-        public UFont font;
-        public UHAlign halign;
-        public UVAlign valign;
-        bool wrapped;
+        // When -1, we need to recreate the buffered Path before returning it.
+        // Otherwise 0 is sysdraw, 1 is d2d, 2 is ogl
+        int storedType = -1;
+        IDisposable storedText = new DumDis();
+        void PropertyChanged()
+        {
+            storedType = -1; // reset validity of cached value
+        }
+
+        private String _text;
+        public String text
+        {
+            get { return _text; }
+            set { _text = value; PropertyChanged(); }
+        }
+        private UFont _font;
+        public UFont font
+        {
+            get { return _font; }
+            set { _font = value; PropertyChanged(); }
+        }
+        private UHAlign _halign;
+        public UHAlign halign
+        {
+            get { return _halign; }
+            set { _halign = value; PropertyChanged(); }
+        }
+        private UVAlign _valign;
+        public UVAlign valign
+        {
+            get { return _valign; }
+            set { _valign = value; PropertyChanged(); }
+        }
+        private bool _wrapped;
+        public bool wrapped
+        {
+            get { return _wrapped; }
+            set { _wrapped = value; PropertyChanged(); }
+        }
         private float _width;
         public float width
         {
             get { return _width; }
-            set { _width = value; }
+            set { _width = value; PropertyChanged(); }
         }
         private float _height;
         public float height 
         {
             get { return _height; }
-            set { _height = value; }
+            set { _height = value; PropertyChanged(); }
         }
+        
         public UText(String text, UHAlign_Enum halign, UVAlign_Enum valign, bool isWrapped, float width, float height)
         {
             this.text = text;
@@ -281,33 +316,52 @@ namespace NoForms.Renderers
             this.height = height;
         }
 
+        public UTextHitInfo HitText(Point hitPoint)
+        {
+            switch storedType
+        }
+
         public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
         {
-            return new SharpDX.DirectWrite.TextLayout(dwFact, text, new SharpDX.DirectWrite.TextFormat(
-                dwFact,
-                font.name,
-                font.bold ? SharpDX.DirectWrite.FontWeight.Bold : SharpDX.DirectWrite.FontWeight.Normal,
-                font.italic ? SharpDX.DirectWrite.FontStyle.Italic : SharpDX.DirectWrite.FontStyle.Normal,
-                font.size)
+            if (storedType != 1)
             {
-             ParagraphAlignment = valign,
-             TextAlignment = halign
-            }, width, height);
+                storedText.Dispose();
+                storedText = new SharpDX.DirectWrite.TextLayout(dwFact, text, new SharpDX.DirectWrite.TextFormat(
+                    dwFact,
+                    font.name,
+                    font.bold ? SharpDX.DirectWrite.FontWeight.Bold : SharpDX.DirectWrite.FontWeight.Normal,
+                    font.italic ? SharpDX.DirectWrite.FontStyle.Italic : SharpDX.DirectWrite.FontStyle.Normal,
+                    font.size)
+                {
+                    ParagraphAlignment = valign,
+                    TextAlignment = halign
+                }, width, height);
+            }
+            return storedText as SharpDX.DirectWrite.TextLayout;
         }
     }
     public struct UFont
     {
-        public String name;
-        public bool bold;
-        public bool italic;
-        public float size;
+        String _name;
+        public String name { get { return _name; } }
+        bool _bold;
+        public bool bold { get { return _bold; } }
+        bool _italic;
+        public bool italic { get { return _italic; } }
+        float _size;
+        public float size { get { return _size; } }
         public UFont(String fontName, float fontSize, bool bold, bool italic)
         {
-            this.fontName = fontName;
-            this.bold = bold;
-            this.italic = italic;
-            this.fontSize = fontSize;
+            _name = fontName;
+            _bold = bold;
+            _italic = italic;
+            _size = fontSize;
         }
+    }
+    public struct UTextHitInfo
+    {
+        public int charPos;
+        public bool leading;
     }
 
     public class UPath
@@ -338,6 +392,7 @@ namespace NoForms.Renderers
                     gs.EndFigure(f.open ? SharpDX.Direct2D1.FigureEnd.Open : SharpDX.Direct2D1.FigureEnd.Closed);
                 }
                 gs.Close();
+                storedPath.Dispose();
                 storedPath = pg;
                 storedType = 1;
             }
