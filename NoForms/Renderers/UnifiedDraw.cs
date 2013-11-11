@@ -201,13 +201,24 @@ namespace NoForms.Renderers
             else throw new Exception("Internal error, DrawRectangle cannot handle " + realRenderer.GetType().ToString());
         }
 
-        public static SharpDX.DirectWrite.Factory dwFact = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared);
-        public void DrawText(UText textObject)
+
+        // FIXME this should go somewere in the d2d renderelements...
+        private static SharpDX.DirectWrite.Factory _dwFact;
+        public static SharpDX.DirectWrite.Factory dwFact
+        {
+            get
+            {
+                if(_dwFact == null)
+                     _dwFact = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared);
+                return _dwFact;
+            }
+        }
+        public void DrawText(UText textObject, Point location, UBrush brush)
         {
             if (realRenderer is D2D_RenderElements)
             {
                 var rel = realRenderer as D2D_RenderElements;
-                
+                rel.renderTarget.DrawTextLayout(location, textObject.GetD2D(dwFact), brush.GetD2D(rel.renderTarget));
             }
             else throw new Exception("Internal error, DrawRectangle cannot handle " + realRenderer.GetType().ToString());
         }
@@ -316,9 +327,40 @@ namespace NoForms.Renderers
             this.height = height;
         }
 
-        public UTextHitInfo HitText(Point hitPoint)
+        public UTextHitInfo HitPoint(Point hitPoint)
         {
-            switch storedType
+            switch (storedType)
+            {
+                case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
+                case 1: return HitPointD2D(hitPoint, storedText as SharpDX.DirectWrite.TextLayout);
+                default: throw new NotImplementedException("Text type not supported by HitPoint");
+            }
+        }
+        UTextHitInfo HitPointD2D(Point hitPoint, SharpDX.DirectWrite.TextLayout textLayout)
+        {
+            SharpDX.Bool trailing,inside;
+            var htm = textLayout.HitTestPoint(hitPoint.X,hitPoint.Y, out trailing, out inside);
+            return new UTextHitInfo()
+            {
+                charPos=htm.TextPosition,
+                leading = hitPoint.X > htm.Left + htm.Width/2,
+                isText = htm.IsText
+            };
+        }
+
+        public IEnumerable<Rectangle> HitTextRange(int start, int length, Point offset)
+        {
+            switch (storedType)
+            {
+                case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
+                case 1: return HitTextRangeD2D(storedText as SharpDX.DirectWrite.TextLayout, start, length, offset);
+                default: throw new NotImplementedException("Text type not supported by HitTextRange");
+            }
+        }
+        IEnumerable<Rectangle> HitTextRangeD2D(SharpDX.DirectWrite.TextLayout textLayout, int start, int length, Point offset)
+        {
+            foreach (var htm in textLayout.HitTestTextRange(start, length, offset.X, offset.Y))
+                yield return new Rectangle(htm.Left, htm.Top, htm.Width, htm.Height);
         }
 
         public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
@@ -362,6 +404,7 @@ namespace NoForms.Renderers
     {
         public int charPos;
         public bool leading;
+        public bool isText;
     }
 
     public class UPath
