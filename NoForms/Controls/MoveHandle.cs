@@ -28,7 +28,7 @@ namespace NoForms.Controls
         } 
 
         // Render methody
-        public override void DrawBase<RenderType>(RenderType renderArg)
+        public override void DrawBase(IRenderType renderArg)
         {
             if (renderArg is RenderTarget)
             {

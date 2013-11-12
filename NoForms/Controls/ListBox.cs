@@ -14,7 +14,7 @@ namespace NoForms.Controls
         }
 
         bool d2dinit = false;
-        public override void DrawBase<RenderType>(RenderType renderArgument)
+        public override void DrawBase(IRenderType renderArgument)
         {
             if (renderArgument is RenderTarget)
             {

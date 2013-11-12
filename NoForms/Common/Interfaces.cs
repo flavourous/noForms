@@ -32,7 +32,7 @@ namespace NoForms
         void RecalculateLocation();
 
         // Rendering Support, passing one object for requesting each rendering type
-        void DrawBase<RenderType>(RenderType renderArgument) /* where RenderType : IRenderType */;
+        void DrawBase(IRenderType renderArgument) /* where RenderType : IRenderType */;
 
         // Mouse events
         void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped);

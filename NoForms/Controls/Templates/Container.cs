@@ -50,13 +50,13 @@ namespace NoForms.Controls.Templates
         /// <typeparam name="RenderType"></typeparam>
         /// <param name="renderArgument"></param>
         /// <param name="parentDisplayRectangle"></param>
-        public override void DrawBase<RenderType>(RenderType renderArgument)
+        public override void DrawBase(IRenderType renderArgument)
         {
-            Util.SetClip<RenderType>(renderArgument, true, clipSet = DisplayRectangle);
+            renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle);
             foreach (IComponent c in components)
                 if (c.visible)
-                    c.DrawBase<RenderType>(renderArgument);
-            Util.SetClip<RenderType>(renderArgument, false, clipSet = Rectangle.Empty);
+                    c.DrawBase(renderArgument);
+            renderArgument.uDraw.PopAxisAlignedClip();
         }
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using SharpDX.Direct2D1;
-using SysRect = System.Drawing.Rectangle;
+using NoForms.Renderers;
+
 
 namespace NoForms.Controls
 {
@@ -27,42 +28,25 @@ namespace NoForms.Controls
         }
 
         // Render methody
-        public override void DrawBase<RenderType>(RenderType renderArg)
+        public UBrush background = new USolidBrush() { color = new Color(0) };
+        public UBrush foreground = new USolidBrush() { color = new Color(1) };
+        public UStroke lineStroke = new UStroke() { strokeWidth = 2f };
+        public override void DrawBase(IRenderType renderArg)
         {
-            if (renderArg is RenderTarget)
-            {
-                RenderTarget d2dtarget = renderArg as RenderTarget;
-                Draw(d2dtarget);
-            }
-            else
-            {
-                throw new NotImplementedException("Render type " + renderArg.ToString() + " not supported");
-            }
+            renderArg.uDraw.FillRectangle(DisplayRectangle, background);
+            float epad = 3;
+            renderArg.uDraw.DrawLine(aof(new Point(1 * DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new Point(DisplayRectangle.width - epad, 1 * DisplayRectangle.height / 5)), foreground, lineStroke);
+            renderArg.uDraw.DrawLine(aof(new Point(2 * DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new Point(DisplayRectangle.width - epad, 2 * DisplayRectangle.height / 5)), foreground, lineStroke);
+            renderArg.uDraw.DrawLine(aof(new Point(3 * DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new Point(DisplayRectangle.width - epad, 3 * DisplayRectangle.height / 5)), foreground, lineStroke);
         }
 
-        // Direct2D Support
-        public virtual void Draw(RenderTarget d2dtarget)
-        {
-            d2dtarget.FillRectangle(DisplayRectangle, new SolidColorBrush(d2dtarget, new SharpDX.Color4(0f, 0f, 0f, 1f)));
-            var scb = new SolidColorBrush(d2dtarget,new SharpDX.Color4(0.8f,0.8f,0.8f,1.0f));
-            float epad = 3; float thickness = 2f;
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(1*DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad, 1*DisplayRectangle.height / 5)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(2*DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad, 2*DisplayRectangle.height / 5)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(3*DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad, 3*DisplayRectangle.height / 5)), scb, thickness);
-            scb.Dispose();
-        }
-        SharpDX.DrawingPointF aof(SharpDX.DrawingPointF dp)
+        Point aof(Point dp)
         {
             dp.X += DisplayRectangle.left;
             dp.Y += DisplayRectangle.top;
             return dp;
         }
-
-        // GDI Support
-        public virtual void Draw(System.Drawing.Graphics graphics)
-        {
-        }
-
+        
         // Mousey
         bool sizin = false;
         System.Drawing.Point deltaLoc;
@@ -71,18 +55,6 @@ namespace NoForms.Controls
             
         }
         Point defosit;
-
-        public void TestResize(int dx, int dy)
-        {
-            sizin = true;
-            defosit = new System.Drawing.Point(0, 0);
-            deltaLoc = System.Windows.Forms.Cursor.Position;
-            sizin = true;
-            controlled.theForm.Capture = true;
-            ResizeMove(new System.Drawing.Point(deltaLoc.X + dx, deltaLoc.Y+dy));
-            controlled.theForm.Capture = false;
-            sizin = false;
-        }
 
         public void ResizeMove(System.Drawing.Point location)
         {

@@ -77,6 +77,6 @@ namespace NoForms.Controls.Templates
         public abstract bool visible { get; set; }
         public abstract void RecalculateDisplayRectangle();
         public abstract void RecalculateLocation();
-        public abstract void DrawBase<RenderType>(RenderType renderArgument);
+        public abstract void DrawBase(IRenderType renderArgument);
     }
 }

@@ -150,6 +150,11 @@ namespace NoForms.Renderers
                 var rel = realRenderer as D2D_RenderElements;
                 rel.renderTarget.DrawLine(start, end, brush.GetD2D(rel.renderTarget), stroke.strokeWidth, stroke.Get_D2D(rel.renderTarget.Factory));
             }
+            else if (realRenderer is SDG_RenderElements)
+            {
+                var rel = realRenderer as SDG_RenderElements;
+                rel.graphics.DrawLine(stroke.Get_SysDraw(brush), start, end);
+            }
             else throw new Exception("Internal error, DrawLine cannot handle " + realRenderer.GetType().ToString());
         }
         public void DrawRectangle(Rectangle rect, UBrush brush, UStroke stroke)
@@ -213,18 +218,47 @@ namespace NoForms.Renderers
                 return _dwFact;
             }
         }
-        public void DrawText(UText textObject, Point location, UBrush brush)
+
+        public void DrawText(UText textObject, Point location, UBrush brush, UTextDrawOptions_Enum opt)
+        {
+            UTextDrawOptions optStruct = opt;
+            if (realRenderer is D2D_RenderElements)
+            {
+                var rel = realRenderer as D2D_RenderElements;
+                rel.renderTarget.DrawTextLayout(location, textObject.GetD2D(dwFact), brush.GetD2D(rel.renderTarget), optStruct);
+            }
+            else throw new Exception("Internal error, DrawText cannot handle " + realRenderer.GetType().ToString());
+        }
+        public void MeasureText(UText textObject)
         {
             if (realRenderer is D2D_RenderElements)
             {
                 var rel = realRenderer as D2D_RenderElements;
-                rel.renderTarget.DrawTextLayout(location, textObject.GetD2D(dwFact), brush.GetD2D(rel.renderTarget));
+                var dummyForUpdatePurposesOnly = textObject.GetD2D(dwFact);
             }
-            else throw new Exception("Internal error, DrawRectangle cannot handle " + realRenderer.GetType().ToString());
+            else throw new Exception("Internal error, MeasureText cannot handle " + realRenderer.GetType().ToString());
         }
     }
 
-    
+    public enum UTextDrawOptions_Enum { None = 1, Clip = 2, NoSnap = 4 };
+    public struct UTextDrawOptions
+    {
+        UTextDrawOptions_Enum innerEnum;
+        public static implicit operator UTextDrawOptions(UTextDrawOptions_Enum enumform)
+        {
+            return new UTextDrawOptions() { innerEnum = enumform };
+        }
+        public static implicit operator SharpDX.Direct2D1.DrawTextOptions(UTextDrawOptions me)
+        {
+            switch (me.innerEnum)
+            {
+                case UTextDrawOptions_Enum.None: return SharpDX.Direct2D1.DrawTextOptions.None;
+                case UTextDrawOptions_Enum.Clip: return SharpDX.Direct2D1.DrawTextOptions.Clip;
+                case UTextDrawOptions_Enum.NoSnap: return SharpDX.Direct2D1.DrawTextOptions.NoSnap;
+                default: throw new NotImplementedException("UTextDrawOptions does not support specified option; " + me.innerEnum.ToString());
+            }
+        }
+    }
     public enum UHAlign_Enum { Left, Center, Right };
     public enum UVAlign_Enum { Top, Middle, Bottom };
     public struct UHAlign
@@ -681,7 +715,7 @@ namespace NoForms.Renderers
         }
 
         StrokeCaps _startCap = eStrokeCaps.flat;
-        StrokeCaps startCap
+        public StrokeCaps startCap
         {
             get { return _startCap; }
             set
@@ -692,7 +726,7 @@ namespace NoForms.Renderers
         }
 
         StrokeCaps _endCap = eStrokeCaps.flat;
-        StrokeCaps endCap
+        public StrokeCaps endCap
         {
             get { return _endCap; }
             set
@@ -703,7 +737,7 @@ namespace NoForms.Renderers
         }
 
         StrokeCaps _dashCap = eStrokeCaps.flat;
-        StrokeCaps dashCap
+        public StrokeCaps dashCap
         {
             get { return _dashCap; }
             set
@@ -725,7 +759,7 @@ namespace NoForms.Renderers
         }
 
         StrokeType _dashStyle = eStrokeType.solid;
-        StrokeType dashStyle
+        public StrokeType dashStyle
         {
             get { return _dashStyle; }
             set
@@ -736,7 +770,7 @@ namespace NoForms.Renderers
         }
 
         float[] _custom = new float[] { 1f, 0f };
-        float[] custom
+        public float[] custom
         {
             get { return _custom; }
             set
@@ -747,7 +781,7 @@ namespace NoForms.Renderers
         }
 
         StrokeJoin _lineJoin = eStrokeJoin.mitre;
-        StrokeJoin lineJoin
+        public StrokeJoin lineJoin
         {
             get { return _lineJoin; }
             set
@@ -758,7 +792,7 @@ namespace NoForms.Renderers
         }
 
         float _mitreLimit = 0f;
-        float mitreLimit
+        public float mitreLimit
         {
             get { return _mitreLimit; }
             set
@@ -852,8 +886,8 @@ namespace NoForms.Renderers
     }
     public class USolidBrush : UBrush
     {
-        Color _color =new Color(1); // white... 
-        Color color { get { return _color; } set { _color = value; storedType = -1; } }
+        Color _color = new Color(1); // white... 
+        public Color color { get { return _color; } set { _color = value; storedType = -1; } }
 
         protected override SharpDX.Direct2D1.Brush CreateD2D(SharpDX.Direct2D1.RenderTarget rt)
         {
@@ -866,15 +900,15 @@ namespace NoForms.Renderers
     }
     public class ULinearGradientBrush : UBrush
     {
-        Color _color1 = new Color(1); 
-        Color color1 { get { return _color1; } set { _color1 = value; storedType = -1; } }
-        Color _color2 = new Color(0); 
-        Color color2 { get { return _color2; } set { _color2 = value; storedType = -1; } }
+        Color _color1 = new Color(1);
+        public Color color1 { get { return _color1; } set { _color1 = value; storedType = -1; } }
+        Color _color2 = new Color(0);
+        public Color color2 { get { return _color2; } set { _color2 = value; storedType = -1; } }
 
-        Point _point1 = new Point(0,0);
-        Point point1 { get { return _point1; } set { _point1 = value; storedType = -1; } }
+        Point _point1 = new Point(0, 0);
+        public Point point1 { get { return _point1; } set { _point1 = value; storedType = -1; } }
         Point _point2 = new Point(0, 0);
-        Point point2 { get { return _point2; } set { _point2 = value; storedType = -1; } }
+        public Point point2 { get { return _point2; } set { _point2 = value; storedType = -1; } }
 
         protected override SharpDX.Direct2D1.Brush CreateD2D(SharpDX.Direct2D1.RenderTarget rt)
         {

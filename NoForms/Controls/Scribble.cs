@@ -1,36 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using SharpDX.Direct2D1;
+using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
     public class Scribble : Templates.Containable
     {
-        public override void DrawBase<RenderType>(RenderType renderArgument)
+        public override void DrawBase(IRenderType renderArgument)
         {
-            if (renderArgument is RenderTarget)
-            {
-                var rt = renderArgument as RenderTarget;
-                if (!d2dinit) Init(rt);
-                Draw(rt);
-            }
-            else throw new System.Exception("Only d2d pls 4 me");
+            draw(renderArgument.uDraw, tehBrush);
         }
-        bool d2dinit = false;
-        public delegate void scribble(RenderTarget rt, SolidColorBrush scb);
-        public event scribble draw;
-        void Draw(RenderTarget rt)
-        {
-            if (draw != null)
-                draw(rt, scb);
-            
-        }
-        SolidColorBrush scb;
-        void Init(RenderTarget rt)
-        {
-            scb = new SolidColorBrush(rt, new NoForms.Color(1f, .9f, .2f, .2f));
-            d2dinit = true;
-        }
+        UBrush tehBrush = new USolidBrush() { color = new Color(1)};
+        UStroke tehStroke = new UStroke(); // use defaylt;
+        public delegate void scribble(UnifiedDraw uDraw, UBrush tehBrush);
+        public event scribble draw = delegate { };
+        
         System.Windows.Forms.Cursor pCurs = null;
         void OnpleaseChangeCursor(System.Windows.Forms.Cursor c)
         {
