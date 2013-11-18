@@ -6,9 +6,9 @@ namespace NoForms.Renderers
     public class UnifiedDraw // This is a combined replacement for 2d2RenderTarget, drawing.graphics etc
     {
         IRenderElements realRenderer;
-        public UnifiedDraw(IRenderElements rt)
+        public UnifiedDraw(IRenderElements re)
         {
-            realRenderer = rt;
+            realRenderer = re;
         }
         private UnifiedDraw()
         {
@@ -306,6 +306,7 @@ namespace NoForms.Renderers
         void PropertyChanged()
         {
             storedType = -1; // reset validity of cached value
+            hitPointCacheValid = hitTextCacheValid = hitTextRangeCacheValid = textMinSizeCacheValid = false;
         }
 
         private String _text;
@@ -361,15 +362,31 @@ namespace NoForms.Renderers
             this.height = height;
         }
 
+        /// <summary>
+        /// Gives hit info, like text position, given a point on the text. Usually used
+        /// for mouse based caret movement and highlighting.
+        /// </summary>
+        /// <param name="hitPoint"></param>
+        /// <returns></returns>
+        /// 
         public UTextHitInfo HitPoint(Point hitPoint)
         {
-            switch (storedType)
+            if (!hitPointCacheValid)
             {
-                case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
-                case 1: return HitPointD2D(hitPoint, storedText as SharpDX.DirectWrite.TextLayout);
-                default: throw new NotImplementedException("Text type not supported by HitPoint");
+                switch (storedType)
+                {
+                    case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
+                    case 1: 
+                        hitPointCache = HitPointD2D(hitPoint, storedText as SharpDX.DirectWrite.TextLayout);
+                        break;
+                    default: throw new NotImplementedException("Text type not supported by HitPoint");
+                }
+                hitPointCacheValid = true;
             }
+            return hitPointCache;
         }
+        bool hitPointCacheValid = false;
+        UTextHitInfo hitPointCache;
         UTextHitInfo HitPointD2D(Point hitPoint, SharpDX.DirectWrite.TextLayout textLayout)
         {
             SharpDX.Bool trailing,inside;
@@ -382,19 +399,110 @@ namespace NoForms.Renderers
             };
         }
 
+        /// <summary>
+        /// Gives the upper left (trailing) or upper right (leading) point of
+        /// specified text position. Usually used for caret positioning.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="length"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public Point HitText(int pos, bool trailing)
+        {
+            if (!hitTextCacheValid)
+            {
+                switch (storedType)
+                {
+                    case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
+                    case 1:
+                        hitTextCache = HitTextD2D(storedText as SharpDX.DirectWrite.TextLayout, pos, trailing);
+                        break;
+                    default: throw new NotImplementedException("Text type not supported by HitText");
+                }
+                hitTextCacheValid = true;
+            }
+            return hitTextCache;
+        }
+        bool hitTextCacheValid = false;
+        Point hitTextCache;
+        Point HitTextD2D(SharpDX.DirectWrite.TextLayout textLayout, int pos, bool trailing)
+        {
+            float hx, hy;
+            var htm = textLayout.HitTestTextPosition(pos, trailing, out hx, out hy);
+            return new Point(hx, hy);
+        }
+
+        /// <summary>
+        /// Gives collection of glyph dimensions. Usually used for highlighting text.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="length"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
         public IEnumerable<Rectangle> HitTextRange(int start, int length, Point offset)
         {
-            switch (storedType)
+            if (!hitTextRangeCacheValid)
             {
-                case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
-                case 1: return HitTextRangeD2D(storedText as SharpDX.DirectWrite.TextLayout, start, length, offset);
-                default: throw new NotImplementedException("Text type not supported by HitTextRange");
+                hitTextRangeCache.Clear();
+                switch (storedType)
+                {
+                    case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
+                    case 1:
+                        foreach (var rect in HitTextRangeD2D(storedText as SharpDX.DirectWrite.TextLayout, start, length, offset))
+                        {
+                            yield return rect;
+                            hitTextRangeCache.Add(rect);
+                        }
+                        break;
+                    default: throw new NotImplementedException("Text type not supported by HitTextRange");
+                }
+                hitTextRangeCacheValid = true;
             }
+            else
+                foreach (var rect in hitTextRangeCache)
+                    yield return rect;
         }
+        bool hitTextRangeCacheValid = false;
+        List<Rectangle> hitTextRangeCache = new List<Rectangle>(); 
         IEnumerable<Rectangle> HitTextRangeD2D(SharpDX.DirectWrite.TextLayout textLayout, int start, int length, Point offset)
         {
             foreach (var htm in textLayout.HitTestTextRange(start, length, offset.X, offset.Y))
                 yield return new Rectangle(htm.Left, htm.Top, htm.Width, htm.Height);
+        }
+
+        public Size TextMinSize(out int nLines)
+        {
+            if (!textMinSizeCacheValid)
+            {
+                switch (storedType)
+                {
+                    case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
+                    case 1: 
+                        textMinSizeCache=  TextMinSizeD2D(storedText as SharpDX.DirectWrite.TextLayout, out nLines);
+                        textMinSizeCache_Lines = nLines;
+                        break;
+                    default: throw new NotImplementedException("Text type not supported by TextSize");
+                }
+                textMinSizeCacheValid = true;
+            }
+            else nLines = textMinSizeCache_Lines;
+            return textMinSizeCache;
+        }
+        bool textMinSizeCacheValid = false;
+        Size textMinSizeCache;
+        int textMinSizeCache_Lines;
+        Size TextMinSizeD2D(SharpDX.DirectWrite.TextLayout textLayout, out int nLines)
+        {
+            // get size of the render
+            float minWidth = textLayout.DetermineMinWidth();
+            float minHeight = 0;
+            nLines = 0;
+            foreach (var tlm in textLayout.GetLineMetrics())
+            {
+                minHeight += tlm.Height;
+                nLines++;
+            }
+            return new Size(minWidth, minHeight);
         }
 
         public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
@@ -412,6 +520,7 @@ namespace NoForms.Renderers
                     ParagraphAlignment = valign,
                     TextAlignment = halign
                 }, width, height);
+                storedType = 1;
             }
             return storedText as SharpDX.DirectWrite.TextLayout;
         }
@@ -631,6 +740,10 @@ namespace NoForms.Renderers
         {
             return new StrokeType(use);
         }
+        public static implicit operator eStrokeType(StrokeType me)
+        {
+            return me.type;
+        }
         public static implicit operator SharpDX.Direct2D1.DashStyle(StrokeType me)
         {
             switch (me.type)
@@ -769,7 +882,7 @@ namespace NoForms.Renderers
             }
         }
 
-        float[] _custom = new float[] { 1f, 0f };
+        float[] _custom = new float[] { 1f, 1f };
         public float[] custom
         {
             get { return _custom; }
@@ -817,7 +930,10 @@ namespace NoForms.Renderers
                     DashOffset = offset
                 };
                 storedStroke.Dispose();
-                storedStroke = new SharpDX.Direct2D1.StrokeStyle(d2dfact, sp, custom);
+                if(dashStyle == eStrokeType.custom)
+                    storedStroke = new SharpDX.Direct2D1.StrokeStyle(d2dfact, sp, custom);
+                else
+                    storedStroke = new SharpDX.Direct2D1.StrokeStyle(d2dfact, sp);
                 storedType = 1;
             }
             return storedStroke as SharpDX.Direct2D1.StrokeStyle;
@@ -1045,7 +1161,7 @@ namespace NoForms.Renderers
         {
             renderTarget = rt;
         }
-        public SharpDX.Direct2D1.RenderTarget renderTarget { get; private set; }
+        public SharpDX.Direct2D1.RenderTarget renderTarget { get; internal set; }
     }
     public class SDG_RenderElements : IRenderElements
     {
@@ -1053,7 +1169,7 @@ namespace NoForms.Renderers
         {
             graphics = gr;
         }
-        public System.Drawing.Graphics graphics { get; private set; }
+        public System.Drawing.Graphics graphics { get; internal set; }
     }
     public class OGL2D_RenderElements : IRenderElements
     {

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using SharpDX.Direct2D1;
-using dwfact = SharpDX.DirectWrite.Factory;
+using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
@@ -10,11 +9,9 @@ namespace NoForms.Controls
     {
         ListBox lb;
         Scribble dropArrowThing = new Scribble();
-        dwfact gotdwFactory;
-        public ComboBox(dwfact iNeedTextPls)
+        public ComboBox()
         {
-            gotdwFactory = iNeedTextPls;
-            lb = new ListBox(iNeedTextPls);
+            lb = new ListBox();
             lb.selectionChanged += new Action<int>(lb_selectionChanged);
             components.Add(lb);
             lb.visible = false;
@@ -43,35 +40,29 @@ namespace NoForms.Controls
             lb.visible = true;
         }
 
-        void dropArrowThing_draw(RenderTarget rt, SolidColorBrush scb)
+        void dropArrowThing_draw(UnifiedDraw ud, USolidBrush brsh, UStroke strk)
         {
-
-            //scb.Color = new Color(0);
-            //rt.FillRectangle(dropArrowThing.DisplayRectangle,scb);
-
             var ddr = dropArrowThing.DisplayRectangle;
-            RoundedRectangle rr = new RoundedRectangle()
-            {
-                Rect = ddr.Inflated(-1f),
-                RadiusX = (float)ddr.Size.height / 4f,
-                RadiusY = (float)ddr.Size.height / 4f,
-            };
+            Rectangle rr = ddr.Inflated(-1f);
+            float rad = (float)ddr.Size.height / 4f;
 
-            scb.Color = new NoForms.Color(0.6f);
-            rt.FillRoundedRectangle(ref rr, scb);
-            scb.Color = new NoForms.Color(0.7f);
-            rr.Rect = ddr.Inflated(-.5f);
-            rt.DrawRoundedRectangle(rr, scb, 1f);
-            scb.Color = new NoForms.Color(0);
+            brsh.color = new NoForms.Color(0.6f);
+            ud.FillRoundedRectangle(rr, rad, rad, brsh);
+            brsh.color = new NoForms.Color(0.7f);
+            rr = ddr.Inflated(-.5f);
+            strk.strokeWidth = 1f;
+            ud.DrawRoundedRectangle(rr, rad, rad, brsh, strk);
+            brsh.color = new NoForms.Color(0);
             var drw = ddr.width;
             var drh = ddr.height;
             var drt = ddr.top;
             var drl = ddr.left;
-            var p1 = new SharpDX.DrawingPointF(drl + drw / 4f, drt + drh / 3f);
-            var p2 = new SharpDX.DrawingPointF(drl + 2f * drw / 4f, drt + 2f * drh / 3f);
-            var p3 = new SharpDX.DrawingPointF(drl + 3f * drw / 4f, drt + drh / 3f);
-            rt.DrawLine(p1, p2, scb, 1.5f);
-            rt.DrawLine(p2, p3, scb, 1.5f);
+            var p1 = new Point(drl + drw / 4f, drt + drh / 3f);
+            var p2 = new Point(drl + 2f * drw / 4f, drt + 2f * drh / 3f);
+            var p3 = new Point(drl + 3f * drw / 4f, drt + drh / 3f);
+            strk.strokeWidth = 1.5f;
+            ud.DrawLine(p1, p2, brsh, strk);
+            ud.DrawLine(p2, p3, brsh, strk);
         }
 
         void ComboBox_SizeChanged(Size obj)
@@ -83,6 +74,8 @@ namespace NoForms.Controls
             lbdr.height = Math.Min(150, listTextHeight + 2 + lb.components.Count);
             lbdr.Location = new Point(lbdr.left, lbdr.top - lbdr.height + 1);
             lb.DisplayRectangle = lbdr;
+            selectyTexty.height = DisplayRectangle.height;
+            selectyTexty.width = DisplayRectangle.width - Size.height;
         }
 
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
@@ -92,41 +85,28 @@ namespace NoForms.Controls
             base.MouseUpDown(mea, mbs, inComponent, amClipped);
         }
 
-
-        bool d2dinit = false;
-        public override void DrawBase(IRenderType renderArgument) 
+        USolidBrush back = new USolidBrush() { color = new Color(0.8f) };
+        USolidBrush edge = new USolidBrush() { color = new Color(0f) };
+        UStroke edgeStroke = new UStroke();
+        UText selectyTexty = new UText("", UHAlign_Enum.Left, UVAlign_Enum.Middle, false, 0, 0)
         {
-            if (renderArgument is RenderTarget)
-            {
-                if (!d2dinit) Init(renderArgument as RenderTarget);
-                Draw(renderArgument as RenderTarget);
-            }
-            else throw new Exception("NO THIS OBLY D2d go way now.");
-            
-            foreach (IComponent c in components)
-                if (c.visible)
-                    c.DrawBase<RenderType>(renderArgument);
-        }
-        SolidColorBrush scb;
-        void Init(RenderTarget rt)
-        {
-            scb = new SolidColorBrush(rt, new NoForms.Color(0));
-            d2dinit = true;
-        }
-        void Draw(RenderTarget rt)
+            font = new UFont("Arial", 12f,false,false)
+        };
+        public override void DrawBase(IRenderType ra) 
         {
             // Draw bg
-            scb.Color = new NoForms.Color(0.8f);
-            rt.FillRectangle(DisplayRectangle, scb);
-            scb.Color = new NoForms.Color(0);
-            rt.DrawRectangle(DisplayRectangle.Inflated(-.5f), scb);
-            int tpad = 3;
-            if(SelectionOptions.Count >0)
-                rt.DrawText(SelectionOptions.Count > _selectedOption ? SelectionOptions[_selectedOption] : "", new SharpDX.DirectWrite.TextFormat(gotdwFactory, "Arial", 12f),
-                    DisplayRectangle.Inflated(-tpad),
-                    scb, DrawTextOptions.Clip);
+            ra.uDraw.FillRectangle(DisplayRectangle, back);
+            ra.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), edge, edgeStroke);
+            if (SelectionOptions.Count > 0) 
+            {
+                selectyTexty.text = SelectionOptions.Count > _selectedOption ? SelectionOptions[_selectedOption] : "";
+                ra.uDraw.DrawText(selectyTexty, DisplayRectangle.Location, edge, UTextDrawOptions_Enum.Clip);
+            }
+            
+            foreach (IComponent c in components)
+                if (c.visible) c.DrawBase(ra);
         }
-
+        
         // Model
         List<String> SelectionOptions = new List<string>();
         public void AddItem(String s)

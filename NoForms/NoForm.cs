@@ -4,12 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
-using SharpDX.Direct2D1;
-
 using NoForms.Controls.Templates;
-
-// aliases
-using SysRect = System.Drawing.Rectangle;
+using NoForms.Renderers;
 
 namespace NoForms
 {
@@ -22,16 +18,6 @@ namespace NoForms
         {
             get { return null; }
             set { return; }
-        }
-
-        Rectangle clipSet = Rectangle.Empty;
-        public void UnClipAll<RenderType>(RenderType renderArgument)
-        {
-            Util.SetClip<RenderType>(renderArgument, true, Rectangle.Empty);
-        }
-        public void ReClipAll<RenderType>(RenderType renderArgument)
-        {
-            Util.SetClip<RenderType>(renderArgument, true, clipSet);
         }
 
         ComponentCollection _components;
@@ -106,13 +92,9 @@ namespace NoForms
             this.renderMethod = renderMethod;
             renderMethod.noForm = this;
             _components = new ComponentCollection(this);
+            background = new USolidBrush() { color = new Color(1) };
         }
-        public SharpDX.Color4 _backColor = new SharpDX.Color4(1f, 1f, 1f, 1f);
-        public SharpDX.Color4 backColor
-        {
-            get { return _backColor; }
-            set { _backColor = value; }
-        }
+        public UBrush background;
 
         // Register controller events
         internal void RegisterControllers()
@@ -204,44 +186,25 @@ namespace NoForms
                 if (inc.visible)
                     inc.MouseMove(location, Util.CursorInRect(inc.DisplayRectangle, Location), !Util.CursorInRect(DisplayRectangle, Location));
         }
-        
 
-        public void DrawBase<RenderType>(RenderType renderArgument)
+        // Dont care.
+        public void ReClipAll(IRenderType rt)
         {
-            if (renderArgument is RenderTarget)
-            {
-                RenderTarget d2dtarget = renderArgument as RenderTarget;
-                d2dtarget.Clear(null); // this lets alphas to desktop happen. same as clear(new color4(0,0,0,0)).
-                Draw(d2dtarget);
+        }
+        public void UnClipAll(IRenderType rt)
+        {
+        }
 
-                // Now we need to draw our childrens....
-                Util.SetClip<RenderType>(renderArgument, true, DisplayRectangle);
-                foreach (IComponent c in components)
-                    if (c.visible)
-                        c.DrawBase<RenderType>(renderArgument);
-                Util.SetClip<RenderType>(renderArgument, false, Rectangle.Empty);
-                // FIXME assuming this is always root. might be nice to allow embedding NoForm in a NoForm...?
-            }
-            else if (renderArgument is System.Drawing.Graphics)
-            {
-                System.Drawing.Graphics g = renderArgument as System.Drawing.Graphics;
-                Draw(g);
-            }
-            else
-            {
-                throw new NotImplementedException("Unknown rendering method asked of NoForm");
-            }
-        }
-        // Supporting Direct2D
-        public virtual void Draw(RenderTarget d2dtarget)
+        public virtual void DrawBase(IRenderType rt)
         {
-            d2dtarget.FillRectangle(DisplayRectangle,
-                new SolidColorBrush(d2dtarget, backColor)); // FIXME many brushes!!
-        }
-        public virtual void Draw(System.Drawing.Graphics graphics)
-        {
-             // not done yet....
-            throw new NotImplementedException("GDI rendering not supported for NoForm");
+            rt.uDraw.Clear(new Color(0,0,0,0)); // this lets alphas to desktop happen.
+            rt.uDraw.FillRectangle(DisplayRectangle, background);
+
+            // Now we need to draw our childrens....
+            rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
+            foreach (IComponent c in components)
+                if (c.visible) c.DrawBase(rt);
+            rt.uDraw.PopAxisAlignedClip();
         }
 
         void SetWFormProps()
@@ -291,6 +254,12 @@ namespace NoForms
             okClose = done;
             theForm.Close();
         }
+
+
+
+
+
+        
     }
 
 

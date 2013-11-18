@@ -9,11 +9,11 @@ namespace NoForms.Controls
     {
         public override void DrawBase(IRenderType renderArgument)
         {
-            draw(renderArgument.uDraw, tehBrush);
+            draw(renderArgument.uDraw, tehBrush, tehStroke);
         }
-        UBrush tehBrush = new USolidBrush() { color = new Color(1)};
+        USolidBrush tehBrush = new USolidBrush() { color = new Color(1)};
         UStroke tehStroke = new UStroke(); // use defaylt;
-        public delegate void scribble(UnifiedDraw uDraw, UBrush tehBrush);
+        public delegate void scribble(UnifiedDraw uDraw, USolidBrush tehBrush, UStroke strk);
         public event scribble draw = delegate { };
         
         System.Windows.Forms.Cursor pCurs = null;

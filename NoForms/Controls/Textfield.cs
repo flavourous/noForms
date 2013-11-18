@@ -97,7 +97,7 @@ namespace NoForms.Controls
 
         public override void DrawBase(IRenderType rt)
         {
-            if (textLayoutNeedsUpdate) UpdateTextLayout(true);
+            if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
             
             rt.uDraw.FillRectangle(DisplayRectangle, background);
             rt.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), borderBrush, borderStroke);
@@ -110,7 +110,6 @@ namespace NoForms.Controls
         }
 
         float roX = 0, roY = 0;
-        float heightLineZero = 0;
         bool textLayoutNeedsUpdate = false;
         private void UpdateTextLayout(IRenderType sendMe = null)
         {
@@ -134,26 +133,23 @@ namespace NoForms.Controls
                 sendMe.uDraw.MeasureText(data);
 
                 // get size of the render
-                float minWidth = textLayout.DetermineMinWidth();
-                float minHeight = 0;
-                foreach (var tlm in textLayout.GetLineMetrics())
-                    minHeight += tlm.Height;
-                heightLineZero = textLayout.GetLineMetrics()[0].Height;
+                int lines;
+                Size tms = data.TextMinSize(out lines);
+                float lineHeight = tms.height / (float) lines;
 
                 // Get Caret location
-                float x, y;
-                textLayout.HitTestTextPosition(caretPos, false, out x, out y);
+                Point cp = data.HitText(caretPos, false);
 
                 // determine render offset
-                roX = x > PaddedRectangle.width ? x - PaddedRectangle.width : 0;
-                roY = y > PaddedRectangle.height - heightLineZero ? y - PaddedRectangle.height + heightLineZero : 0;
+                roX = cp.X > PaddedRectangle.width ? cp.X - PaddedRectangle.width : 0;
+                roY = cp.Y > PaddedRectangle.height - lineHeight ? cp.Y - PaddedRectangle.height + lineHeight : 0;
 
-                float yCenteringOffset = PaddedRectangle.height / 2 - heightLineZero / 2;
-                if (!multiline) roY += yCenteringOffset;
+                float yCenteringOffset = PaddedRectangle.height / 2 - lineHeight / 2;
+                if (layout == LayoutStyle.OneLine) roY += yCenteringOffset;
 
                 // set caret line
-                caret1 = new Point((float)Math.Round(PaddedRectangle.left + x - roX) + 0.5f, (float)Math.Round(PaddedRectangle.top + y - roY));
-                caret2 = new Point((float)Math.Round(PaddedRectangle.left + x - roX) + 0.5f, (float)Math.Round(PaddedRectangle.top + y - roY + heightLineZero));
+                caret1 = new Point((float)Math.Round(PaddedRectangle.left + cp.X - roX) + 0.5f, (float)Math.Round(PaddedRectangle.top + cp.Y - roY));
+                caret2 = new Point((float)Math.Round(PaddedRectangle.left + cp.X - roX) + 0.5f, (float)Math.Round(PaddedRectangle.top + cp.Y - roY + lineHeight));
             }
         }
 
@@ -179,7 +175,7 @@ namespace NoForms.Controls
         public override void KeyPress(char c)
         {
             if (c != '\b' && focus)
-                if((c!='\r' && c!='\n') || multiline)
+                if((c!='\r' && c!='\n') || layout != LayoutStyle.OneLine)
                 {
                     data.text = data.text.Substring(0, caretPos) + c + data.text.Substring(caretPos);
                     caretPos++;

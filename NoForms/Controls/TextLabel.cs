@@ -1,27 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using SharpDX.Direct2D1;
-using SharpDX;
-using SharpDX.DirectWrite;
+using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
     public class TextLabel : Templates.Containable
     {
-        SharpDX.DirectWrite.Factory dwfact;
-        public TextLabel(SharpDX.DirectWrite.Factory ineedawriteyfact) 
+        public Object tag = null;
+        public USolidBrush background = new USolidBrush() { color = new Color(0, 0, 0, 0) };
+        public UBrush foreground = new USolidBrush() { color = new Color(0) };
+
+        public bool autosizeX = false, autosizeY = false;
+        public UText textData = new UText("", UHAlign_Enum.Center, UVAlign_Enum.Middle, true, 0, 0)
         {
-            dwfact = ineedawriteyfact;
-        }
+            font = new UFont("Arial Black", 15f, false, false),
+        };
 
         public event System.Windows.Forms.MethodInvoker clicked;
-        public override void DrawBase<RenderType>(RenderType renderArgument)
+        public override void DrawBase(IRenderType ra)
         {
-            if (renderArgument is RenderTarget)
-            {
-                Draw(renderArgument as RenderTarget);
-            }
-            else throw new NotImplementedException("No suportty anything but d2d");
+            ra.uDraw.FillRectangle(DisplayRectangle, background);
+            ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions_Enum.None);
+            
+            int nLines;
+            Size minSize = textData.TextMinSize(out nLines);
+            if ((autosizeX && minSize.width != Size.width) || (autosizeY && minSize.height != Size.height))
+                Size = new Size(autosizeX ? minSize.width : Size.width, autosizeY ? minSize.height : Size.height);
         }
 
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
@@ -47,76 +51,5 @@ namespace NoForms.Controls
             }
         }
         public event Action<bool> MouseHover;
-
-        public Object tag = null;
-        public String fontName = "Arial Black";
-        public float fontSize = 15f;
-        public Align textAlign = new Align() { horizontal = HAlign.center, vertical = VAlign.middle };
-        public String text = "";
-        void Draw(RenderTarget d2drt)
-        {
-            if (!d2dinit) Init(d2drt);
-
-            var tl = getTextLayout();
-            d2drt.FillRectangle(DisplayRectangle, bb);
-            d2drt.DrawTextLayout(DisplayRectangle.Location, tl, tb);
-            tl.Dispose();
-        }
-
-        TextLayout ll = null;
-        TextLayout getTextLayout()
-        {
-            return ll=new TextLayout(dwfact, text, new TextFormat(dwfact, fontName, fontSize), DisplayRectangle.width, DisplayRectangle.height)
-            {
-                ParagraphAlignment = textAlign,
-                TextAlignment = textAlign,
-                WordWrapping = WordWrapping.Wrap
-            };
-        }
-
-        public float getLineHeight()
-        {
-            if (ll == null) getTextLayout();
-            return ll.GetLineMetrics()[0].Height;
-        }
-        bool d2dinit = false;
-        SolidColorBrush tb, bb;
-        void Init(RenderTarget d2drt)
-        {
-            bb = new SolidColorBrush(d2drt, new NoForms.Color(0,0,0,0));
-            tb = new SolidColorBrush(d2drt, new NoForms.Color(0.15f));
-            d2dinit = true;
-        }
-
-        public NoForms.Color foreColor
-        {
-            get
-            {
-                if (tb == null)
-                    new NoForms.Color(0);
-                return tb.Color;
-            }
-            set
-            {
-                if (tb != null)
-                    tb.Color = value;
-            }
-        }
-        public NoForms.Color backColor
-        {
-            get
-            {
-                if (bb == null)
-                    new NoForms.Color(0);
-                return bb.Color;
-            }
-            set
-            {
-                if (bb != null)
-                    bb.Color = value;
-            }
-        }
-
     }
-
 }

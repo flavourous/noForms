@@ -9,7 +9,7 @@ using SharpDX;
 namespace NoForms.Renderers
 {
     // Base Renderers, exposing some drawing mechanism and options
-    public class D2DLayered : IRender
+    public class D2DLayered : IRender, IRenderType
     {
         class D2LForm : System.Windows.Forms.Form
         {
@@ -95,6 +95,10 @@ namespace NoForms.Renderers
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
             scbTrans = new SolidColorBrush(d2dRenderTarget, new Color4(1f, 0f, 1f, 0f)); // set buffer area to transparent
+
+            // Init uDraw and assign IRenderElement parts
+            _backRenderer = new D2D_RenderElements(d2dRenderTarget);
+            _uDraw = new UnifiedDraw(_backRenderer);
         }
         SolidColorBrush scbTrans;
         public Thread renderThread = null;
@@ -138,7 +142,7 @@ namespace NoForms.Renderers
             DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
             d2dRenderTarget.BeginDraw();
             d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
-            noForm.DrawBase(d2dRenderTarget);
+            noForm.DrawBase(this);
             d2dRenderTarget.PopAxisAlignedClip();
 
             // Fill with transparency the edgeBuffer!
@@ -187,8 +191,23 @@ namespace NoForms.Renderers
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+            _backRenderer.renderTarget = d2dRenderTarget;
+        }
 
-            
+        // IRenderType
+        UnifiedDraw _uDraw;
+        public UnifiedDraw uDraw
+        {
+            get { return _uDraw; }
+        }
+        D2D_RenderElements _backRenderer;
+        public IRenderElements backRenderer
+        {
+            get { return _backRenderer; }
+        }
+        public UnifiedEffects uAdvanced
+        {
+            get { throw new NotImplementedException(); }
         }
     }    
 }

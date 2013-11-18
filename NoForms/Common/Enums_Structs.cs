@@ -75,26 +75,6 @@ namespace NoForms
         }
     }
 
-    public enum VAlign { middle, top, bottom };
-    public enum HAlign { center, left, right };
-    public struct Align 
-    { 
-        public VAlign vertical; 
-        public HAlign horizontal;
-        public static implicit operator SharpDX.DirectWrite.ParagraphAlignment(Align me)
-        {
-            if ((me.vertical & VAlign.bottom) > 0) return SharpDX.DirectWrite.ParagraphAlignment.Far;
-            if ((me.vertical & VAlign.top) > 0) return SharpDX.DirectWrite.ParagraphAlignment.Near;
-            return SharpDX.DirectWrite.ParagraphAlignment.Center;
-        }
-        public static implicit operator SharpDX.DirectWrite.TextAlignment(Align me)
-        {
-            if ((me.horizontal & HAlign.left) > 0) return SharpDX.DirectWrite.TextAlignment.Leading;
-            if ((me.horizontal & HAlign.right) > 0) return SharpDX.DirectWrite.TextAlignment.Trailing;
-            return SharpDX.DirectWrite.TextAlignment.Center;
-        }
-    }
-
     public struct Size
     {
         public static Size Empty { get { return new Size(0, 0); } }

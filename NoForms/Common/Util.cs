@@ -80,18 +80,6 @@ namespace NoForms
             return par.Location;
         }
 
-        public static void SetClip<RenderType>(RenderType renderArgument, bool onoff, Rectangle clipRgn)
-        {
-            if (renderArgument is SharpDX.Direct2D1.RenderTarget)
-            {
-                var rt = renderArgument as SharpDX.Direct2D1.RenderTarget;
-                if (onoff)
-                    rt.PushAxisAlignedClip(clipRgn, SharpDX.Direct2D1.AntialiasMode.Aliased);
-                else
-                    rt.PopAxisAlignedClip();
-            }
-        }
-
         public static void Set2DTransform<RenderType>(RenderType renderArgument, System.Drawing.Point trans)
         {
             if (renderArgument is SharpDX.Direct2D1.RenderTarget)

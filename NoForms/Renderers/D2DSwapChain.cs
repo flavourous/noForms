@@ -8,7 +8,7 @@ using SharpDX;
 
 namespace NoForms.Renderers
 {
-    public class D2DSwapChain : IRender
+    public class D2DSwapChain : IRender, IRenderType
     {
         class D2SForm : System.Windows.Forms.Form
         {
@@ -104,6 +104,11 @@ namespace NoForms.Renderers
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+
+            // Init uDraw and assign IRenderElement parts
+            _backRenderer = new D2D_RenderElements(d2dRenderTarget);
+            _uDraw = new UnifiedDraw(_backRenderer);
+
         }
         public Thread renderThread = null;
         public void BeginRender()
@@ -135,7 +140,7 @@ namespace NoForms.Renderers
             DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
             d2dRenderTarget.BeginDraw();
             d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
-            noForm.DrawBase(d2dRenderTarget);
+            noForm.DrawBase(this);
             d2dRenderTarget.PopAxisAlignedClip();
             d2dRenderTarget.EndDraw();
 
@@ -160,6 +165,24 @@ namespace NoForms.Renderers
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+            // Init uDraw and assign IRenderElement parts
+            _backRenderer.renderTarget = d2dRenderTarget;
+        }
+
+        // IRenderType
+        UnifiedDraw _uDraw;
+        public UnifiedDraw uDraw
+        {
+            get { return _uDraw; }
+        }
+        D2D_RenderElements _backRenderer;
+        public IRenderElements backRenderer
+        {
+            get { return _backRenderer; }
+        }
+        public UnifiedEffects uAdvanced
+        {
+            get { throw new NotImplementedException(); }
         }
     }
 }

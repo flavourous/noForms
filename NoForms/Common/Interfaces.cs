@@ -43,7 +43,7 @@ namespace NoForms
     {
         // TODO Unified interface for render objects, incase we want to add more to existing ones.
         Renderers.UnifiedDraw uDraw { get; }
-        Object backRenderer { get; }
+        Renderers.IRenderElements backRenderer { get; }
         Renderers.UnifiedEffects uAdvanced { get; }
     }
 
@@ -54,8 +54,8 @@ namespace NoForms
         IContainer Parent { get; set; }
 
         // Clipping control
-        void ReClipAll<RenderType>(RenderType renderArgument);
-        void UnClipAll<RenderType>(RenderType renderArgument);
+        void ReClipAll(IRenderType renderArgument);
+        void UnClipAll(IRenderType renderArgument);
 
         Point Location { get; set; }
 

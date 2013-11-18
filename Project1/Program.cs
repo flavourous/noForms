@@ -3,19 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using NoForms;
 using System.Diagnostics;
-using SharpDX.Direct2D1;
-using SharpDX.DirectWrite;
 using System.Xml;
 using System.IO;
-using SysRect = System.Drawing.Rectangle;
-
+using NoForms.Renderers;
 using NoForms.Controls;
 
 namespace testapp
 {
     class Program
     {
-        public static SharpDX.DirectWrite.Factory dwfact = new SharpDX.DirectWrite.Factory();
         public static Collection<Story> Stories = new Collection<Story>();
         public static Collection<Project> Projects = new Collection<Project>();
         public static Project selectedProject;
@@ -107,7 +103,7 @@ namespace testapp
         MoveHandle mh;
         SizeHandle sh;
         MainContainer mc;
-        ComboBox cbProject = new ComboBox(Program.dwfact);
+        ComboBox cbProject;
         Scribble editProject, delProject, newProject;
 
 
@@ -124,6 +120,7 @@ namespace testapp
             SizeChanged += new Act(MyNoForm_OnSizeChanged);
             SetCursor = new Action<System.Windows.Forms.Cursor>(cur => SetFormCursor(cur));
 
+            cbProject = new ComboBox();
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
             components.Add(cbProject);
 
@@ -142,9 +139,17 @@ namespace testapp
             newProject.draw += new Scribble.scribble(newProject_draw);
             components.Add(newProject);
 
+            var bordercolor = themeColor;
+            bordercolor.a = 0.9f;
+            scb = new USolidBrush() { color = bordercolor };
+            var mainColor = new Color(1f);
+            scb1 = new USolidBrush() { color = mainColor };
+            var barColor = bordercolor.Scale(0.2f);
+            brushBars = new USolidBrush() { color = barColor };
+
             MyNoForm_OnSizeChanged();
         }
-
+        USolidBrush scb, scb1, brushBars;
         void cbProject_selectionChanged(int obj)
         {
             foreach(var p in Program.Projects)
@@ -152,18 +157,19 @@ namespace testapp
                     Program.selectedProject = p;
         }
 
-        void newProject_draw(RenderTarget rt, SolidColorBrush scb)
+        UText n = new UText("n", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        void newProject_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            scb.Color = new NoForms.Color(.5f, 1, 1, 1);
+            scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var dr = newProject.DisplayRectangle;
             var ir = dr.Inflated(-3.5f);
             var or = dr.Inflated(-.5f);
-            rt.FillRectangle(or, scb);
-            scb.Color = new NoForms.Color(1, 0, 0, 1);
-            rt.DrawRectangle(or, scb, 1f);
-            rt.DrawRectangle(ir, scb, 1f);
+            ud.FillRectangle(or, scb);
+            scb.color = new NoForms.Color(1, 0, 0, 1);
+            ud.DrawRectangle(or, scb, stroke);
+            ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            rt.DrawText("n", new TextFormat(Program.dwfact, "Arial", 12f), ir, scb, DrawTextOptions.Clip);
+            ud.DrawText(n,newProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip);
         }
 
         void newProject_Clicked(Point loc)
@@ -181,18 +187,19 @@ namespace testapp
             Program.Projects.Add(pref);
         }
 
-        void delProject_draw(RenderTarget rt, SolidColorBrush scb)
+        UText d = new UText("d", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        void delProject_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            scb.Color = new NoForms.Color(.5f, 1, 1, 1);
+            scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var dr = delProject.DisplayRectangle;
             var ir = dr.Inflated(-3.5f);
             var or = dr.Inflated(-.5f);
-            rt.FillRectangle(or, scb);
-            scb.Color = new NoForms.Color(1, 1, 0, 0);
-            rt.DrawRectangle(or, scb, 1f);
-            rt.DrawRectangle(ir, scb, 1f);
+            ud.FillRectangle(or, scb);
+            scb.color = new NoForms.Color(1, 1, 0, 0);
+            ud.DrawRectangle(or, scb, stroke);
+            ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            rt.DrawText("d", new TextFormat(Program.dwfact, "Arial", 12f), ir, scb, DrawTextOptions.Clip);
+            ud.DrawText(d,delProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip);
         }
 
         bool del = false;
@@ -240,17 +247,18 @@ namespace testapp
             }
         }
 
-        void editProject_draw(RenderTarget rt, SolidColorBrush scb)
+        UText e = new UText("e", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        void editProject_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            scb.Color = new NoForms.Color(.5f, 1, 1, 1);
+            scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var ir = editProject.DisplayRectangle.Inflated(-3.5f);
             var or = editProject.DisplayRectangle.Inflated(-.5f);
-            rt.FillRectangle(or, scb);
-            scb.Color = new NoForms.Color(1, 0, 1, 0);
-            rt.DrawRectangle(or, scb, 1f);
-            rt.DrawRectangle(ir, scb, 1f);
+            ud.FillRectangle(or, scb);
+            scb.color = new NoForms.Color(1, 0, 1, 0);
+            ud.DrawRectangle(or, scb, stroke);
+            ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            rt.DrawText("e", new TextFormat(Program.dwfact, "Arial", 12f), ir, scb, DrawTextOptions.Clip);
+            ud.DrawText(e,editProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip);
         }
 
         void editProject_Clicked(Point loc)
@@ -279,29 +287,32 @@ namespace testapp
             int cbwid = 150;
             cbProject.DisplayRectangle = new Rectangle(Size.width - 10 - cbwid - 50, Size.height - 30, cbwid, 20);
             editProject.DisplayRectangle = new Rectangle(Size.width - 10 - cbwid - 50 - 25, Size.height - 30, 20, 20);
+            e.width = editProject.DisplayRectangle.width; e.height = editProject.DisplayRectangle.height;
             delProject.DisplayRectangle = new Rectangle(Size.width - 10 - cbwid - 50 - 50, Size.height - 30, 20, 20);
+            d.width = delProject.DisplayRectangle.width; d.height = delProject.DisplayRectangle.height;
             newProject.DisplayRectangle = new Rectangle(Size.width - 10 - cbwid - 50 - 75, Size.height - 30, 20, 20);
+            n.width = newProject.DisplayRectangle.width; n.height = newProject.DisplayRectangle.height;
         }
 
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 95f/255f,150f/255f,190f/255f);
-        public override void Draw(SharpDX.Direct2D1.RenderTarget d2dtarget)
+        public override void DrawBase(IRenderType rt) 
         {
-            if (!d2dinit) Init(d2dtarget);
+            base.DrawBase(rt);
 
-            d2dtarget.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
-            d2dtarget.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, Size.height), scb);
-            d2dtarget.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
-            d2dtarget.FillRectangle(new Rectangle(Size.width-gap, 0, Size.width, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(Size.width - gap, 0, Size.width, Size.height), scb);
 
             var innerRect = new Rectangle(gap, gap+barwid, Size.width - gap*2, Size.height - gap*2-barwid*2);
-            d2dtarget.FillRectangle(innerRect, scb1);
+            rt.uDraw.FillRectangle(innerRect, scb1);
 
             var topbarrect = new Rectangle(gap, gap, Size.width - gap*2, barwid);
             var botbarrect = new Rectangle(gap, Size.height-gap-barwid, Size.width - gap*2, barwid);
-            d2dtarget.FillRectangle(topbarrect, brushBars);
-            d2dtarget.FillRectangle(botbarrect, brushBars);
+            rt.uDraw.FillRectangle(topbarrect, brushBars);
+            rt.uDraw.FillRectangle(botbarrect, brushBars);
 
             UpdateProjectComboBox();
             foreach (var s in Program.Stories)
@@ -332,19 +343,8 @@ namespace testapp
         }
         public static NoForms.IComponent iAmDropped = null;
         public static StoryState iAmDropped_oldParent;
-        bool d2dinit = false;
-        Brush scb, scb1, brushBars;
-        void Init(RenderTarget d2drt)
-        {
-            var bordercolor = themeColor;
-            bordercolor.a = 0.9f;
-            scb = new SharpDX.Direct2D1.SolidColorBrush(d2drt, bordercolor);
-            var mainColor = new NoForms.Color(1f);
-            scb1 = new SharpDX.Direct2D1.SolidColorBrush(d2drt, mainColor);
-            var barColor = bordercolor.Scale(0.2f);
-            brushBars = new SolidColorBrush(d2drt, barColor);
-            d2dinit = true;
-        }
+
+        
     }
 
     class MainContainer : NoForms.Controls.Templates.Container
@@ -367,7 +367,8 @@ namespace testapp
             for (int i=0;i<slcs.Length;i++)
             {
                 components.Add(slcs[i]);
-                slcts[i] = new TextLabel(Program.dwfact) { text = slcs[i].name };
+                slcts[i] = new TextLabel();
+                slcts[i].textData.text = slcs[i].name;
                 components.Add(slcts[i]);
             }
             SizeChanged += new Action<Size>(MainContainer_SizeChanged);
@@ -429,13 +430,14 @@ namespace testapp
             editDlg.Create(false, true);
         }
 
-        void add_draw(RenderTarget rt, SolidColorBrush scb)
+        void add_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             var crt = add.DisplayRectangle;
-            var ss = new StrokeStyle(rt.Factory, new StrokeStyleProperties() { StartCap = CapStyle.Round, EndCap = CapStyle.Round });
-            scb.Color = new NoForms.Color(1, 0, 1, 0);
-            rt.DrawLine(new Point(crt.left + crt.width / 2, crt.top), new Point(crt.left + crt.width / 2, crt.bottom), scb, 3f,ss);
-            rt.DrawLine(new Point(crt.left, crt.top + crt.height / 2), new Point(crt.right, crt.top + crt.height / 2), scb, 3f, ss);
+            stroke.endCap = stroke.startCap = eStrokeCaps.round;
+            stroke.strokeWidth = 3f;
+            scb.color = new Color(1, 0, 1, 0);
+            ud.DrawLine(new Point(crt.left + crt.width / 2, crt.top), new Point(crt.left + crt.width / 2, crt.bottom), scb, stroke);
+            ud.DrawLine(new Point(crt.left, crt.top + crt.height / 2), new Point(crt.right, crt.top + crt.height / 2), scb, stroke);
         }
 
         void StoryListContainer_SizeChanged(Size obj)
@@ -444,30 +446,16 @@ namespace testapp
             add.Location = new Point(Size.width - 15, Size.height - 15);
         }
         Scribble add;
-        public override void DrawBase<RenderType>(RenderType renderArgument)
+        public override void DrawBase(IRenderType ra)
         {
-            if (renderArgument is RenderTarget)
-            {
-                Draw(renderArgument as RenderTarget);
-            }
-            else
-            {
-                throw new NotImplementedException("Only d2d here");
-            }
-            base.DrawBase<RenderType>(renderArgument); // draws children
-        }
-        void Draw(RenderTarget d2drt)
-        {
-            if (!d2dinit) Init(d2drt);
             float lt = 1.0f;
             float bv = lt / 2;
             var ir = DisplayRectangle.Inflated(-lt);
             var lr = DisplayRectangle.Inflated(-bv);
-            d2drt.DrawRectangle(lr, borderBrush);
-            d2drt.FillRectangle(ir, fillBrush);
+            ra.uDraw.DrawRectangle(lr, borderBrush, edge);
+            ra.uDraw.FillRectangle(ir, fillBrush);
 
             float startY = 0;
-
             foreach (var s in Program.Stories)
             {
                 if (s.state == state && s.projectName == Program.selectedProject.name)
@@ -482,15 +470,11 @@ namespace testapp
                     }
                 }
             }
+            base.DrawBase(ra);
         }
-        Brush borderBrush, fillBrush;
-        bool d2dinit = false;
-        void Init(RenderTarget d2drt)
-        {
-            borderBrush = new SolidColorBrush(d2drt, new NoForms.Color(0.7f, 0, 0, 0));
-            fillBrush = new SolidColorBrush(d2drt, new NoForms.Color(0.3f, .7f, .7f, .7f));
-            d2dinit = true;
-        }
+        UBrush borderBrush = new USolidBrush() { color = new NoForms.Color(0.7f, 0, 0, 0) };
+        UBrush fillBrush = new USolidBrush() { color = new NoForms.Color(0.3f, .7f, .7f, .7f) };
+        UStroke edge = new UStroke();
 
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
@@ -539,12 +523,13 @@ namespace testapp
             Program.rootForm.SetFormCursor(System.Windows.Forms.Cursors.Default);
         }
 
-        void cx_draw(RenderTarget rt, Brush scb)
+        void cx_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            var ss = new StrokeStyle(rt.Factory, new StrokeStyleProperties() { StartCap = CapStyle.Round, EndCap = CapStyle.Round });
+            stroke.strokeWidth = 2f;
+            stroke.startCap = stroke.endCap = new StrokeCaps(eStrokeCaps.round);
             var dr = cx.DisplayRectangle;
-            rt.DrawLine(new Point(dr.left, dr.top), new Point(dr.right, dr.bottom), scb, 2f, ss);
-            rt.DrawLine(new Point(dr.right, dr.top), new Point(dr.left, dr.bottom), scb, 2f, ss);
+            ud.DrawLine(new Point(dr.left, dr.top), new Point(dr.right, dr.bottom), scb, stroke);
+            ud.DrawLine(new Point(dr.right, dr.top), new Point(dr.left, dr.bottom), scb, stroke);
         }
 
         void Story_SizeChanged(Size obj)
@@ -557,64 +542,48 @@ namespace testapp
         public String storyText;
         public StoryState state;
         public Rectangle padding = new Rectangle() { top = 5, left = 5, right = 5, bottom = 0 };
+        float boxHeight = 100;
 
         // Drawybit
-        public override void DrawBase<RenderType>(RenderType renderArgument)
+        public override void DrawBase(IRenderType ra)
         {
-            if (renderArgument is RenderTarget)
-            {
-                if (!d2dinit) Init(renderArgument as RenderTarget);
-                Draw(renderArgument as RenderTarget);
-            }
-            else
-            {
-                throw new NotImplementedException("nos");
-            }
-            base.DrawBase<RenderType>(renderArgument);
-        }
-        bool d2dinit = false;
-        float boxHeight = 100;
-        public void Draw(RenderTarget rt) 
-        {
-            Size = new Size(Size.width,boxHeight);
+            Size = new Size(Size.width, boxHeight);
             // do bottom padding on the slc
             Rectangle clr = DisplayRectangle;
             clr.bottom = Parent.DisplayRectangle.bottom - 5;
-            rt.PushAxisAlignedClip(clr, AntialiasMode.Aliased);
+            ra.uDraw.PushAxisAlignedClip(clr);
 
             Rectangle inRect = DisplayRectangle.Deflated(padding);
-
-            rt.FillRectangle(inRect, scb_back);
-
+            ra.uDraw.FillRectangle(inRect, scb_back);
             Rectangle inRect2 = inRect.Deflated(padding);
-            
-            var tl = new TextLayout(Program.dwfact, storyTitle + "\r\n" + Program.BreakSentance(storyText,50), new TextFormat(Program.dwfact, "Arial", 10f), inRect2.width, 0)
-            {
-                WordWrapping = WordWrapping.Wrap
-            };
-            tl.SetFontWeight(FontWeight.DemiBold, new TextRange(0, storyTitle.Length));
-            tl.SetFontSize(12f, new TextRange(0, storyTitle.Length));
 
-            float ct = 0;
-            foreach (var ln in tl.GetLineMetrics())
-                ct += ln.Height;
+            UText textyTime = new UText(
+                storyTitle + "\r\n" + Program.BreakSentance(storyText, 50),
+                UHAlign_Enum.Left, UVAlign_Enum.Top, true, inRect2.width,0) 
+                { font = new UFont("Arial",10f,false,false) };
+
+            // FIXME uDraw support, somehow (hmm how with sdg?)
+            //tl.SetFontWeight(FontWeight.DemiBold, new TextRange(0, storyTitle.Length));
+            //tl.SetFontSize(12f, new TextRange(0, storyTitle.Length));
+
+            ra.uDraw.MeasureText(textyTime);   
+            int nlines;
+            float ct = textyTime.TextMinSize(out nlines).height;
             ct += 3 * padding.top;
             boxHeight = (int)Math.Round(ct);
 
-            rt.PushAxisAlignedClip(inRect2, AntialiasMode.Aliased);
-            rt.DrawTextLayout(inRect2.Location, tl, scb_text);
-            rt.PopAxisAlignedClip();
+            ra.uDraw.PushAxisAlignedClip(inRect2);
+            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.Clip);
+            ra.uDraw.PopAxisAlignedClip();
 
-            tl.Dispose();
+            ra.uDraw.PopAxisAlignedClip();
 
-            rt.PopAxisAlignedClip();
+            base.DrawBase(ra);
         }
-        SolidColorBrush scb_back, scb_text;
-        public void Init(RenderTarget rt) 
-        {
-            scb_back = new SolidColorBrush(rt, new Color(.4f,.2f, .2f, .2f));
-            scb_text = new SolidColorBrush(rt, new Color(1f,.1f, .1f, .1f));
-        }
+        
+        USolidBrush scb_back = new USolidBrush() { color = new Color(.4f, .2f, .2f, .2f) };
+        USolidBrush scb_text = new USolidBrush() { color = new Color(1f, .1f, .1f, .1f) };
+        UStroke edge = new UStroke();
 
         int sdx, sdy;
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
@@ -703,7 +672,6 @@ namespace testapp
             // hold ref to stroy
             refStory = sedthis;
 
-
             // move and resize
             mh = new MoveHandle(this);
             sh = new SizeHandle(this);
@@ -711,25 +679,22 @@ namespace testapp
 
             tft = new Textfield();
             tft.text = refStory.storyTitle;
-            tft.wordwrap = false;
-            tft.multiline = false;
+            tft.layout = Textfield.LayoutStyle.OneLine;
             components.Add(tft);
 
             tf = new Textfield();
             tf.text = refStory.storyText;
-            tf.wordwrap = true;
-            tf.multiline = true;
+            tf.layout = Textfield.LayoutStyle.WrappedMultiLine;
             components.Add(tf);
 
-            pcb = new ComboBox(Program.dwfact);
+            pcb = new ComboBox();
             foreach (var p in Program.Projects)
                 pcb.AddItem(p.name);
             pcb.SelectOption(refStory.projectName);
             components.Add(pcb);
 
-
             bt = new Button();
-            bt.text = "Save & Close";
+            bt.textData.text = "Save & Close";
             bt.buttonColor = themeColor;
             bt.textColor = new NoForms.Color(0);
             bt.ButtonClicked += new Button.NFAction( () => 
@@ -743,6 +708,14 @@ namespace testapp
 
             SizeChanged += new Act(SED_OnSizeChanged);
             SED_OnSizeChanged();
+
+            var bordercolor = themeColor;
+            bordercolor.a = 0.9f;
+            scb = new USolidBrush() { color = bordercolor };
+            var mainColor = new Color(1f);
+            scb1 = new USolidBrush() { color = mainColor };
+            var barColor = bordercolor.Scale(0.2f);
+            brushBars = new USolidBrush() { color = barColor };
         }
 
         void SED_OnSizeChanged()
@@ -760,51 +733,36 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
-        public override void Draw(SharpDX.Direct2D1.RenderTarget d2dtarget)
+        public override void DrawBase(IRenderType rt)
         {
-            if (!d2dinit) Init(d2dtarget);
-
-            d2dtarget.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
-            d2dtarget.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
-            d2dtarget.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
-            d2dtarget.FillRectangle(new Rectangle(Size.width - gap, 0, gap, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(Size.width - gap, 0, gap, Size.height), scb);
 
             var innerRect = new Rectangle(gap, gap + barwid, Size.width - gap * 2, Size.height - gap * 2 - barwid * 2);
-            d2dtarget.FillRectangle(innerRect, scb1);
+            rt.uDraw.FillRectangle(innerRect, scb1);
 
             var topbarrect = new Rectangle(gap, gap, Size.width - gap * 2, barwid);
             var botbarrect = new Rectangle(gap, Size.height - gap - barwid, Size.width - gap * 2, barwid);
-            d2dtarget.FillRectangle(topbarrect, brushBars);
-            d2dtarget.FillRectangle(botbarrect, brushBars);
+            rt.uDraw.FillRectangle(topbarrect, brushBars);
+            rt.uDraw.FillRectangle(botbarrect, brushBars);
 
             var titRect = topbarrect;
-            titRect.left += 30; 
+            titRect.left += 30;
             titRect.right -= 30;
 
-            var tl = new TextLayout(Program.dwfact, "Editing Story", new TextFormat(Program.dwfact, "Arial", 12f), titRect.width, titRect.height)
-            {
-                WordWrapping= WordWrapping.NoWrap,
-                ParagraphAlignment = ParagraphAlignment.Center
-            };
+            titleText.width = titRect.width;
+            titleText.height = titRect.height;
 
-            d2dtarget.DrawTextLayout(titRect.Location, tl, scb1);
-            tl.Dispose();
+            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip);
         }
-        bool d2dinit = false;
-        Brush scb, scb1, brushBars;
-        void Init(RenderTarget d2drt)
+        USolidBrush scb, scb1, brushBars;
+        UText titleText = new UText("Editing Story", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
         {
-            var bordercolor = themeColor;
-            bordercolor.a = 0.9f;
-            scb = new SharpDX.Direct2D1.SolidColorBrush(d2drt, bordercolor);
-            var mainColor = themeColor.Add(.2f, .15f, .2f);
-            mainColor.a = 0.92f;
-            scb1 = new SharpDX.Direct2D1.SolidColorBrush(d2drt, mainColor);
-            var barColor = themeColor.Add(-.1f, -.1f, -.1f);
-            barColor.a = 0.97f;
-            brushBars = new SolidColorBrush(d2drt, barColor);
-            d2dinit = true;
-        }
+            font = new UFont("Arial", 12f, false, false)
+        };
+        
     }
 
     public class Project
@@ -872,18 +830,16 @@ namespace testapp
 
             tft = new Textfield();
             tft.text = refProject.name;
-            tft.wordwrap = false;
-            tft.multiline = false;
+            tft.layout = Textfield.LayoutStyle.OneLine;
             components.Add(tft);
 
             tf = new Textfield();
             tf.text = refProject.details;
-            tf.wordwrap = true;
-            tf.multiline = true;
+            tf.layout = Textfield.LayoutStyle.WrappedMultiLine;
             components.Add(tf);
 
             bt = new Button();
-            bt.text = "Save & Close";
+            bt.textData.text = "Save & Close";
             bt.buttonColor = themeColor;
             bt.textColor = new NoForms.Color(0);
             bt.ButtonClicked += new Button.NFAction( () => 
@@ -909,6 +865,14 @@ namespace testapp
 
             SizeChanged += new Act(SED_OnSizeChanged);
             SED_OnSizeChanged();
+
+            var bordercolor = themeColor;
+            bordercolor.a = 0.9f;
+            scb = new USolidBrush() { color = bordercolor };
+            var mainColor = new Color(1f);
+            scb1 = new USolidBrush() { color = mainColor };
+            var barColor = bordercolor.Scale(0.2f);
+            brushBars = new USolidBrush() { color = barColor };
         }
 
         void SED_OnSizeChanged()
@@ -925,51 +889,36 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
-        public override void Draw(SharpDX.Direct2D1.RenderTarget d2dtarget)
+        public override void DrawBase(IRenderType rt)
         {
-            if (!d2dinit) Init(d2dtarget);
-
-            d2dtarget.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
-            d2dtarget.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
-            d2dtarget.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
-            d2dtarget.FillRectangle(new Rectangle(Size.width - gap, 0, gap, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
+            rt.uDraw.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
+            rt.uDraw.FillRectangle(new Rectangle(Size.width - gap, 0, gap, Size.height), scb);
 
             var innerRect = new Rectangle(gap, gap + barwid, Size.width - gap*2, Size.height - gap*2 - barwid*2);
-            d2dtarget.FillRectangle(innerRect, scb1);
+            rt.uDraw.FillRectangle(innerRect, scb1);
 
             var topbarrect = new Rectangle(gap, gap, Size.width - gap*2, barwid);
             var botbarrect = new Rectangle(gap, Size.height - gap - barwid, Size.width - gap*2, barwid);
-            d2dtarget.FillRectangle(topbarrect, brushBars);
-            d2dtarget.FillRectangle(botbarrect, brushBars);
+            rt.uDraw.FillRectangle(topbarrect, brushBars);
+            rt.uDraw.FillRectangle(botbarrect, brushBars);
 
             var titRect = topbarrect;
             titRect.left += 30; 
             titRect.right -= 30;
 
-            var tl = new TextLayout(Program.dwfact, "Editing Project", new TextFormat(Program.dwfact, "Arial", 12f), titRect.width, titRect.height)
-            {
-                WordWrapping= WordWrapping.NoWrap,
-                ParagraphAlignment = ParagraphAlignment.Center
-            };
+            titleText.width = titRect.width;
+            titleText.height = titRect.height;
 
-            d2dtarget.DrawTextLayout(titRect.Location, tl, scb1);
-            tl.Dispose();
+            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip);
         }
-        bool d2dinit = false;
-        Brush scb, scb1, brushBars;
-        void Init(RenderTarget d2drt)
+        USolidBrush scb, scb1, brushBars;
+        UText titleText = new UText("Editing Project", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
         {
-            var bordercolor = themeColor;
-            bordercolor.a = 0.9f;
-            scb = new SharpDX.Direct2D1.SolidColorBrush(d2drt, bordercolor);
-            var mainColor = themeColor.Add(.2f, .15f, .2f);
-            mainColor.a = 0.92f;
-            scb1 = new SharpDX.Direct2D1.SolidColorBrush(d2drt, mainColor);
-            var barColor = themeColor.Add(-.1f, -.1f, -.1f);
-            barColor.a = 0.97f;
-            brushBars = new SolidColorBrush(d2drt, barColor);
-            d2dinit = true;
-        }
+            font = new UFont("Arial", 12f, false, false)
+        };
+        
     }
 
 }

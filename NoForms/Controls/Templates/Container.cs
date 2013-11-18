@@ -31,17 +31,16 @@ namespace NoForms.Controls.Templates
         }
 
         Rectangle clipSet = Rectangle.Empty;
-        public void UnClipAll<RenderType>(RenderType renderArgument)
+        public void UnClipAll(IRenderType rt)
         {
-            Util.SetClip<RenderType>(renderArgument, false, Rectangle.Empty);
-            Parent.UnClipAll<RenderType>(renderArgument);
+            rt.uDraw.PopAxisAlignedClip();
+            Parent.UnClipAll(rt);
         }
-        public void ReClipAll<RenderType>(RenderType renderArgument)
+        public void ReClipAll(IRenderType rt)
         {
-            Parent.ReClipAll<RenderType>(renderArgument);
-            Util.SetClip<RenderType>(renderArgument, true, clipSet);
+            Parent.ReClipAll(rt);
+            rt.uDraw.PushAxisAlignedClip(clipSet);
         }
-
 
         /// <summary>
         /// You MUST call this base method when you override, at the end of your method, to

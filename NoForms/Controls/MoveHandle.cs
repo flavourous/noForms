@@ -1,6 +1,6 @@
 ﻿using System;
-using SharpDX.Direct2D1;
-using SysRect = System.Drawing.Rectangle;
+using NoForms;
+using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
@@ -25,44 +25,33 @@ namespace NoForms.Controls
 
         public override void KeyPress(char c)
         {
-        } 
+        }
 
+        USolidBrush fore = new USolidBrush() { color = new Color(1.0f, 0.8f, 0.8f, 0.8f) };
+        USolidBrush back = new USolidBrush() { color = new Color(1.0f, 0f, 0f, 0f) };
+        UStroke stroke = new UStroke() { strokeWidth = 2f };
         // Render methody
-        public override void DrawBase(IRenderType renderArg)
+        public override void DrawBase(IRenderType ra)
         {
-            if (renderArg is RenderTarget)
-            {
-                RenderTarget d2dtarget = renderArg as RenderTarget;
-                Draw(d2dtarget);
-            }
-            else
-            {
-                throw new NotImplementedException("Render type " + renderArg.ToString() + " not supported");
-            }
+            ra.uDraw.FillRectangle(DisplayRectangle,back);
+            
+            float epad = 3; float arrSq = 3;
+            ra.uDraw.DrawLine(aof(new Point(epad, DisplayRectangle.height / 2)), aof(new Point(DisplayRectangle.width - epad, DisplayRectangle.height / 2)), fore, stroke);
+
+            ra.uDraw.DrawLine(aof(new Point(epad, DisplayRectangle.height / 2)), aof(new Point(epad + arrSq, DisplayRectangle.height / 2 + arrSq)), fore, stroke);
+            ra.uDraw.DrawLine(aof(new Point(epad, DisplayRectangle.height / 2)), aof(new Point(epad + arrSq, DisplayRectangle.height / 2 - arrSq)), fore, stroke);
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width - epad - arrSq, DisplayRectangle.height / 2 + arrSq)), aof(new Point(DisplayRectangle.width - epad, DisplayRectangle.height / 2)), fore, stroke);
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width - epad - arrSq, DisplayRectangle.height / 2 - arrSq)), aof(new Point(DisplayRectangle.width - epad, DisplayRectangle.height / 2)), fore, stroke);
+
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width / 2, epad)), aof(new Point(DisplayRectangle.width / 2, DisplayRectangle.height - epad)), fore, stroke);
+
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width / 2, epad)), aof(new Point(DisplayRectangle.width / 2 - arrSq, epad + arrSq)), fore, stroke);
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width / 2, epad)), aof(new Point(DisplayRectangle.width / 2 + arrSq, epad + arrSq)), fore, stroke);
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width / 2 - arrSq, DisplayRectangle.height - epad - arrSq)), aof(new Point(DisplayRectangle.width / 2, DisplayRectangle.height - epad)), fore, stroke);
+            ra.uDraw.DrawLine(aof(new Point(DisplayRectangle.width / 2 + arrSq, DisplayRectangle.height - epad - arrSq)), aof(new Point(DisplayRectangle.width / 2, DisplayRectangle.height - epad)), fore, stroke);
         }
 
-        // Direct2D Support
-        public virtual void Draw(RenderTarget d2dtarget)
-        {
-            d2dtarget.FillRectangle(DisplayRectangle, new SolidColorBrush(d2dtarget, new SharpDX.Color4(0f, 0f, 0f, 1f)));
-            var scb = new SolidColorBrush(d2dtarget,new SharpDX.Color4(0.8f,0.8f,0.8f,1.0f));
-            float epad = 3; float arrSq = 3; float thickness = 2f;
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(epad, DisplayRectangle.height / 2)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad, DisplayRectangle.height / 2)), scb, thickness);
-
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(epad, DisplayRectangle.height / 2)), aof(new SharpDX.DrawingPointF(epad + arrSq, DisplayRectangle.height / 2 + arrSq)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(epad, DisplayRectangle.height / 2)), aof(new SharpDX.DrawingPointF(epad + arrSq, DisplayRectangle.height / 2 - arrSq)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad - arrSq, DisplayRectangle.height / 2 + arrSq)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad, DisplayRectangle.height / 2)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad - arrSq, DisplayRectangle.height / 2 - arrSq)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width - epad, DisplayRectangle.height / 2)), scb, thickness);
-
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2, epad)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2, DisplayRectangle.height - epad)), scb, thickness);
-
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2, epad)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2 - arrSq, epad + arrSq)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2, epad)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2 + arrSq, epad + arrSq)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2 - arrSq, DisplayRectangle.height - epad - arrSq)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2, DisplayRectangle.height - epad)), scb, thickness);
-            d2dtarget.DrawLine(aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2 + arrSq, DisplayRectangle.height - epad - arrSq)), aof(new SharpDX.DrawingPointF(DisplayRectangle.width / 2, DisplayRectangle.height - epad)), scb, thickness);
-            scb.Dispose();
-        }
-        SharpDX.DrawingPointF aof(SharpDX.DrawingPointF dp)
+        Point aof(Point dp)
         {
             dp.X += DisplayRectangle.left;
             dp.Y += DisplayRectangle.top;
