@@ -16,6 +16,17 @@ namespace NoForms.Controls
             font = new UFont("Arial Black", 15f, false, false),
         };
 
+        public TextLabel() : base() 
+        {
+            SizeChanged += new Action<NoForms.Size>(TextLabel_SizeChanged);
+        }
+
+        void TextLabel_SizeChanged(Size obj)
+        {
+            textData.width = obj.width;
+            textData.height = obj.height;
+        }
+
         public event System.Windows.Forms.MethodInvoker clicked;
         public override void DrawBase(IRenderType ra)
         {

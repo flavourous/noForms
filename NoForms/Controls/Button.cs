@@ -16,7 +16,12 @@ namespace NoForms.Controls
             get { return _type; }
             set { _type = value; Init(); }
         }
-        ButtonState state = ButtonState.Normal;
+        ButtonState _state = ButtonState.Normal;
+        ButtonState state
+        {
+            get { return _state; }
+            set { _state = value; SetBrushColors(); }
+        }
         public Color buttonColor = new Color(1, 0.6f, 0.6f, 0.6f);
         public UText textData = new UText("Button", UHAlign_Enum.Center, UVAlign_Enum.Middle, true, 0, 0)
         {

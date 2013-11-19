@@ -7,12 +7,18 @@ namespace NoForms.Controls
 {
     public class ComboBox : Templates.Container
     {
+        
         ListBox lb;
         Scribble dropArrowThing = new Scribble();
+
+        public float dropLength { get { return lb.Size.height; } set { lb.Size = new Size(Size.width,value); } }
+
         public ComboBox()
         {
             lb = new ListBox();
+            dropLength = 50;
             lb.selectionChanged += new Action<int>(lb_selectionChanged);
+            lb.breakForCombo = true;
             components.Add(lb);
             lb.visible = false;
 
@@ -21,6 +27,7 @@ namespace NoForms.Controls
             dropArrowThing.Clicked += new Scribble.ClickDelegate(dropArrowThing_Clicked);
             components.Add(dropArrowThing);
 
+            LocationChanged += new Action<Point>(pt => ComboBox_SizeChanged(Size));
             SizeChanged += new Action<Size>(ComboBox_SizeChanged);
             ComboBox_SizeChanged(Size);
         }
@@ -69,11 +76,8 @@ namespace NoForms.Controls
         {
             dropArrowThing.Size = new Size(Size.height - 2, Size.height - 2);
             dropArrowThing.Location = new Point(Size.width -1 - Size.height +2, 1);
-            Rectangle lbdr = DisplayRectangle;
-            float listTextHeight = lb.components.Count > 0 ? lb.components[0].DisplayRectangle.height * lb.components.Count : 0;
-            lbdr.height = Math.Min(150, listTextHeight + 2 + lb.components.Count);
-            lbdr.Location = new Point(lbdr.left, lbdr.top - lbdr.height + 1);
-            lb.DisplayRectangle = lbdr;
+            lb.Location = new Point(0, 1 - lb.Size.height);
+            lb.Size = new Size(Size.width, lb.Size.height);
             selectyTexty.height = DisplayRectangle.height;
             selectyTexty.width = DisplayRectangle.width - Size.height;
         }
@@ -90,7 +94,7 @@ namespace NoForms.Controls
         UStroke edgeStroke = new UStroke();
         UText selectyTexty = new UText("", UHAlign_Enum.Left, UVAlign_Enum.Middle, false, 0, 0)
         {
-            font = new UFont("Arial", 12f,false,false)
+            font = new UFont("Arial", 12f, false, false)
         };
         public override void DrawBase(IRenderType ra) 
         {

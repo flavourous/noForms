@@ -33,14 +33,17 @@ namespace NoForms.Controls.Templates
         Rectangle clipSet = Rectangle.Empty;
         public void UnClipAll(IRenderType rt)
         {
+            if (!doClip) return;
             rt.uDraw.PopAxisAlignedClip();
             Parent.UnClipAll(rt);
         }
         public void ReClipAll(IRenderType rt)
         {
+            if (!doClip) return;
             Parent.ReClipAll(rt);
             rt.uDraw.PushAxisAlignedClip(clipSet);
         }
+        internal bool doClip;
 
         /// <summary>
         /// You MUST call this base method when you override, at the end of your method, to
@@ -51,11 +54,11 @@ namespace NoForms.Controls.Templates
         /// <param name="parentDisplayRectangle"></param>
         public override void DrawBase(IRenderType renderArgument)
         {
-            renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle);
+            if(doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle);
             foreach (IComponent c in components)
                 if (c.visible)
                     c.DrawBase(renderArgument);
-            renderArgument.uDraw.PopAxisAlignedClip();
+            if (doClip) renderArgument.uDraw.PopAxisAlignedClip();
         }
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {

@@ -8,15 +8,23 @@ namespace NoForms.Controls
     {
         public override void DrawBase(IRenderType renderArgument)
         {
-            renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);
+            if (breakForCombo) UnClipAll(renderArgument);
             PoisitionItems();
+            renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);
             base.DrawBase(renderArgument);
             // so that the box overdraws the childrens
             renderArgument.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), brushy1, strokey);
+            if (breakForCombo) ReClipAll(renderArgument);
         }
         UBrush brushy1 = new USolidBrush() { color = new Color(0) };
         UBrush brushy2 = new USolidBrush() { color = new Color(0.98f) };
         UStroke strokey = new UStroke();
+
+        internal bool breakForCombo = false;
+        public ListBox() : base()
+        {
+            doClip = false;
+        }
 
         void PoisitionItems()
         {
@@ -53,7 +61,6 @@ namespace NoForms.Controls
             components.Add(lb);
         }
 
-        
         public void RemoveItem(int i)
         {
             SelectionOptions.RemoveAt(i);
@@ -68,7 +75,5 @@ namespace NoForms.Controls
             get { return SelectionOptions.Count; }
         }
         public int selected = 0;
-
-        
     }
 }
