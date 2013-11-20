@@ -21,7 +21,7 @@ namespace NoForms.Controls
             get { return data.text; }
             set { data.text = value; UpdateTextLayout(); } // internally calls goto data.text
         }
-        UText data = new UText("kitty", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
+        UText data = new UText("kitty", UHAlign_Enum.Left, UVAlign_Enum.Middle, false, 0, 0)
         {
             font = new UFont("Arial", 14f, false, false)
         };

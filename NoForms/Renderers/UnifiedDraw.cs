@@ -518,7 +518,8 @@ namespace NoForms.Renderers
                     font.size)
                 {
                     ParagraphAlignment = valign,
-                    TextAlignment = halign
+                    TextAlignment = halign,
+                    WordWrapping = wrapped ? SharpDX.DirectWrite.WordWrapping.Wrap : SharpDX.DirectWrite.WordWrapping.NoWrap
                 }, width, height);
                 storedType = 1;
             }
