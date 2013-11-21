@@ -96,7 +96,7 @@ namespace NoForms.Controls
         {
             font = new UFont("Arial", 12f, false, false)
         };
-        public override void DrawBase(IRenderType ra) 
+        public override void Draw(IRenderType ra) 
         {
             // Draw bg
             ra.uDraw.FillRectangle(DisplayRectangle, back);

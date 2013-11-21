@@ -43,8 +43,7 @@ namespace NoForms.Controls.Templates
             Parent.ReClipAll(rt);
             rt.uDraw.PushAxisAlignedClip(clipSet);
         }
-        internal bool doClip;
-
+        internal bool doClip = true;
         /// <summary>
         /// You MUST call this base method when you override, at the end of your method, to
         /// draw the children.
@@ -52,14 +51,19 @@ namespace NoForms.Controls.Templates
         /// <typeparam name="RenderType"></typeparam>
         /// <param name="renderArgument"></param>
         /// <param name="parentDisplayRectangle"></param>
-        public override void DrawBase(IRenderType renderArgument)
+        public sealed override void DrawBase(IRenderType renderArgument)
         {
+            Draw(renderArgument);
             if(doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle);
+            Util.Set2DTransform(renderArgument, transform);
             foreach (IComponent c in components)
                 if (c.visible)
                     c.DrawBase(renderArgument);
+            Util.Set2DTransform(renderArgument, System.Drawing.Point.Empty);
             if (doClip) renderArgument.uDraw.PopAxisAlignedClip();
         }
+        System.Drawing.Point transform = new System.Drawing.Point(0, 0); // for scrolling
+        public abstract void Draw(IRenderType renderArgument);
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
             foreach (IComponent c in components)

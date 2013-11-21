@@ -110,8 +110,6 @@ namespace Easy
             mnf_SizeChanged();
         }
 
-       
-
         void mnf_SizeChanged()
         {
             sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
@@ -121,12 +119,11 @@ namespace Easy
 
     class con : NoForms.Controls.Templates.Container
     {
-        public override void DrawBase(IRenderType renderArgument)
+        public override void Draw(IRenderType renderArgument)
         {
             lgb.point1 = DisplayRectangle.Location;
             lgb.point2 = new Point(DisplayRectangle.right, DisplayRectangle.bottom);
             renderArgument.uDraw.FillRectangle(DisplayRectangle, lgb);
-            base.DrawBase(renderArgument);
         }
         ULinearGradientBrush lgb = new ULinearGradientBrush()
         {

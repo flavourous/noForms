@@ -133,8 +133,9 @@ namespace NoForms.Controls
                 sendMe.uDraw.MeasureText(data);
 
                 // get size of the render
-                int lines;
-                Size tms = data.TextMinSize(out lines);
+                var ti=data.GetTextInfo();
+                int lines=ti.numLines;
+                Size tms = ti.minSize;
                 float lineHeight = tms.height / (float) lines;
 
                 // Get Caret location
@@ -155,7 +156,9 @@ namespace NoForms.Controls
 
         public override void KeyDown(System.Windows.Forms.Keys key)
         {
-            if (key == System.Windows.Forms.Keys.Back && focus && caretPos > 0)
+            if (!focus) return;
+
+            if (key == System.Windows.Forms.Keys.Back && caretPos > 0)
             {
                 data.text = data.text.Substring(0, caretPos - 1) + data.text.Substring(caretPos);
                 caretPos--;
@@ -174,6 +177,8 @@ namespace NoForms.Controls
         }
         public override void KeyPress(char c)
         {
+            if (!focus) return;
+
             if (c != '\b' && focus)
                 if((c!='\r' && c!='\n') || layout != LayoutStyle.OneLine)
                 {

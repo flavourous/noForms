@@ -306,7 +306,7 @@ namespace NoForms.Renderers
         void PropertyChanged()
         {
             storedType = -1; // reset validity of cached value
-            hitPointCacheValid = hitTextCacheValid = hitTextRangeCacheValid = textMinSizeCacheValid = false;
+            hitPointCacheValid = hitTextCacheValid = hitTextRangeCacheValid = textInfoCacheValid = false;
         }
 
         private String _text;
@@ -470,40 +470,55 @@ namespace NoForms.Renderers
                 yield return new Rectangle(htm.Left, htm.Top, htm.Width, htm.Height);
         }
 
-        public Size TextMinSize(out int nLines)
+        public TextInfo GetTextInfo()
         {
-            if (!textMinSizeCacheValid)
+            if (!textInfoCacheValid)
             {
                 switch (storedType)
                 {
                     case -1: throw new Exception("UText is not ready for measuring. GetXXX needs calling first.");
                     case 1: 
-                        textMinSizeCache=  TextMinSizeD2D(storedText as SharpDX.DirectWrite.TextLayout, out nLines);
-                        textMinSizeCache_Lines = nLines;
+                        textInfoCache =  TextInfoD2D(storedText as SharpDX.DirectWrite.TextLayout);
                         break;
                     default: throw new NotImplementedException("Text type not supported by TextSize");
                 }
-                textMinSizeCacheValid = true;
+                textInfoCacheValid = true;
             }
-            else nLines = textMinSizeCache_Lines;
-            return textMinSizeCache;
+            return textInfoCache;
         }
-        bool textMinSizeCacheValid = false;
-        Size textMinSizeCache;
-        int textMinSizeCache_Lines;
-        Size TextMinSizeD2D(SharpDX.DirectWrite.TextLayout textLayout, out int nLines)
+        bool textInfoCacheValid = false;
+        TextInfo textInfoCache;
+        TextInfo TextInfoD2D(SharpDX.DirectWrite.TextLayout textLayout)
         {
+            TextInfo ret = new TextInfo();
+
             // get size of the render
-            float minWidth = textLayout.DetermineMinWidth();
             float minHeight = 0;
-            nLines = 0;
+            ret.numLines = 0;
+            ret.lineLengths = new int[textLayout.Metrics.LineCount];
+            ret.lineWrapped = new bool[textLayout.Metrics.LineCount];
+            int i=0;
             foreach (var tlm in textLayout.GetLineMetrics())
             {
                 minHeight += tlm.Height;
-                nLines++;
+                ret.numLines++;
+                ret.lineLengths[i] = tlm.Length;
+                ret.lineWrapped[i] = tlm.TrailingWhitespaceLength > 0 && (i+1) < textLayout.Metrics.LineCount;
+                i++;
             }
-            return new Size(minWidth, minHeight);
+            ret.minSize = new Size(textLayout.DetermineMinWidth(), minHeight);
+
+            return ret;
         }
+        public class TextInfo
+        {
+            public Size minSize;
+            public int numLines;
+            public int[] lineLengths;
+            public bool[] lineWrapped;
+        }
+
+
 
         public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
         {

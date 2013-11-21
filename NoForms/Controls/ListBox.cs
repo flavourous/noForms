@@ -6,12 +6,11 @@ namespace NoForms.Controls
 {
     public class ListBox : Templates.Container
     {
-        public override void DrawBase(IRenderType renderArgument)
+        public override void Draw(IRenderType renderArgument)
         {
             if (breakForCombo) UnClipAll(renderArgument);
             PoisitionItems();
             renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);
-            base.DrawBase(renderArgument);
             // so that the box overdraws the childrens
             renderArgument.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), brushy1, strokey);
             if (breakForCombo) ReClipAll(renderArgument);

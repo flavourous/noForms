@@ -195,16 +195,21 @@ namespace NoForms
         {
         }
 
-        public virtual void DrawBase(IRenderType rt)
+        public void DrawBase(IRenderType rt)
         {
             rt.uDraw.Clear(new Color(0,0,0,0)); // this lets alphas to desktop happen.
             rt.uDraw.FillRectangle(DisplayRectangle, background);
+
+            Draw(rt);
 
             // Now we need to draw our childrens....
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
             foreach (IComponent c in components)
                 if (c.visible) c.DrawBase(rt);
             rt.uDraw.PopAxisAlignedClip();
+        }
+        public virtual void Draw(IRenderType rt)
+        {
         }
 
         void SetWFormProps()

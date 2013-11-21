@@ -109,6 +109,8 @@ namespace testapp
 
         public MyNoForm(IRender ir) : base(ir) 
         {
+            background = new USolidBrush() { color = new Color(0.5f, 0, 0, 0) };
+
             // move and resize
             mh = new MoveHandle(this);
             sh = new SizeHandle(this);
@@ -297,10 +299,8 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 95f/255f,150f/255f,190f/255f);
-        public override void DrawBase(IRenderType rt) 
+        public override void Draw(IRenderType rt) 
         {
-            base.DrawBase(rt);
-
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, Size.height), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, 0, gap, Size.height), scb);
@@ -396,6 +396,11 @@ namespace testapp
                 rc += rem;
             }
         }
+
+        public override void Draw(IRenderType renderArgument)
+        {
+            
+        }
     }
 
     class StoryListContainer : NoForms.Controls.Templates.Container
@@ -446,7 +451,7 @@ namespace testapp
             add.Location = new Point(Size.width - 15, Size.height - 15);
         }
         Scribble add;
-        public override void DrawBase(IRenderType ra)
+        public override void Draw(IRenderType ra)
         {
             float lt = 1.0f;
             float bv = lt / 2;
@@ -470,7 +475,6 @@ namespace testapp
                     }
                 }
             }
-            base.DrawBase(ra);
         }
         UBrush borderBrush = new USolidBrush() { color = new NoForms.Color(0.7f, 0, 0, 0) };
         UBrush fillBrush = new USolidBrush() { color = new NoForms.Color(0.3f, .7f, .7f, .7f) };
@@ -527,6 +531,7 @@ namespace testapp
         {
             stroke.strokeWidth = 2f;
             stroke.startCap = stroke.endCap = new StrokeCaps(eStrokeCaps.round);
+            scb.color = new Color(1, 1, 0, 0);
             var dr = cx.DisplayRectangle;
             ud.DrawLine(new Point(dr.left, dr.top), new Point(dr.right, dr.bottom), scb, stroke);
             ud.DrawLine(new Point(dr.right, dr.top), new Point(dr.left, dr.bottom), scb, stroke);
@@ -545,7 +550,7 @@ namespace testapp
         float boxHeight = 100;
 
         // Drawybit
-        public override void DrawBase(IRenderType ra)
+        public override void Draw(IRenderType ra)
         {
             Size = new Size(Size.width, boxHeight);
             // do bottom padding on the slc
@@ -566,19 +571,18 @@ namespace testapp
             //tl.SetFontWeight(FontWeight.DemiBold, new TextRange(0, storyTitle.Length));
             //tl.SetFontSize(12f, new TextRange(0, storyTitle.Length));
 
-            ra.uDraw.MeasureText(textyTime);   
-            int nlines;
-            float ct = textyTime.TextMinSize(out nlines).height;
+            ra.uDraw.MeasureText(textyTime);
+            var ti = textyTime.GetTextInfo();
+            int nlines = ti.numLines;
+            float ct = ti.minSize.height;
             ct += 3 * padding.top;
             boxHeight = (int)Math.Round(ct);
 
             ra.uDraw.PushAxisAlignedClip(inRect2);
-            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.Clip);
+            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.None);
             ra.uDraw.PopAxisAlignedClip();
 
             ra.uDraw.PopAxisAlignedClip();
-
-            base.DrawBase(ra);
         }
         
         USolidBrush scb_back = new USolidBrush() { color = new Color(.4f, .2f, .2f, .2f) };
@@ -733,7 +737,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
-        public override void DrawBase(IRenderType rt)
+        public override void Draw(IRenderType rt)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
@@ -889,7 +893,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
-        public override void DrawBase(IRenderType rt)
+        public override void Draw(IRenderType rt)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
