@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace NoForms.Renderers
 {
@@ -351,7 +352,36 @@ namespace NoForms.Renderers
             get { return _height; }
             set { _height = value; PropertyChanged(); }
         }
-        
+
+        // Advanced stylings!
+        public class StyleRange 
+        {
+            public int start;
+            public int end;
+            public UFont? fontOverride = null;
+            public Color fgOveride = null;
+            public Color bgOveride = null;
+
+            public StyleRange(int start, int end, UFont? font, Color foreground, Color background)
+            {
+                this.start = start;
+                this.end = end;
+                fontOverride = font;
+                fgOveride = foreground;
+                bgOveride = background;
+            }
+        }
+        private ObsCollection<StyleRange> _styleRanges = new ObsCollection<StyleRange>();
+        /// <summary>
+        /// applied in order
+        /// </summary>
+        public ObsCollection<StyleRange> styleRanges { get { return _styleRanges; } }
+        void _styleRanges_collectionChanged()
+        {
+            // called on add/remove/clear etc
+            PropertyChanged();
+        }
+
         public UText(String text, UHAlign_Enum halign, UVAlign_Enum valign, bool isWrapped, float width, float height)
         {
             this.text = text;
@@ -360,7 +390,10 @@ namespace NoForms.Renderers
             this.wrapped = isWrapped;
             this.width = width;
             this.height = height;
+            _styleRanges.collectionChanged += new System.Windows.Forms.MethodInvoker(_styleRanges_collectionChanged);
         }
+
+        
 
         /// <summary>
         /// Gives hit info, like text position, given a point on the text. Usually used
@@ -534,6 +567,24 @@ namespace NoForms.Renderers
                     TextAlignment = halign,
                     WordWrapping = wrapped ? SharpDX.DirectWrite.WordWrapping.Wrap : SharpDX.DirectWrite.WordWrapping.NoWrap
                 }, width, height);
+
+                for (int i = 0; i < styleRanges.Count; i++)
+                {
+                    // Grab this volatile element
+                    StyleRange sr = null;
+                    try { sr = styleRanges[i]; }
+                    catch { continue; }
+                    if (sr == null) continue;
+
+                    var tl = storedText as SharpDX.DirectWrite.TextLayout;
+                    
+                    if(sr.fontOverride!=null)
+                    {
+                        UFont ft = (UFont)sr.fontOverride;
+                        tl.SetFontFamilyName(ft.name, new SharpDX.DirectWrite.TextRange(sr.start, sr.end - sr.start + 1));
+                    }
+                }
+
                 storedType = 1;
             }
             return storedText as SharpDX.DirectWrite.TextLayout;
