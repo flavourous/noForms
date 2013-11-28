@@ -201,6 +201,21 @@ namespace NoForms.Controls
                     caretPos = nextLine + linePos;
                 }
             }
+            if (key == System.Windows.Forms.Keys.End)
+            {
+                int lineNum, linePos;
+                UText.TextInfo ti = data.GetTextInfo();
+                FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                int bitty = lineNum + 1 == ti.numLines ? 0 : 1;
+                caretPos += ti.lineLengths[lineNum] - linePos - bitty;
+            }
+            if (key == System.Windows.Forms.Keys.Home)
+            {
+                int lineNum, linePos;
+                UText.TextInfo ti = data.GetTextInfo();
+                FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                caretPos -= linePos;
+            }
         }
         void FindMyLine(int myPos, int[] linelens, out int lineNum, out int linePos)
         {
