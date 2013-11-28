@@ -171,7 +171,86 @@ namespace NoForms.Controls
             {
                 caretPos++;
             }
+            if (key == System.Windows.Forms.Keys.Up)
+            {
+                int lineNum, linePos;
+                UText.TextInfo ti = data.GetTextInfo();
+                FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                if (lineNum != 0) // cant go up there!
+                {
+                    int prevLine =0;
+                    for (int i = 0; i < lineNum - 1; i++) 
+                        prevLine += ti.lineLengths[i];
+                    int prevLineLen = ti.lineLengths[lineNum-1] - ti.lineNewLineLength[lineNum-1];
+                    if (linePos > prevLineLen) linePos = prevLineLen;
+                    caretPos = prevLine + linePos;
+                }
+            }
+            if (key == System.Windows.Forms.Keys.Down)
+            {
+                int lineNum, linePos;
+                UText.TextInfo ti = data.GetTextInfo();
+                FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                if (lineNum != ti.numLines-1) // cant go down there!
+                {
+                    int nextLine = 0;
+                    for (int i = 0; i < lineNum + 1; i++)
+                        nextLine += ti.lineLengths[i];
+                    int nextLineLen = ti.lineLengths[lineNum + 1] - ti.lineNewLineLength[lineNum + 1];
+                    if (linePos > nextLineLen) linePos = nextLineLen;
+                    caretPos = nextLine + linePos;
+                }
+            }
         }
+        void FindMyLine(int myPos, int[] linelens, out int lineNum, out int linePos)
+        {
+            int myLineStart = 0,myLineNum;
+            for (myLineNum = 0; myLineNum < linelens.Length; myLineNum++)
+            {
+                myLineStart += linelens[myLineNum];
+                if (myLineStart > myPos)
+                {
+                    myLineStart -= linelens[myLineNum];
+                    break;
+                } 
+            }
+            if (myLineNum == linelens.Length)
+            {
+                lineNum = myLineNum - 1;
+                linePos = linelens[lineNum];
+            }
+            else
+            {
+                lineNum = myLineNum;
+                linePos = myPos - myLineStart;
+            }
+        }
+
+        // case 1
+        // 
+        // ab|cdd\r
+        // cd
+        //
+        // pos = 2
+        // when <=0: -4
+
+        // case 2
+        // 
+        // 1233\r
+        // ab|cdd\r
+        // cd
+        //
+        // pos = 7
+        // when <=0: -4
+
+        // case 3
+        // 
+        // 1233\r
+        // abcdd|\r
+        // cd
+        //
+        // pos = 10
+        // when <=0: -1
         public override void KeyUp(System.Windows.Forms.Keys key)
         {
         }
@@ -182,6 +261,7 @@ namespace NoForms.Controls
             if (c != '\b' && focus)
                 if((c!='\r' && c!='\n') || layout != LayoutStyle.OneLine)
                 {
+                    
                     data.text = data.text.Substring(0, caretPos) + c + data.text.Substring(caretPos);
                     caretPos++;
                 }

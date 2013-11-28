@@ -302,11 +302,11 @@ namespace NoForms.Renderers
         // When -1, we need to recreate the buffered Path before returning it.
         // Otherwise 0 is sysdraw, 1 is d2d, 2 is ogl
         int storedType = -1;
+        bool storedValid = false;
         IDisposable storedText = new DumDis();
         void PropertyChanged()
         {
-            storedType = -1; // reset validity of cached value
-            hitPointCacheValid = hitTextCacheValid = hitTextRangeCacheValid = textInfoCacheValid = false;
+            storedValid = hitPointCacheValid = hitTextCacheValid = hitTextRangeCacheValid = textInfoCacheValid = false;
         }
 
         private String _text;
@@ -496,14 +496,14 @@ namespace NoForms.Renderers
             float minHeight = 0;
             ret.numLines = 0;
             ret.lineLengths = new int[textLayout.Metrics.LineCount];
-            ret.lineWrapped = new bool[textLayout.Metrics.LineCount];
+            ret.lineNewLineLength = new int[textLayout.Metrics.LineCount];
             int i=0;
             foreach (var tlm in textLayout.GetLineMetrics())
             {
                 minHeight += tlm.Height;
                 ret.numLines++;
                 ret.lineLengths[i] = tlm.Length;
-                ret.lineWrapped[i] = tlm.TrailingWhitespaceLength > 0 && (i+1) < textLayout.Metrics.LineCount;
+                ret.lineNewLineLength[i] = tlm.NewlineLength;
                 i++;
             }
             ret.minSize = new Size(textLayout.DetermineMinWidth(), minHeight);
@@ -515,14 +515,12 @@ namespace NoForms.Renderers
             public Size minSize;
             public int numLines;
             public int[] lineLengths;
-            public bool[] lineWrapped;
+            public int[] lineNewLineLength;
         }
-
-
 
         public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
         {
-            if (storedType != 1)
+            if (storedType != 1 || !storedValid)
             {
                 storedText.Dispose();
                 storedText = new SharpDX.DirectWrite.TextLayout(dwFact, text, new SharpDX.DirectWrite.TextFormat(

@@ -72,14 +72,16 @@ namespace NoForms.Controls
             ud.DrawLine(p2, p3, brsh, strk);
         }
 
+
+        int textPad = 3;
         void ComboBox_SizeChanged(Size obj)
         {
             dropArrowThing.Size = new Size(Size.height - 2, Size.height - 2);
             dropArrowThing.Location = new Point(Size.width -1 - Size.height +2, 1);
             lb.Location = new Point(0, 1 - lb.Size.height);
             lb.Size = new Size(Size.width, lb.Size.height);
-            selectyTexty.height = DisplayRectangle.height;
-            selectyTexty.width = DisplayRectangle.width - Size.height;
+            selectyTexty.height = DisplayRectangle.height - textPad*2;
+            selectyTexty.width = DisplayRectangle.width - Size.height - textPad * 2;
         }
 
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
@@ -103,8 +105,9 @@ namespace NoForms.Controls
             ra.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), edge, edgeStroke);
             if (SelectionOptions.Count > 0) 
             {
+                Point tp = new Point(DisplayRectangle.left + textPad, DisplayRectangle.top + textPad);
                 selectyTexty.text = SelectionOptions.Count > _selectedOption ? SelectionOptions[_selectedOption] : "";
-                ra.uDraw.DrawText(selectyTexty, DisplayRectangle.Location, edge, UTextDrawOptions_Enum.Clip);
+                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions_Enum.Clip);
             }
             
             foreach (IComponent c in components)
