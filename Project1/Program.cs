@@ -567,9 +567,7 @@ namespace testapp
                 UHAlign_Enum.Left, UVAlign_Enum.Top, true, inRect2.width,0) 
                 { font = new UFont("Arial",10f,false,false) };
 
-            // FIXME uDraw support, somehow (hmm how with sdg?)
-            //tl.SetFontWeight(FontWeight.DemiBold, new TextRange(0, storyTitle.Length));
-            //tl.SetFontSize(12f, new TextRange(0, storyTitle.Length));
+            textyTime.styleRanges.Add(new UText.StyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false), new Color(1, 1, 0, 0), new Color(1, 1, 1, 1)));
 
             ra.uDraw.MeasureText(textyTime);
             var ti = textyTime.GetTextInfo();

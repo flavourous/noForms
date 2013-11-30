@@ -226,7 +226,19 @@ namespace NoForms.Renderers
             if (realRenderer is D2D_RenderElements)
             {
                 var rel = realRenderer as D2D_RenderElements;
-                rel.renderTarget.DrawTextLayout(location, textObject.GetD2D(dwFact), brush.GetD2D(rel.renderTarget), optStruct);
+                var tl = textObject.GetD2D(dwFact, rel.renderTarget);
+
+                // Draw the background
+                foreach (var sr in textObject.SafeGetStyleRanges)
+                    if (sr.bgOveride != null)
+                    {
+                        UBrush bBrush = new USolidBrush() { color = sr.bgOveride };
+                        foreach(Rectangle glyphRect in textObject.HitTextRange(sr.start,sr.end-sr.start+1, location))
+                            FillRectangle(glyphRect.Inflated(.5f), bBrush);
+                    }
+
+                // Draw the text (foreground)
+                rel.renderTarget.DrawTextLayout(location, tl, brush.GetD2D(rel.renderTarget), optStruct);
             }
             else throw new Exception("Internal error, DrawText cannot handle " + realRenderer.GetType().ToString());
         }
@@ -235,7 +247,7 @@ namespace NoForms.Renderers
             if (realRenderer is D2D_RenderElements)
             {
                 var rel = realRenderer as D2D_RenderElements;
-                var dummyForUpdatePurposesOnly = textObject.GetD2D(dwFact);
+                var dummyForUpdatePurposesOnly = textObject.GetD2D(dwFact, rel.renderTarget);
             }
             else throw new Exception("Internal error, MeasureText cannot handle " + realRenderer.GetType().ToString());
         }
@@ -380,6 +392,21 @@ namespace NoForms.Renderers
         {
             // called on add/remove/clear etc
             PropertyChanged();
+        }
+        internal IEnumerable<StyleRange> SafeGetStyleRanges
+        {
+            get
+            {
+                for (int i = 0; i < styleRanges.Count; i++)
+                {
+                    // Grab this volatile element
+                    StyleRange sr = null;
+                    try { sr = styleRanges[i]; }
+                    catch { continue; }
+                    if (sr == null) continue;
+                    yield return sr;
+                }
+            }
         }
 
         public UText(String text, UHAlign_Enum halign, UVAlign_Enum valign, bool isWrapped, float width, float height)
@@ -551,7 +578,7 @@ namespace NoForms.Renderers
             public int[] lineNewLineLength;
         }
 
-        public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact)
+        public SharpDX.DirectWrite.TextLayout GetD2D(SharpDX.DirectWrite.Factory dwFact, SharpDX.Direct2D1.RenderTarget d2drt)
         {
             if (storedType != 1 || !storedValid)
             {
@@ -568,20 +595,23 @@ namespace NoForms.Renderers
                     WordWrapping = wrapped ? SharpDX.DirectWrite.WordWrapping.Wrap : SharpDX.DirectWrite.WordWrapping.NoWrap
                 }, width, height);
 
-                for (int i = 0; i < styleRanges.Count; i++)
+                // Set font ranges... textLayout just created, dont worry about any leftover ranges.
+                var tl = storedText as SharpDX.DirectWrite.TextLayout;
+                foreach (var sr in SafeGetStyleRanges)
                 {
-                    // Grab this volatile element
-                    StyleRange sr = null;
-                    try { sr = styleRanges[i]; }
-                    catch { continue; }
-                    if (sr == null) continue;
-
-                    var tl = storedText as SharpDX.DirectWrite.TextLayout;
-                    
+                    var tr = new SharpDX.DirectWrite.TextRange(sr.start, sr.end - sr.start + 1);
                     if(sr.fontOverride!=null)
                     {
                         UFont ft = (UFont)sr.fontOverride;
-                        tl.SetFontFamilyName(ft.name, new SharpDX.DirectWrite.TextRange(sr.start, sr.end - sr.start + 1));
+                        tl.SetFontFamilyName(ft.name, tr);
+                        tl.SetFontSize(ft.size, tr);
+                        tl.SetFontStyle(ft.italic ? SharpDX.DirectWrite.FontStyle.Italic : SharpDX.DirectWrite.FontStyle.Normal, tr);
+                        tl.SetFontWeight(ft.bold ? SharpDX.DirectWrite.FontWeight.Bold : SharpDX.DirectWrite.FontWeight.Normal, tr);
+                    }
+                    if (sr.fgOveride != null)
+                    {
+                        UBrush fg = new USolidBrush() { color = sr.fgOveride };
+                        tl.SetDrawingEffect(fg.GetD2D(d2drt), tr);
                     }
                 }
 
