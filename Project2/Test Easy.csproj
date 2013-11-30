@@ -41,10 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct2D1">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct2D1.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />

@@ -33,5 +33,6 @@
   <Projects>
     <Project name="NoForms" />
     <Project name="KanBani" />
+    <Project name="" />
   </Projects>
 </Kanban>

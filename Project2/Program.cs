@@ -45,7 +45,7 @@ namespace Easy
             cont = new con();
             cont.Location = new Point(30, 90);
             cont.Size = new Size(Size.width - 60, Size.height - 60);
-            components.Add(cont);
+            //components.Add(cont);
 
             NoForms.Controls.Button bt = new NoForms.Controls.Button();
             bt.textData.text = "Hellos!";
@@ -108,12 +108,70 @@ namespace Easy
 
             SizeChanged += new Act(mnf_SizeChanged);
             mnf_SizeChanged();
+
+            
         }
 
         void mnf_SizeChanged()
         {
             sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
             cont.Size = new Size(Size.width - 60, Size.height - 120);
+        }
+
+        UBrush black = new USolidBrush() { color = new Color(1, 0, 0, 0) };
+        UBrush red = new USolidBrush() { color = new Color(1, 1, 0, 0) };
+        Rectangle dr = new Rectangle(80, 80, 500, 300);
+        public override void Draw(IRenderType rt)
+        {
+            var el = rt.backRenderer as D2D_RenderElements;
+
+            var d2drt = el.renderTarget;
+            //d2drt.FillRectangle(dr, red.GetD2D(d2drt));
+
+            var tl = new SharpDX.DirectWrite.TextLayout(UnifiedDraw.dwFact, "hello", new SharpDX.DirectWrite.TextFormat(UnifiedDraw.dwFact, "Arial", 25f), 300, 0);
+
+            var cce = new D2D_ClientTextEffect() { brsh = red.GetD2D(d2drt) };
+            var cce2 = new D2D_ClientTextEffect() { brsh = black.GetD2D(d2drt) };
+            var trend = new D2D_ClientTextRenderer(d2drt);
+
+            tl.SetDrawingEffect(cce, new SharpDX.DirectWrite.TextRange(0, 2));
+            tl.SetDrawingEffect(cce2, new SharpDX.DirectWrite.TextRange(2, 3));
+
+            tl.Draw(trend, 50, 50);
+
+            var ut = new UText("haiiii\r\nKITTEN", UHAlign_Enum.Left, UVAlign_Enum.Top, false, 1000, 50) { font = new UFont("Arial", 40f, false, false) };
+
+            rt.uDraw.DrawText(ut, new Point(300, 300), red, UTextDrawOptions_Enum.Clip);
+        }
+    }
+
+    class D2D_ClientTextEffect : SharpDX.ComObject
+    {
+        public SharpDX.Direct2D1.Brush brsh;
+    }
+    class D2D_ClientTextRenderer : SharpDX.DirectWrite.TextRendererBase
+    {
+        SharpDX.Direct2D1.RenderTarget rt;
+        public D2D_ClientTextRenderer(SharpDX.Direct2D1.RenderTarget rt)
+        {
+            this.rt = rt;
+        }
+
+        public override SharpDX.Result DrawGlyphRun(object clientDrawingContext, float baselineOriginX, float baselineOriginY, SharpDX.Direct2D1.MeasuringMode measuringMode, SharpDX.DirectWrite.GlyphRun glyphRun, SharpDX.DirectWrite.GlyphRunDescription glyphRunDescription, SharpDX.ComObject clientDrawingEffect)
+        {
+            var cce = (D2D_ClientTextEffect)clientDrawingEffect;
+            var pg = new SharpDX.Direct2D1.PathGeometry(cce.brsh.Factory);
+            var sink = pg.Open();
+            glyphRun.FontFace.GetGlyphRunOutline(glyphRun.FontSize, glyphRun.Indices, glyphRun.Advances, glyphRun.Offsets, glyphRun.IsSideways, glyphRun.BidiLevel % 2 != 0, sink);
+            sink.Close();
+
+            var rtt = rt.Transform;
+            rt.Transform = new SharpDX.Matrix3x2(1, 0, 0, 1, baselineOriginX, baselineOriginY);
+            rt.DrawGeometry(pg, cce.brsh);
+            rt.FillGeometry(pg, cce.brsh);
+            rt.Transform = rtt;
+
+            return SharpDX.Result.Ok;
         }
     }
 

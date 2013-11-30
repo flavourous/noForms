@@ -58,27 +58,28 @@
     <Compile Include="Controls\Textfield.cs" />
     <Compile Include="Common\Util.cs" />
     <Compile Include="Common\Win32.cs" />
+    <Compile Include="Renderers\D2D_Text.cs" />
     <Compile Include="Renderers\UnifiedDraw.cs" />
     <Compile Include="Renderers\UnifiedEffects.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct2D1">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct2D1.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D10">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct3D10.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct3D10.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DXGI">
-      <HintPath>..\..\..\..\..\Desktop\dxsharp\Bin\Standard-net20\SharpDX.DXGI.dll</HintPath>
+      <HintPath>..\SharpDX\Signed-net20\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
