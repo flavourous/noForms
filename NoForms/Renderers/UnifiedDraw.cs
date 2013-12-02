@@ -220,7 +220,7 @@ namespace NoForms.Renderers
             }
         }
 
-        public void DrawText(UText textObject, Point location, UBrush defBrush, UTextDrawOptions_Enum opt)
+        public void DrawText(UText textObject, Point location, UBrush defBrush, UTextDrawOptions_Enum opt, bool clientRendering)
         {
             UTextDrawOptions optStruct = opt;
             if (realRenderer is D2D_RenderElements)
@@ -228,29 +228,28 @@ namespace NoForms.Renderers
                 var rel = realRenderer as D2D_RenderElements;
                 var tl = textObject.GetD2D(dwFact, rel.renderTarget);
 
-                // set default foreground brush
-                tl.textRenderer.defaultEffect.brsh = defBrush.GetD2D(rel.renderTarget);
-
-                 //Draw the background
-                
-                List<SharpDX.Direct2D1.Geometry> geos= new List<SharpDX.Direct2D1.Geometry>();
-                foreach (var sr in textObject.SafeGetStyleRanges) {
-                    foreach(var g in geos) g.Dispose(); geos.Clear();
-                    if (sr.bgOveride != null)
+                foreach (var ord in textObject.SafeGetStyleRanges)
+                {
+                    if (ord.bgOveride != null)
                     {
-                        SharpDX.Direct2D1.Brush bBrush = new USolidBrush() { color = sr.bgOveride }.GetD2D(rel.renderTarget);
-                        foreach(Rectangle glyphRect in textObject.HitTextRange(sr.start,sr.end-sr.start+1, location))
-                            geos.Add(new SharpDX.Direct2D1.RectangleGeometry(rel.renderTarget.Factory, glyphRect));
-                            //FillRectangle(glyphRect.Inflated(.5f), bBrush);
-                        SharpDX.Direct2D1.GeometryGroup gg = new SharpDX.Direct2D1.GeometryGroup(rel.renderTarget.Factory, SharpDX.Direct2D1.FillMode.Alternate, geos.ToArray());
-                        rel.renderTarget.FillGeometry(gg, bBrush);
-                        bBrush.Dispose();
+                        foreach (var r in textObject.HitTextRange(ord.start, ord.end - ord.start + 1, location))
+                            FillRectangle(r, ord.bgOveride);
                     }
                 }
 
-                // Draw the text (foreground)
-                tl.textLayout.Draw(tl.textRenderer, location.X, location.Y);
-                //rel.renderTarget.DrawTextLayout(location, tl.textLayout, defBrush.GetD2D(rel.renderTarget));
+                if (clientRendering)
+                {
+                    // set default foreground brush
+                    tl.textRenderer.defaultEffect.fgBrush = defBrush;
+
+                    // Draw the text (foreground & background in the client renderer)
+                    tl.textLayout.Draw(new Object[] { location, textObject }, tl.textRenderer, location.X, location.Y);
+                }
+                else
+                {
+                    // Use D2D implimentation of text layout rendering
+                    rel.renderTarget.DrawTextLayout(location, tl.textLayout, defBrush.GetD2D(rel.renderTarget));
+                }
             }
             else throw new Exception("Internal error, DrawText cannot handle " + realRenderer.GetType().ToString());
         }
@@ -383,10 +382,10 @@ namespace NoForms.Renderers
             public int start;
             public int end;
             public UFont? fontOverride = null;
-            public Color fgOveride = null;
-            public Color bgOveride = null;
+            public UBrush fgOveride = null;
+            public UBrush bgOveride = null;
 
-            public StyleRange(int start, int end, UFont? font, Color foreground, Color background)
+            public StyleRange(int start, int end, UFont? font, UBrush foreground, UBrush background)
             {
                 this.start = start;
                 this.end = end;
@@ -590,14 +589,11 @@ namespace NoForms.Renderers
             public int[] lineNewLineLength;
         }
 
-        List<IDisposable> depDispose = new List<IDisposable>();
         public D2D_TextElements GetD2D(SharpDX.DirectWrite.Factory dwFact, SharpDX.Direct2D1.RenderTarget d2drt)
         {
             if (storedType != 1 || !storedValid)
             {
                 storedText.Dispose();
-                foreach (var d in depDispose) d.Dispose();
-                depDispose.Clear();
 
                 var textLayout = new SharpDX.DirectWrite.TextLayout(dwFact, text, new SharpDX.DirectWrite.TextFormat(
                     dwFact,
@@ -624,20 +620,20 @@ namespace NoForms.Renderers
                         textLayout.SetFontStyle(ft.italic ? SharpDX.DirectWrite.FontStyle.Italic : SharpDX.DirectWrite.FontStyle.Normal, tr);
                         textLayout.SetFontWeight(ft.bold ? SharpDX.DirectWrite.FontWeight.Bold : SharpDX.DirectWrite.FontWeight.Normal, tr);
                     }
-                    if (sr.fgOveride != null)
+                    if (sr.fgOveride != null || sr.bgOveride != null)
                     {
-                        UBrush fg = new USolidBrush() { color = sr.fgOveride };
-                        var fgb = fg.GetD2D(d2drt);
-                        depDispose.Add(fgb);
-                        D2D_ClientTextEffect cte = new D2D_ClientTextEffect() { brsh = fgb };
+                        ClientTextEffect cte = new ClientTextEffect();
+                        if (sr.fgOveride != null)
+                            cte.fgBrush = sr.fgOveride;
+                        if (sr.bgOveride != null)
+                            cte.bgBrush = sr.bgOveride;
                         textLayout.SetDrawingEffect(cte, tr);
                     }
                 }
 
                 // Set renderer with a default brush
-                var def = new USolidBrush() { color = new Color(0) }.GetD2D(d2drt);
-                depDispose.Add(def);
-                var textRenderer = new D2D_ClientTextRenderer(d2drt, new D2D_ClientTextEffect() { brsh = def });
+                var def = new USolidBrush() { color = new Color(0) };
+                var textRenderer = new D2D_ClientTextRenderer(d2drt, new ClientTextEffect() { fgBrush = def });
 
                 storedText = new D2D_TextElements(textLayout, textRenderer);
                 storedType = 1;
@@ -1116,7 +1112,12 @@ namespace NoForms.Renderers
             }
             return storedBrush as System.Drawing.Brush;
         }
-        
+        ~UBrush()
+        {
+            if(storedBrush != null)
+                storedBrush.Dispose();
+        }
+
         protected abstract SharpDX.Direct2D1.Brush CreateD2D(SharpDX.Direct2D1.RenderTarget rt);
         protected abstract System.Drawing.Brush CreateSDG();
     }

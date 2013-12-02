@@ -64,10 +64,14 @@ namespace NoForms.Controls
             }
         }
 
+        UText.StyleRange selectRange;
         public Textfield() : base()
         {
             SizeChanged += new Action<Size>(Textfield_SizeChanged);
             LocationChanged += new Action<Point>(Textfield_LocationChanged);
+
+            selectRange = new UText.StyleRange(0,0, null, selectFG, selectBG);
+            data.styleRanges.Add(selectRange);
 
             UpdateTextLayout();
             System.Timers.Timer tm = new System.Timers.Timer(800) { AutoReset = true };
@@ -95,6 +99,9 @@ namespace NoForms.Controls
         Point caret1 = new Point(0.5f, 0.5f);
         Point caret2 = new Point(0.5f, 0.5f);
 
+        public UBrush selectBG = new USolidBrush() { color = new Color(.5f, .5f, .5f, 1f) };
+        public UBrush selectFG = new USolidBrush() { color = new Color(1f) };
+
         public override void DrawBase(IRenderType rt)
         {
             if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
@@ -103,7 +110,7 @@ namespace NoForms.Controls
             rt.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), borderBrush, borderStroke);
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
 
-            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), textBrush, UTextDrawOptions_Enum.None);
+            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), textBrush, UTextDrawOptions_Enum.None,true);
             if (focus) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
 
             rt.uDraw.PopAxisAlignedClip();
@@ -131,6 +138,10 @@ namespace NoForms.Controls
 
                 // update UText to make measurments available
                 sendMe.uDraw.MeasureText(data);
+
+                bool rev = caretPos > shiftOrigin;
+                selectRange.start = rev ? shiftOrigin : caretPos;
+                selectRange.end = rev ? caretPos : shiftOrigin;
 
                 // get size of the render
                 var ti=data.GetTextInfo();
@@ -216,7 +227,25 @@ namespace NoForms.Controls
                 FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                 caretPos -= linePos;
             }
+            if (key == System.Windows.Forms.Keys.ShiftKey)
+            {
+                shiftOrigin = caretPos;
+                shiftSelect = true;
+            }
+            if (!shiftSelect) shiftOrigin = caretPos;
         }
+
+        bool shiftSelect = false;
+        int shiftOrigin = 0;
+
+        public override void KeyUp(System.Windows.Forms.Keys key)
+        {
+            if (key == System.Windows.Forms.Keys.ShiftKey)
+            {
+                shiftSelect = false;
+            }
+        }
+
         void FindMyLine(int myPos, int[] linelens, out int lineNum, out int linePos)
         {
             int myLineStart = 0,myLineNum;
@@ -240,6 +269,7 @@ namespace NoForms.Controls
                 linePos = myPos - myLineStart;
             }
         }
+
 
         // case 1
         // 
@@ -266,9 +296,7 @@ namespace NoForms.Controls
         //
         // pos = 10
         // when <=0: -1
-        public override void KeyUp(System.Windows.Forms.Keys key)
-        {
-        }
+        
         public override void KeyPress(char c)
         {
             if (!focus) return;

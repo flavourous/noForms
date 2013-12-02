@@ -31,7 +31,7 @@ namespace NoForms.Controls
         public override void DrawBase(IRenderType ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle, background);
-            ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions_Enum.None);
+            ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions_Enum.None,false);
             
             var ti=textData.GetTextInfo();
             int nLines=ti.numLines;

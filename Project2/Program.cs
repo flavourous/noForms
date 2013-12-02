@@ -141,7 +141,7 @@ namespace Easy
 
             var ut = new UText("haiiii\r\nKITTEN", UHAlign_Enum.Left, UVAlign_Enum.Top, false, 1000, 50) { font = new UFont("Arial", 40f, false, false) };
 
-            rt.uDraw.DrawText(ut, new Point(300, 300), red, UTextDrawOptions_Enum.Clip);
+            rt.uDraw.DrawText(ut, new Point(300, 300), red, UTextDrawOptions_Enum.Clip,false);
         }
     }
 

@@ -62,7 +62,7 @@ namespace NoForms.Controls
 
             rt.uDraw.FillRectangle(ir, brushFill);
             rt.uDraw.DrawRectangle(lr, brushLine, edge);
-            rt.uDraw.DrawText(textData, ir.Location, brushText, UTextDrawOptions_Enum.Clip);
+            rt.uDraw.DrawText(textData, ir.Location, brushText, UTextDrawOptions_Enum.Clip,false);
         }
         UStroke edge = new UStroke() { strokeWidth = 1f };
         UBrush brushLine, brushFill, brushText;

@@ -21,15 +21,16 @@ namespace NoForms.Renderers
             textLayout.Dispose();
         }
     }
-    public class D2D_ClientTextEffect : SharpDX.ComObject
+    public class ClientTextEffect : SharpDX.ComObject
     {
-        public SharpDX.Direct2D1.Brush brsh;
+        public UBrush fgBrush;
+        public UBrush bgBrush;
     }
     public class D2D_ClientTextRenderer : SharpDX.DirectWrite.TextRendererBase
     {
-        internal D2D_ClientTextEffect defaultEffect;
+        internal ClientTextEffect defaultEffect;
         SharpDX.Direct2D1.RenderTarget rt;
-        public D2D_ClientTextRenderer(SharpDX.Direct2D1.RenderTarget rt, D2D_ClientTextEffect defaultEffect)
+        public D2D_ClientTextRenderer(SharpDX.Direct2D1.RenderTarget rt, ClientTextEffect defaultEffect)
         {
             this.rt = rt;
             this.defaultEffect = defaultEffect;
@@ -37,24 +38,15 @@ namespace NoForms.Renderers
 
         public override SharpDX.Result DrawGlyphRun(object clientDrawingContext, float baselineOriginX, float baselineOriginY, SharpDX.Direct2D1.MeasuringMode measuringMode, SharpDX.DirectWrite.GlyphRun glyphRun, SharpDX.DirectWrite.GlyphRunDescription glyphRunDescription, SharpDX.ComObject clientDrawingEffect)
         {
-            var cce = (D2D_ClientTextEffect)clientDrawingEffect;
-            if(cce==null) cce= defaultEffect;
+            var cce = (ClientTextEffect)clientDrawingEffect;
+            var args = (Object[])clientDrawingContext;
+            var ofs = (Point)args[0];
+            var ut = (UText)args[1];
 
-            rt.DrawGlyphRun(new Point(baselineOriginX, baselineOriginY), glyphRun, cce.brsh, SharpDX.Direct2D1.MeasuringMode.Natural);
+            Point origin = new Point(baselineOriginX, baselineOriginY);
 
-            bool fuckingIdiotMode = false;
-            if (fuckingIdiotMode)
-            {
-                var pg = new SharpDX.Direct2D1.PathGeometry(cce.brsh.Factory);
-                var sink = pg.Open();
-                if (glyphRun.Indices.Length > 0)
-                    glyphRun.FontFace.GetGlyphRunOutline(glyphRun.FontSize, glyphRun.Indices, glyphRun.Advances, glyphRun.Offsets, glyphRun.IsSideways, glyphRun.BidiLevel % 2 != 0, sink);
-                sink.Close();
-                var rtt = rt.Transform;
-                rt.Transform = new SharpDX.Matrix3x2(1, 0, 0, 1, baselineOriginX, baselineOriginY);
-                rt.FillGeometry(pg, cce.brsh);
-                rt.Transform = rtt;
-            }
+            var fgb = cce == null ? defaultEffect.fgBrush : cce.fgBrush;
+            rt.DrawGlyphRun(new Point(baselineOriginX, baselineOriginY), glyphRun, fgb.GetD2D(rt), SharpDX.Direct2D1.MeasuringMode.Natural);            
 
             return SharpDX.Result.Ok;
         }

@@ -107,7 +107,7 @@ namespace NoForms.Controls
             {
                 Point tp = new Point(DisplayRectangle.left + textPad, DisplayRectangle.top + textPad);
                 selectyTexty.text = SelectionOptions.Count > _selectedOption ? SelectionOptions[_selectedOption] : "";
-                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions_Enum.Clip);
+                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions_Enum.Clip,false);
             }
             
             foreach (IComponent c in components)

@@ -171,7 +171,7 @@ namespace testapp
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            ud.DrawText(n,newProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip);
+            ud.DrawText(n,newProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip,false);
         }
 
         void newProject_Clicked(Point loc)
@@ -201,7 +201,7 @@ namespace testapp
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            ud.DrawText(d,delProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip);
+            ud.DrawText(d,delProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip,false);
         }
 
         bool del = false;
@@ -260,7 +260,7 @@ namespace testapp
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            ud.DrawText(e,editProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip);
+            ud.DrawText(e,editProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip,false);
         }
 
         void editProject_Clicked(Point loc)
@@ -549,6 +549,9 @@ namespace testapp
         public Rectangle padding = new Rectangle() { top = 5, left = 5, right = 5, bottom = 0 };
         float boxHeight = 100;
 
+        UBrush red = new USolidBrush() { color = new Color(1, 1, 0, 0) };
+        UBrush white = new USolidBrush() { color = new Color(1) };
+
         // Drawybit
         public override void Draw(IRenderType ra)
         {
@@ -567,7 +570,8 @@ namespace testapp
                 UHAlign_Enum.Left, UVAlign_Enum.Top, true, inRect2.width,0) 
                 { font = new UFont("Arial",10f,false,false) };
 
-            textyTime.styleRanges.Add(new UText.StyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false), new Color(1, 1, 0, 0), new Color(1, 1, 1, 1)));
+            textyTime.styleRanges.Add(new UText.StyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false),
+                red, null));
 
             ra.uDraw.MeasureText(textyTime);
             var ti = textyTime.GetTextInfo();
@@ -577,7 +581,7 @@ namespace testapp
             boxHeight = (int)Math.Round(ct);
 
             ra.uDraw.PushAxisAlignedClip(inRect2);
-            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.None);
+            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.None,true);
             ra.uDraw.PopAxisAlignedClip();
 
             ra.uDraw.PopAxisAlignedClip();
@@ -757,7 +761,7 @@ namespace testapp
             titleText.width = titRect.width;
             titleText.height = titRect.height;
 
-            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip);
+            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip,false);
         }
         USolidBrush scb, scb1, brushBars;
         UText titleText = new UText("Editing Story", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
@@ -913,7 +917,7 @@ namespace testapp
             titleText.width = titRect.width;
             titleText.height = titRect.height;
 
-            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip);
+            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip,false);
         }
         USolidBrush scb, scb1, brushBars;
         UText titleText = new UText("Editing Project", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
