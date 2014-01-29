@@ -16,13 +16,15 @@ namespace testapp
         public static Collection<Project> Projects = new Collection<Project>();
         public static Project selectedProject;
         public static NoForm rootForm;
+
+        [STAThread]
         public static void Main()
         {
             Load();
 
             NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
             NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
-            NoForm nf = rootForm = new MyNoForm(d2dlayered);
+            NoForm nf = rootForm = new MyNoForm(d2dswapchain);
             nf.title = "Test App";
             nf.Size = new System.Drawing.Size(700, 500);
             nf.MinSize = new System.Drawing.Size(700, 300);
@@ -120,7 +122,7 @@ namespace testapp
             components.Add(mc);
 
             SizeChanged += new Act(MyNoForm_OnSizeChanged);
-            SetCursor = new Action<System.Windows.Forms.Cursor>(cur => SetFormCursor(cur));
+            SetCursor = new Action<System.Windows.Forms.Cursor>(cur => FormCursor = cur);
 
             cbProject = new ComboBox();
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
@@ -416,7 +418,7 @@ namespace testapp
             SizeChanged += new Action<Size>(StoryListContainer_SizeChanged);
             add.draw += new Scribble.scribble(add_draw);
             add.Clicked += new Scribble.ClickDelegate(add_Clicked);
-            add.pleaseChangeCursor += new Action<System.Windows.Forms.Cursor>(c => Program.rootForm.SetFormCursor(c));
+            add.pleaseChangeCursor += new Action<System.Windows.Forms.Cursor>(c => Program.rootForm.FormCursor = c);
             StoryListContainer_SizeChanged(Size);
         }
 
@@ -514,7 +516,7 @@ namespace testapp
             
             cx.draw += new Scribble.scribble(cx_draw);
             cx.Clicked += new Scribble.ClickDelegate(cx_Clicked);
-            cx.pleaseChangeCursor += new Action<System.Windows.Forms.Cursor>(c=>Program.rootForm.SetFormCursor(c));
+            cx.pleaseChangeCursor += new Action<System.Windows.Forms.Cursor>(c=>Program.rootForm.FormCursor = c);
             Story_SizeChanged(Size);
         }
 
@@ -524,7 +526,7 @@ namespace testapp
             state = StoryState.undefined;
             Parent.components.Remove(this);
             Program.Stories.Remove(this);
-            Program.rootForm.SetFormCursor(System.Windows.Forms.Cursors.Default);
+            Program.rootForm.FormCursor = System.Windows.Forms.Cursors.Default;
         }
 
         void cx_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
@@ -581,7 +583,7 @@ namespace testapp
             boxHeight = (int)Math.Round(ct);
 
             ra.uDraw.PushAxisAlignedClip(inRect2);
-            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.None,true);
+            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.None,false);
             ra.uDraw.PopAxisAlignedClip();
 
             ra.uDraw.PopAxisAlignedClip();

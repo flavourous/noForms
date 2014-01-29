@@ -110,6 +110,11 @@ namespace NoForms
         public float X;
         public float Y;
 
+        public override string ToString()
+        {
+            return String.Format("({0},{1})", X, Y);
+        }
+
         public static implicit operator Point(System.Drawing.Point you)
         {
             return new Point(you.X, you.Y);

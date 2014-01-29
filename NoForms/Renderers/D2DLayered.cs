@@ -19,8 +19,6 @@ namespace NoForms.Renderers
                 SetStyle(System.Windows.Forms.ControlStyles.UserPaint, true);
                 FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             }
-
-            
       
             protected override void OnLoad(EventArgs e)
             {

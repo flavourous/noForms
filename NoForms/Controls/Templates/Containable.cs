@@ -98,5 +98,16 @@ namespace NoForms.Controls.Templates
             set { _visible = value; }
         }
 
+        public NoForm TopLevelForm
+        {
+            get
+            {
+                IContainer ic = Parent;
+                while (ic.Parent != null)
+                    ic = ic.Parent;
+                return ic as NoForm;
+            }
+        }
+
     }
 }

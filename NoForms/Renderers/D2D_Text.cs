@@ -46,7 +46,8 @@ namespace NoForms.Renderers
             Point origin = new Point(baselineOriginX, baselineOriginY);
 
             var fgb = cce == null ? defaultEffect.fgBrush : cce.fgBrush;
-            rt.DrawGlyphRun(new Point(baselineOriginX, baselineOriginY), glyphRun, fgb.GetD2D(rt), SharpDX.Direct2D1.MeasuringMode.Natural);            
+            var brsh = fgb.GetD2D(rt);
+            rt.DrawGlyphRun(origin, glyphRun, brsh, SharpDX.Direct2D1.MeasuringMode.Natural);            
 
             return SharpDX.Result.Ok;
         }

@@ -29,9 +29,10 @@ namespace NoForms
         protected IRender renderMethod;
         internal Form theForm;
 
-        public void SetFormCursor(Cursor cur)
+        public Cursor FormCursor
         {
-            theForm.Cursor = cur;
+            get { return theForm.Cursor; }
+            set { theForm.Cursor = value; } 
         }
 
         // Some Model Elements...
@@ -113,7 +114,6 @@ namespace NoForms
                 if (inc is Focusable)
                     (inc as Focusable).KeyPress(c);
         }
-
         
         // Key Events
         public void KeyDown(System.Windows.Forms.Keys key)
