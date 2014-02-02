@@ -59,11 +59,8 @@ namespace NoForms.Renderers
         RenderTargetView renderView;
         Surface1 surface;
         RenderTarget d2dRenderTarget;
-
         IntPtr winHandle;
-
         IntPtr someDC;
-
 
         public D2DLayered()
         {
@@ -96,7 +93,7 @@ namespace NoForms.Renderers
 
             // Init uDraw and assign IRenderElement parts
             _backRenderer = new D2D_RenderElements(d2dRenderTarget);
-            _uDraw = new IUnifiedDraw(_backRenderer);
+            _uDraw = new D2DDraw(_backRenderer);
         }
         SolidColorBrush scbTrans;
         public Thread renderThread = null;

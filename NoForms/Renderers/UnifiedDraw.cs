@@ -28,6 +28,40 @@ namespace NoForms.Renderers
         IEnumerable<Rectangle> HitTextRange(int start, int length, Point offset, UText text);
         UTextInfo GetTextInfo(UText text);
     }
+
+    // Cached base object for drawing objects
+    public delegate IDisposable NoCacheDelegate();
+    public abstract class ObjStore : IDisposable
+    {
+        Type storedType = null; // nothing stored to begin with
+        bool storedValid = false;
+        IDisposable storedObject = null; // nothing stored...
+        Object validationLock = new Object(); // FIXME actually, it's up to framework not to destroy the Retrieved value until it's done with.
+        public void Invalidate()
+        {
+            lock (validationLock)
+                storedValid = false;
+        }
+        public IDisposable Retreive<RetreiverType>(NoCacheDelegate noCacheAction) where RetreiverType : class, IRenderElements
+        {
+            lock (validationLock)
+            {
+                if (!storedValid || storedType != typeof(RetreiverType))
+                {
+                    storedObject.Dispose();
+                    storedObject = noCacheAction();
+                    storedValid = true;
+                    storedType = typeof(RetreiverType);
+                } 
+                return storedObject;
+            }
+        }
+        public void Dispose()
+        {
+            storedObject.Dispose();
+        }
+    }
+
     // Text options
     public enum UTextDrawOptions { None = 1, Clip = 2, NoSnap = 4 };
     public enum UHAlign { Left, Center, Right };
@@ -83,8 +117,6 @@ namespace NoForms.Renderers
             this.height = height;
             _styleRanges.collectionChanged += new System.Windows.Forms.MethodInvoker(_styleRanges_collectionChanged);
         }
-
-
     }
 
     public class UStyleRange
@@ -223,45 +255,13 @@ namespace NoForms.Renderers
         public StrokeCaps startCap { get { return _startCap; } set { _startCap = value; Invalidate(); } }
         public StrokeCaps endCap { get { return _endCap; } set { _endCap = value; Invalidate(); } }
         public StrokeCaps dashCap { get { return _dashCap; } set { _dashCap = value; Invalidate(); } }
-        float offset { get { return _offset; } set { _offset = value; Invalidate(); } }
+        public float offset { get { return _offset; } set { _offset = value; Invalidate(); } }
         public StrokeType dashStyle { get { return _dashStyle; } set { _dashStyle = value; Invalidate(); } }
         public float[] custom { get { return _custom; } set { _custom = value; Invalidate(); } }
         public StrokeJoin lineJoin { get { return _lineJoin; } set { _lineJoin = value; Invalidate(); } }
         public float mitreLimit { get { return _mitreLimit; } set { _mitreLimit = value; Invalidate(); } }
     }
-    public delegate IDisposable NoCacheDelegate();
-    public abstract class ObjStore : IDisposable
-    {
-        Type storedType = null; // nothing stored to begin with
-        bool storedValid = false;
-        IDisposable storedObject = null; // nothing stored...
-        Object validationLock = new Object(); // FIXME actually, it's up to framework not to destroy the Retrieved value until it's done with.
-        public void Invalidate()
-        {
-            lock (validationLock)
-                storedValid = false;
-        }
-        public IDisposable Retreive<RetreiverType>(NoCacheDelegate noCacheAction) where RetreiverType : class,IRenderElements
-        {
-            lock (validationLock)
-            {
-                if (!storedValid || storedType != typeof(RetreiverType))
-                {
-                    storedObject.Dispose();
-                    storedObject = noCacheAction();
-                    storedValid = true;
-                    storedType = typeof(RetreiverType);
-                } return storedObject;
-            }
-        }
-        public void Dispose()
-        {
-            storedObject.Dispose();
-        }
-    }
-    public abstract class UBrush : ObjStore
-    {
-    }
+    public abstract class UBrush : ObjStore { }
     public class USolidBrush : UBrush
     {
         Color _color = new Color(1); // white... 
@@ -279,10 +279,13 @@ namespace NoForms.Renderers
     /// <summary>
     ///  instance a bitmap!
     /// </summary>
-    public class UBitmap
+    public class UBitmap : ObjStore
     {
         // FIXME allow changes to bitmap source/data AND the storeInMemory option.  constructor for byte[] too...
-        public byte[] bitmapData { get; private set; } public String bitmapFile { get; private set; } /// <summary>
+        public byte[] bitmapData { get; private set; } 
+        public String bitmapFile { get; private set; } 
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="filePath"></param>
@@ -300,22 +303,23 @@ namespace NoForms.Renderers
     /// <summary>
     /// Blank interface, the backing to renderes are these only.
     /// </summary>
-    public interface IRenderElements
-    {
-    }
+    public interface IRenderElements { } // Mainly used because graphics/rendertarget can change instance Facout drawing implimentors needing to know. eg resize.
     public class D2D_RenderElements : IRenderElements
     {
         public D2D_RenderElements(SharpDX.Direct2D1.RenderTarget rt)
         {
             renderTarget = rt;
-        } public SharpDX.Direct2D1.RenderTarget renderTarget { get; internal set; }
+        }
+        public SharpDX.Direct2D1.RenderTarget renderTarget { get; internal set; }
     }
+
     public class SDG_RenderElements : IRenderElements
     {
         public SDG_RenderElements(System.Drawing.Graphics gr)
         {
             graphics = gr;
-        } public System.Drawing.Graphics graphics { get; internal set; }
+        } 
+        public System.Drawing.Graphics graphics { get; internal set; }
     }
     public class OGL2D_RenderElements : IRenderElements
     {

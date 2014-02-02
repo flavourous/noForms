@@ -240,10 +240,13 @@ namespace NoForms.Controls
                 if (key == System.Windows.Forms.Keys.Insert)
                 {
                     int lineNum, linePos;
-                    UTextInfo ti = data.GetTextInfo();
-                    FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
-                    _caretPos = shiftOrigin = caretPos-linePos;
-                    ReplaceSelectionWithText(System.Windows.Forms.Clipboard.GetText().TrimEnd('\r', '\n') + "\n");
+                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    {
+                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                        _caretPos = shiftOrigin = caretPos - linePos;
+                        ReplaceSelectionWithText(System.Windows.Forms.Clipboard.GetText().TrimEnd('\r', '\n') + "\n");
+                    }));
                 }
             }
 
@@ -316,17 +319,20 @@ namespace NoForms.Controls
                 else
                 {
                     int lineNum, linePos;
-                    UTextInfo ti = data.GetTextInfo();
-                    FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
-                    if (lineNum != 0) // cant go up there!
+                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
                     {
-                        int prevLine = 0;
-                        for (int i = 0; i < lineNum - 1; i++)
-                            prevLine += ti.lineLengths[i];
-                        int prevLineLen = ti.lineLengths[lineNum - 1] - ti.lineNewLineLength[lineNum - 1];
-                        if (linePos > prevLineLen) linePos = prevLineLen;
-                        caretPos = prevLine + linePos;
-                    }
+                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                        if (lineNum != 0) // cant go up there!
+                        {
+                            int prevLine = 0;
+                            for (int i = 0; i < lineNum - 1; i++)
+                                prevLine += ti.lineLengths[i];
+                            int prevLineLen = ti.lineLengths[lineNum - 1] - ti.lineNewLineLength[lineNum - 1];
+                            if (linePos > prevLineLen) linePos = prevLineLen;
+                            caretPos = prevLine + linePos;
+                        }
+                    }));
                 }
             }
             if (key == System.Windows.Forms.Keys.Down)
@@ -345,17 +351,20 @@ namespace NoForms.Controls
                 else
                 {
                     int lineNum, linePos;
-                    UTextInfo ti = data.GetTextInfo();
-                    FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
-                    if (lineNum != ti.numLines - 1) // cant go down there!
+                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
                     {
-                        int nextLine = 0;
-                        for (int i = 0; i < lineNum + 1; i++)
-                            nextLine += ti.lineLengths[i];
-                        int nextLineLen = ti.lineLengths[lineNum + 1] - ti.lineNewLineLength[lineNum + 1];
-                        if (linePos > nextLineLen) linePos = nextLineLen;
-                        caretPos = nextLine + linePos;
-                    }
+                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                        if (lineNum != ti.numLines - 1) // cant go down there!
+                        {
+                            int nextLine = 0;
+                            for (int i = 0; i < lineNum + 1; i++)
+                                nextLine += ti.lineLengths[i];
+                            int nextLineLen = ti.lineLengths[lineNum + 1] - ti.lineNewLineLength[lineNum + 1];
+                            if (linePos > nextLineLen) linePos = nextLineLen;
+                            caretPos = nextLine + linePos;
+                        }
+                    }));
                 }
             }
             if (key == System.Windows.Forms.Keys.End)
@@ -363,16 +372,19 @@ namespace NoForms.Controls
                 if (ctrl) caretPos = data.text.Length;
                 else
                 {
-                    int lineNum, linePos;
-                    UTextInfo ti = data.GetTextInfo();
-                    FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
-                    int cp = caretPos + ti.lineLengths[lineNum] - linePos - 1;
-                    
-                    char c;
-                    while ((c = data.text[cp]) == '\r' || c == '\n')
-                        cp--;
+                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    {
+                        int lineNum, linePos;
+                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                        int cp = caretPos + ti.lineLengths[lineNum] - linePos - 1;
 
-                    caretPos = cp +1;
+                        char c;
+                        while ((c = data.text[cp]) == '\r' || c == '\n')
+                            cp--;
+
+                        caretPos = cp + 1;
+                    }));
                 }
             }
             if (key == System.Windows.Forms.Keys.Home)
@@ -380,10 +392,13 @@ namespace NoForms.Controls
                 if (ctrl) caretPos = 0;
                 else
                 {
-                    int lineNum, linePos;
-                    UTextInfo ti = data.GetTextInfo();
-                    FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
-                    caretPos -= linePos;
+                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    {
+                        int lineNum, linePos;
+                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
+                        caretPos -= linePos;
+                    }));
                 }
             }
             
@@ -530,12 +545,15 @@ namespace NoForms.Controls
             }
             if (mouseSelect && inComponent && !amClipped)
             {
-                Point tl = TopLevelForm.Location;
-                Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
-                UTextHitInfo htInfo = data.HitPoint(tfPoint);
-                int extra = 0;
-                if (htInfo.charPos == data.text.Length - 1 && htInfo.leading) extra++;
-                caretPos = htInfo.charPos + extra;
+                runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    {
+                        Point tl = TopLevelForm.Location;
+                        Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
+                        UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
+                        int extra = 0;
+                        if (htInfo.charPos == data.text.Length - 1 && htInfo.leading) extra++;
+                        caretPos = htInfo.charPos + extra;
+                    }));
             }
         }
         bool mouseSelect = false;

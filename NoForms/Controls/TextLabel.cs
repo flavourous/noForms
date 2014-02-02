@@ -33,7 +33,7 @@ namespace NoForms.Controls
             ra.uDraw.FillRectangle(DisplayRectangle, background);
             ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions.None,false);
             
-            var ti=textData.GetTextInfo();
+            var ti = ra.uDraw.GetTextInfo(textData);
             int nLines=ti.numLines;
             Size minSize = ti.minSize;
             if ((autosizeX && minSize.width != Size.width) || (autosizeY && minSize.height != Size.height))

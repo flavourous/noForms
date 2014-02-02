@@ -51,6 +51,7 @@
     <Compile Include="Controls\Templates\Container.cs" />
     <Compile Include="Controls\Templates\Focusable.cs" />
     <Compile Include="Controls\TextLabel.cs" />
+    <Compile Include="Renderers\D2DDraw.cs" />
     <Compile Include="Renderers\D2DSwapChain.cs" />
     <Compile Include="Renderers\D2DLayered.cs" />
     <Compile Include="Controls\SizeHandle.cs" />

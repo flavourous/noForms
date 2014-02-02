@@ -532,7 +532,7 @@ namespace testapp
         void cx_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             stroke.strokeWidth = 2f;
-            stroke.startCap = stroke.endCap = new StrokeCaps(StrokeCaps.round);
+            stroke.startCap = stroke.endCap = StrokeCaps.round;
             scb.color = new Color(1, 1, 0, 0);
             var dr = cx.DisplayRectangle;
             ud.DrawLine(new Point(dr.left, dr.top), new Point(dr.right, dr.bottom), scb, stroke);
@@ -575,8 +575,7 @@ namespace testapp
             textyTime.styleRanges.Add(new UStyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false),
                 red, null));
 
-            ra.uDraw.MeasureText(textyTime);
-            var ti = textyTime.GetTextInfo();
+            var ti = ra.uDraw.GetTextInfo(textyTime);
             int nlines = ti.numLines;
             float ct = ti.minSize.height;
             ct += 3 * padding.top;
