@@ -107,7 +107,7 @@ namespace NoForms.Renderers
 
             // Init uDraw and assign IRenderElement parts
             _backRenderer = new D2D_RenderElements(d2dRenderTarget);
-            _uDraw = new UnifiedDraw(_backRenderer);
+            _uDraw = new IUnifiedDraw(_backRenderer);
 
         }
         public Thread renderThread = null;
@@ -170,8 +170,8 @@ namespace NoForms.Renderers
         }
 
         // IRenderType
-        UnifiedDraw _uDraw;
-        public UnifiedDraw uDraw
+        IUnifiedDraw _uDraw;
+        public IUnifiedDraw uDraw
         {
             get { return _uDraw; }
         }

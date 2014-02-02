@@ -11,7 +11,7 @@ namespace NoForms.Controls
         public UBrush foreground = new USolidBrush() { color = new Color(0) };
 
         public bool autosizeX = false, autosizeY = false;
-        public UText textData = new UText("", UHAlign_Enum.Center, UVAlign_Enum.Middle, true, 0, 0)
+        public UText textData = new UText("", UHAlign.Center, UVAlign.Middle, true, 0, 0)
         {
             font = new UFont("Arial Black", 15f, false, false),
         };
@@ -31,7 +31,7 @@ namespace NoForms.Controls
         public override void DrawBase(IRenderType ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle, background);
-            ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions_Enum.None,false);
+            ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions.None,false);
             
             var ti=textData.GetTextInfo();
             int nLines=ti.numLines;

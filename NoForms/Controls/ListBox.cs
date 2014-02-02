@@ -47,8 +47,8 @@ namespace NoForms.Controls
             var lb = new TextLabel();
             lb.textData.text = s;
             lb.textData.wrapped = false;
-            lb.textData.halign = UHAlign_Enum.Left;
-            lb.textData.valign = UVAlign_Enum.Middle;
+            lb.textData.halign = UHAlign.Left;
+            lb.textData.valign = UVAlign.Middle;
             lb.autosizeY = true;
             lb.clicked += new System.Windows.Forms.MethodInvoker(() =>
             {

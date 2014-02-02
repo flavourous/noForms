@@ -47,7 +47,7 @@ namespace NoForms.Controls
             lb.visible = true;
         }
 
-        void dropArrowThing_draw(UnifiedDraw ud, USolidBrush brsh, UStroke strk)
+        void dropArrowThing_draw(IUnifiedDraw ud, USolidBrush brsh, UStroke strk)
         {
             var ddr = dropArrowThing.DisplayRectangle;
             Rectangle rr = ddr.Inflated(-1f);
@@ -94,7 +94,7 @@ namespace NoForms.Controls
         USolidBrush back = new USolidBrush() { color = new Color(0.8f) };
         USolidBrush edge = new USolidBrush() { color = new Color(0f) };
         UStroke edgeStroke = new UStroke();
-        UText selectyTexty = new UText("", UHAlign_Enum.Left, UVAlign_Enum.Middle, false, 0, 0)
+        UText selectyTexty = new UText("", UHAlign.Left, UVAlign.Middle, false, 0, 0)
         {
             font = new UFont("Arial", 12f, false, false)
         };
@@ -107,7 +107,7 @@ namespace NoForms.Controls
             {
                 Point tp = new Point(DisplayRectangle.left + textPad, DisplayRectangle.top + textPad);
                 selectyTexty.text = SelectionOptions.Count > _selectedOption ? SelectionOptions[_selectedOption] : "";
-                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions_Enum.Clip,false);
+                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions.Clip,false);
             }
             
             foreach (IComponent c in components)

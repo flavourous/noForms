@@ -83,7 +83,7 @@ namespace Easy
 
             TextLabel tl = new TextLabel()
             {
-                textData = new UText("?hell", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 100, 50)
+                textData = new UText("?hell", UHAlign.Center, UVAlign.Middle, false, 100, 50)
                 {
                     font = new UFont("Arial Black", 15f, true, true)
                 }
@@ -128,7 +128,7 @@ namespace Easy
             var d2drt = el.renderTarget;
             //d2drt.FillRectangle(dr, red.GetD2D(d2drt));
 
-            var tl = new SharpDX.DirectWrite.TextLayout(UnifiedDraw.dwFact, "hello", new SharpDX.DirectWrite.TextFormat(UnifiedDraw.dwFact, "Arial", 25f), 300, 0);
+            var tl = new SharpDX.DirectWrite.TextLayout(IUnifiedDraw.dwFact, "hello", new SharpDX.DirectWrite.TextFormat(IUnifiedDraw.dwFact, "Arial", 25f), 300, 0);
 
             var cce = new D2D_ClientTextEffect() { brsh = red.GetD2D(d2drt) };
             var cce2 = new D2D_ClientTextEffect() { brsh = black.GetD2D(d2drt) };
@@ -139,9 +139,9 @@ namespace Easy
 
             tl.Draw(trend, 50, 50);
 
-            var ut = new UText("haiiii\r\nKITTEN", UHAlign_Enum.Left, UVAlign_Enum.Top, false, 1000, 50) { font = new UFont("Arial", 40f, false, false) };
+            var ut = new UText("haiiii\r\nKITTEN", UHAlign.Left, UVAlign.Top, false, 1000, 50) { font = new UFont("Arial", 40f, false, false) };
 
-            rt.uDraw.DrawText(ut, new Point(300, 300), red, UTextDrawOptions_Enum.Clip,false);
+            rt.uDraw.DrawText(ut, new Point(300, 300), red, UTextDrawOptions.Clip,false);
         }
     }
 

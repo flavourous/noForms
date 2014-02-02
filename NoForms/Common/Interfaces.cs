@@ -42,7 +42,7 @@ namespace NoForms
     public interface IRenderType
     {
         // TODO Unified interface for render objects, incase we want to add more to existing ones.
-        Renderers.UnifiedDraw uDraw { get; }
+        Renderers.IUnifiedDraw uDraw { get; }
         Renderers.IRenderElements backRenderer { get; }
         Renderers.UnifiedEffects uAdvanced { get; }
     }

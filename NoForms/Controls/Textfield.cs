@@ -21,7 +21,7 @@ namespace NoForms.Controls
             get { return data.text; }
             set { data.text = value.Replace("\r\n","\n").Replace("\r","\n"); UpdateTextLayout(); } // internally calls goto data.text
         }
-        UText data = new UText("kitty", UHAlign_Enum.Left, UVAlign_Enum.Middle, false, 0, 0)
+        UText data = new UText("kitty", UHAlign.Left, UVAlign.Middle, false, 0, 0)
         {
             font = new UFont("Arial", 14f, false, false)
         };
@@ -66,13 +66,13 @@ namespace NoForms.Controls
             }
         }
 
-        UText.StyleRange selectRange;
+        UStyleRange selectRange;
         public Textfield() : base()
         {
             SizeChanged += new Action<Size>(Textfield_SizeChanged);
             LocationChanged += new Action<Point>(Textfield_LocationChanged);
 
-            selectRange = new UText.StyleRange(0,0, null, selectFG, selectBG);
+            selectRange = new UStyleRange(0,0, null, selectFG, selectBG);
             data.styleRanges.Add(selectRange);
 
             UpdateTextLayout();
@@ -104,15 +104,18 @@ namespace NoForms.Controls
         public UBrush selectBG = new USolidBrush() { color = new Color(.5f, .5f, .5f, 1f) };
         public UBrush selectFG = new USolidBrush() { color = new Color(1f) };
 
+        System.Collections.Generic.Queue<Action<IRenderType>> runNextRender = new System.Collections.Generic.Queue<Action<IRenderType>>();
         public override void DrawBase(IRenderType rt)
         {
             if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
+            while (runNextRender.Count > 0)
+                runNextRender.Dequeue()(rt);
             
             rt.uDraw.FillRectangle(DisplayRectangle, background);
             rt.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), borderBrush, borderStroke);
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
 
-            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), new USolidBrush() { color = new Color(0) }, UTextDrawOptions_Enum.None, true);
+            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), new USolidBrush() { color = new Color(0) }, UTextDrawOptions.None, true);
             if (focus) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
 
             rt.uDraw.PopAxisAlignedClip();
@@ -137,23 +140,20 @@ namespace NoForms.Controls
                 data.wrapped = layout == LayoutStyle.WrappedMultiLine;
                 data.width = PaddedRectangle.width;
                 data.height = PaddedRectangle.height;
-                data.valign = (layout == LayoutStyle.OneLine) ? UVAlign_Enum.Middle : UVAlign_Enum.Top;
-
-                // update UText to make measurments available
-                sendMe.uDraw.MeasureText(data);
+                data.valign = (layout == LayoutStyle.OneLine) ? UVAlign.Middle : UVAlign.Top;
 
                 bool rev = caretPos > shiftOrigin;
                 selectRange.start = rev ? shiftOrigin : caretPos;
                 selectRange.length = Math.Abs(caretPos-shiftOrigin);
 
                 // get size of the render
-                var ti=data.GetTextInfo();
+                var ti=sendMe.uDraw.GetTextInfo(data);
                 int lines=ti.numLines;
                 Size tms = ti.minSize;
                 float lineHeight = tms.height / (float) lines;
 
                 // Get Caret location
-                Point cp = data.HitText(caretPos, false);
+                Point cp = sendMe.uDraw.HitText(caretPos, false, data);
 
                 // determine render offset
                 roX = cp.X > PaddedRectangle.width ? cp.X - PaddedRectangle.width : 0;
@@ -240,7 +240,7 @@ namespace NoForms.Controls
                 if (key == System.Windows.Forms.Keys.Insert)
                 {
                     int lineNum, linePos;
-                    UText.TextInfo ti = data.GetTextInfo();
+                    UTextInfo ti = data.GetTextInfo();
                     FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                     _caretPos = shiftOrigin = caretPos-linePos;
                     ReplaceSelectionWithText(System.Windows.Forms.Clipboard.GetText().TrimEnd('\r', '\n') + "\n");
@@ -316,7 +316,7 @@ namespace NoForms.Controls
                 else
                 {
                     int lineNum, linePos;
-                    UText.TextInfo ti = data.GetTextInfo();
+                    UTextInfo ti = data.GetTextInfo();
                     FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                     if (lineNum != 0) // cant go up there!
                     {
@@ -345,7 +345,7 @@ namespace NoForms.Controls
                 else
                 {
                     int lineNum, linePos;
-                    UText.TextInfo ti = data.GetTextInfo();
+                    UTextInfo ti = data.GetTextInfo();
                     FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                     if (lineNum != ti.numLines - 1) // cant go down there!
                     {
@@ -364,7 +364,7 @@ namespace NoForms.Controls
                 else
                 {
                     int lineNum, linePos;
-                    UText.TextInfo ti = data.GetTextInfo();
+                    UTextInfo ti = data.GetTextInfo();
                     FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                     int cp = caretPos + ti.lineLengths[lineNum] - linePos - 1;
                     
@@ -381,7 +381,7 @@ namespace NoForms.Controls
                 else
                 {
                     int lineNum, linePos;
-                    UText.TextInfo ti = data.GetTextInfo();
+                    UTextInfo ti = data.GetTextInfo();
                     FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                     caretPos -= linePos;
                 }
@@ -547,10 +547,13 @@ namespace NoForms.Controls
                 if (inComponent && !amClipped)
                 {
                     Point tfPoint = new Point(mea.Location.X - Location.X+roX, mea.Location.Y - Location.Y+roY);
-                    var hti = data.HitPoint(tfPoint);
-                    int extra = 0;
-                    if (hti.charPos == data.text.Length-1 && hti.leading) extra++;
-                    caretPos = hti.charPos + extra;
+                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    {
+                        var hti = rt.uDraw.HitPoint(tfPoint, data);
+                        int extra = 0;
+                        if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
+                        caretPos = hti.charPos + extra;
+                    }));
                     mouseSelect = true;
                 }
             }

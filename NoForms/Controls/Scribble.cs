@@ -13,7 +13,7 @@ namespace NoForms.Controls
         }
         USolidBrush tehBrush = new USolidBrush() { color = new Color(1)};
         UStroke tehStroke = new UStroke(); // use defaylt;
-        public delegate void scribble(UnifiedDraw uDraw, USolidBrush tehBrush, UStroke strk);
+        public delegate void scribble(IUnifiedDraw uDraw, USolidBrush tehBrush, UStroke strk);
         public event scribble draw = delegate { };
         
         System.Windows.Forms.Cursor pCurs = null;

@@ -161,8 +161,8 @@ namespace testapp
                     Program.selectedProject = p;
         }
 
-        UText n = new UText("n", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
-        void newProject_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
+        UText n = new UText("n", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        void newProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var dr = newProject.DisplayRectangle;
@@ -173,7 +173,7 @@ namespace testapp
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            ud.DrawText(n,newProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip,false);
+            ud.DrawText(n,newProject.DisplayRectangle.Location, scb, UTextDrawOptions.Clip,false);
         }
 
         void newProject_Clicked(Point loc)
@@ -191,8 +191,8 @@ namespace testapp
             Program.Projects.Add(pref);
         }
 
-        UText d = new UText("d", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
-        void delProject_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
+        UText d = new UText("d", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        void delProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var dr = delProject.DisplayRectangle;
@@ -203,7 +203,7 @@ namespace testapp
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            ud.DrawText(d,delProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip,false);
+            ud.DrawText(d,delProject.DisplayRectangle.Location, scb, UTextDrawOptions.Clip,false);
         }
 
         bool del = false;
@@ -251,8 +251,8 @@ namespace testapp
             }
         }
 
-        UText e = new UText("e", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
-        void editProject_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
+        UText e = new UText("e", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        void editProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var ir = editProject.DisplayRectangle.Inflated(-3.5f);
@@ -262,7 +262,7 @@ namespace testapp
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
-            ud.DrawText(e,editProject.DisplayRectangle.Location, scb, UTextDrawOptions_Enum.Clip,false);
+            ud.DrawText(e,editProject.DisplayRectangle.Location, scb, UTextDrawOptions.Clip,false);
         }
 
         void editProject_Clicked(Point loc)
@@ -437,10 +437,10 @@ namespace testapp
             editDlg.Create(false, true);
         }
 
-        void add_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
+        void add_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             var crt = add.DisplayRectangle;
-            stroke.endCap = stroke.startCap = eStrokeCaps.round;
+            stroke.endCap = stroke.startCap = StrokeCaps.round;
             stroke.strokeWidth = 3f;
             scb.color = new Color(1, 0, 1, 0);
             ud.DrawLine(new Point(crt.left + crt.width / 2, crt.top), new Point(crt.left + crt.width / 2, crt.bottom), scb, stroke);
@@ -529,10 +529,10 @@ namespace testapp
             Program.rootForm.FormCursor = System.Windows.Forms.Cursors.Default;
         }
 
-        void cx_draw(UnifiedDraw ud, USolidBrush scb, UStroke stroke)
+        void cx_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             stroke.strokeWidth = 2f;
-            stroke.startCap = stroke.endCap = new StrokeCaps(eStrokeCaps.round);
+            stroke.startCap = stroke.endCap = new StrokeCaps(StrokeCaps.round);
             scb.color = new Color(1, 1, 0, 0);
             var dr = cx.DisplayRectangle;
             ud.DrawLine(new Point(dr.left, dr.top), new Point(dr.right, dr.bottom), scb, stroke);
@@ -569,10 +569,10 @@ namespace testapp
 
             UText textyTime = new UText(
                 storyTitle + "\r\n" + Program.BreakSentance(storyText, 50),
-                UHAlign_Enum.Left, UVAlign_Enum.Top, true, inRect2.width,0) 
+                UHAlign.Left, UVAlign.Top, true, inRect2.width,0) 
                 { font = new UFont("Arial",10f,false,false) };
 
-            textyTime.styleRanges.Add(new UText.StyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false),
+            textyTime.styleRanges.Add(new UStyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false),
                 red, null));
 
             ra.uDraw.MeasureText(textyTime);
@@ -583,7 +583,7 @@ namespace testapp
             boxHeight = (int)Math.Round(ct);
 
             ra.uDraw.PushAxisAlignedClip(inRect2);
-            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions_Enum.None,false);
+            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions.None,false);
             ra.uDraw.PopAxisAlignedClip();
 
             ra.uDraw.PopAxisAlignedClip();
@@ -763,10 +763,10 @@ namespace testapp
             titleText.width = titRect.width;
             titleText.height = titRect.height;
 
-            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip,false);
+            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions.Clip,false);
         }
         USolidBrush scb, scb1, brushBars;
-        UText titleText = new UText("Editing Story", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
+        UText titleText = new UText("Editing Story", UHAlign.Center, UVAlign.Middle, false, 0, 0)
         {
             font = new UFont("Arial", 12f, false, false)
         };
@@ -919,10 +919,10 @@ namespace testapp
             titleText.width = titRect.width;
             titleText.height = titRect.height;
 
-            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions_Enum.Clip,false);
+            rt.uDraw.DrawText(titleText, titRect.Location, scb1, UTextDrawOptions.Clip,false);
         }
         USolidBrush scb, scb1, brushBars;
-        UText titleText = new UText("Editing Project", UHAlign_Enum.Center, UVAlign_Enum.Middle, false, 0, 0)
+        UText titleText = new UText("Editing Project", UHAlign.Center, UVAlign.Middle, false, 0, 0)
         {
             font = new UFont("Arial", 12f, false, false)
         };

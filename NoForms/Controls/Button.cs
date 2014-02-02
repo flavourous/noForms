@@ -23,7 +23,7 @@ namespace NoForms.Controls
             set { _state = value; SetBrushColors(); }
         }
         public Color buttonColor = new Color(1, 0.6f, 0.6f, 0.6f);
-        public UText textData = new UText("Button", UHAlign_Enum.Center, UVAlign_Enum.Middle, true, 0, 0)
+        public UText textData = new UText("Button", UHAlign.Center, UVAlign.Middle, true, 0, 0)
         {
             font = new UFont("Arial", 12f, false, false)
         };
@@ -62,7 +62,7 @@ namespace NoForms.Controls
 
             rt.uDraw.FillRectangle(ir, brushFill);
             rt.uDraw.DrawRectangle(lr, brushLine, edge);
-            rt.uDraw.DrawText(textData, ir.Location, brushText, UTextDrawOptions_Enum.Clip,false);
+            rt.uDraw.DrawText(textData, ir.Location, brushText, UTextDrawOptions.Clip,false);
         }
         UStroke edge = new UStroke() { strokeWidth = 1f };
         UBrush brushLine, brushFill, brushText;
