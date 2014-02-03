@@ -532,53 +532,56 @@ namespace NoForms.Controls
         System.Windows.Forms.Cursor pc = null;
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
-            // LETS NOT FORGET THIS IS relative to the SCREEN (FIXME?)
-            if (inComponent && !amClipped && pc == null)
+            
+                // LETS NOT FORGET THIS IS relative to the SCREEN (FIXME?)
+                if (inComponent && !amClipped && pc == null)
+                {
+                    pc = TopLevelForm.FormCursor;
+                    TopLevelForm.FormCursor = System.Windows.Forms.Cursors.IBeam;
+                }
+                if (!inComponent && pc != null)
+                {
+                    TopLevelForm.FormCursor = pc;
+                    pc = null;
+                }
+            runNextRender.Enqueue(new Action<IRenderType>(rt =>
             {
-                pc = TopLevelForm.FormCursor;
-                TopLevelForm.FormCursor = System.Windows.Forms.Cursors.IBeam;
-            }
-            if (!inComponent && pc != null)
-            {
-                TopLevelForm.FormCursor = pc;
-                pc = null;
-            }
-            if (mouseSelect && inComponent && !amClipped)
-            {
-                runNextRender.Enqueue(new Action<IRenderType>(rt =>
-                    {
-                        Point tl = TopLevelForm.Location;
-                        Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
-                        UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
-                        int extra = 0;
-                        if (htInfo.charPos == data.text.Length - 1 && htInfo.leading) extra++;
-                        caretPos = htInfo.charPos + extra;
-                    }));
-            }
+                if (mouseSelect && inComponent && !amClipped)
+                {
+
+                    Point tl = TopLevelForm.Location;
+                    Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
+                    UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
+                    int extra = 0;
+                    if (htInfo.charPos == data.text.Length - 1 && htInfo.leading) extra++;
+                    caretPos = htInfo.charPos + extra;
+                }
+            }));
         }
         bool mouseSelect = false;
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN)
+            runNextRender.Enqueue(new Action<IRenderType>(rt =>
             {
-                focus = inComponent;
-                if (inComponent && !amClipped)
+                if (mbs == MouseButtonState.DOWN)
                 {
-                    Point tfPoint = new Point(mea.Location.X - Location.X+roX, mea.Location.Y - Location.Y+roY);
-                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    focus = inComponent;
+                    if (inComponent && !amClipped)
                     {
+
+                        Point tfPoint = new Point(mea.Location.X - Location.X + roX, mea.Location.Y - Location.Y + roY);
                         var hti = rt.uDraw.HitPoint(tfPoint, data);
                         int extra = 0;
                         if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
                         caretPos = hti.charPos + extra;
-                    }));
-                    mouseSelect = true;
+                        mouseSelect = true;
+                    }
                 }
-            }
-            else if (mbs == MouseButtonState.UP && mouseSelect)
-            {
-                mouseSelect = false;
-            }
+                else if (mbs == MouseButtonState.UP && mouseSelect)
+                {
+                    mouseSelect = false;
+                }
+            }));
         }
         public override void FocusChange(bool focus)
         {

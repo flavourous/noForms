@@ -59,7 +59,6 @@
     <Compile Include="Controls\Textfield.cs" />
     <Compile Include="Common\Util.cs" />
     <Compile Include="Common\Win32.cs" />
-    <Compile Include="Renderers\D2D_Text.cs" />
     <Compile Include="Renderers\UnifiedDraw.cs" />
     <Compile Include="Renderers\UnifiedEffects.cs" />
   </ItemGroup>

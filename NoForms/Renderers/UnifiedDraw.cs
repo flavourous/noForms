@@ -30,35 +30,39 @@ namespace NoForms.Renderers
     }
 
     // Cached base object for drawing objects
-    public delegate IDisposable NoCacheDelegate();
+    public class DDis : IDisposable { public void Dispose() { } }
+    public delegate Object NoCacheDelegate();
     public abstract class ObjStore : IDisposable
     {
         Type storedType = null; // nothing stored to begin with
         bool storedValid = false;
-        IDisposable storedObject = null; // nothing stored...
+        Dictionary<String, Object> storedObjects = new Dictionary<string, Object>(); // nothing stored...
         Object validationLock = new Object(); // FIXME actually, it's up to framework not to destroy the Retrieved value until it's done with.
         public void Invalidate()
         {
             lock (validationLock)
                 storedValid = false;
         }
-        public IDisposable Retreive<RetreiverType>(NoCacheDelegate noCacheAction) where RetreiverType : class, IRenderElements
+        public Object Retreive<RetreiverType>(NoCacheDelegate noCacheAction, String key = "default") where RetreiverType : class, IRenderElements
         {
             lock (validationLock)
             {
-                if (!storedValid || storedType != typeof(RetreiverType))
+                if (!storedValid || storedType != typeof(RetreiverType) || !storedObjects.ContainsKey(key))
                 {
-                    storedObject.Dispose();
-                    storedObject = noCacheAction();
+                    if(storedObjects.ContainsKey(key) && storedObjects[key] is IDisposable)
+                        (storedObjects[key] as IDisposable).Dispose();
+                    storedObjects[key] = noCacheAction();
                     storedValid = true;
                     storedType = typeof(RetreiverType);
                 } 
-                return storedObject;
+                return storedObjects[key];
             }
         }
         public void Dispose()
         {
-            storedObject.Dispose();
+            foreach(var id in storedObjects.Values)
+                if(id is IDisposable)
+                    (id as IDisposable).Dispose();
         }
     }
 
@@ -92,7 +96,7 @@ namespace NoForms.Renderers
         public ObsCollection<UStyleRange> styleRanges { get { return _styleRanges; } }
         void _styleRanges_collectionChanged() { Invalidate(); }
         internal IEnumerable<UStyleRange> SafeGetStyleRanges
-        {
+        { // "best" effort.  should lock. FIXME
             get
             {
                 for (int i = 0; i < styleRanges.Count; i++)
@@ -119,22 +123,28 @@ namespace NoForms.Renderers
         }
     }
 
-    public class UStyleRange
+    public class UStyleRange : IObservable
     {
-        public int start { get;  set; }
-        public int length { get;  set; }
-        public UFont? fontOverride { get;  set; }
-        public UBrush fgOveride { get;  set; }
-        public UBrush bgOveride { get;  set; }
+        int _start;
+        public int start { get { return _start; } set { _start = value; collectionChanged(); } }
+        int _length;
+        public int length { get { return _length; } set { _length = value; collectionChanged(); } }
+        UFont? _fontOverride;
+        public UFont? fontOverride { get { return _fontOverride; } set { _fontOverride = value; collectionChanged(); } }
+        UBrush _fgOverride;
+        public UBrush fgOverride { get { return _fgOverride; } set { _fgOverride = value; collectionChanged(); } }
+        UBrush _bgOverride;
+        public UBrush bgOverride { get { return _bgOverride; } set { _bgOverride = value; collectionChanged(); } }
 
         public UStyleRange(int start, int length, UFont? font, UBrush foreground, UBrush background)
         {
-            this.start = start;
-            this.length = length;
-            fontOverride = font;
-            fgOveride = foreground;
-            bgOveride = background;
+            _start = start;
+            _length = length;
+            _fontOverride = font;
+            _fgOverride = foreground;
+            _bgOverride = background;
         }
+        public event System.Windows.Forms.MethodInvoker collectionChanged;
     }
     public class UTextInfo
     {

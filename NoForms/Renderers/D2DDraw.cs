@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using SharpDX.DirectWrite;
 using SharpDX.Direct2D1;
 
 namespace NoForms.Renderers
@@ -36,7 +37,7 @@ namespace NoForms.Renderers
         }
         public void PushAxisAlignedClip(Rectangle clipRect)
         {
-            realRenderer.renderTarget.PushAxisAlignedClip(clipRect, SharpDX.Direct2D1.AntialiasMode.PerPrimitive);
+            realRenderer.renderTarget.PushAxisAlignedClip(clipRect, AntialiasMode.PerPrimitive);
         }
         public void PopAxisAlignedClip()
         {
@@ -48,11 +49,11 @@ namespace NoForms.Renderers
         }
         public void FillPath(UPath path, UBrush brush)
         {
-            realRenderer.renderTarget.FillGeometry(path.getD2D(realRenderer.renderTarget), CreateBrush(brush));
+            realRenderer.renderTarget.FillGeometry(CreatePath(path), CreateBrush(brush));
         }
         public void DrawPath(UPath path, UBrush brush, UStroke stroke)
         {
-            realRenderer.renderTarget.DrawGeometry(path.getD2D(realRenderer.renderTarget), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
+            realRenderer.renderTarget.DrawGeometry(CreatePath(path), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
         }
         public void DrawBitmap(UBitmap bitmap, float opacity, UInterp interp, Rectangle source, Rectangle destination)
         {
@@ -60,11 +61,11 @@ namespace NoForms.Renderers
         }
         public void FillEllipse(Point center, float radiusX, float radiusY, UBrush brush)
         {
-            realRenderer.renderTarget.FillEllipse(new SharpDX.Direct2D1.Ellipse(center, radiusX, radiusY), CreateBrush(brush));
+            realRenderer.renderTarget.FillEllipse(new Ellipse(center, radiusX, radiusY), CreateBrush(brush));
         }
         public void DrawEllipse(Point center, float radiusX, float radiusY, UBrush brush, UStroke stroke)
         {
-            realRenderer.renderTarget.DrawEllipse(new SharpDX.Direct2D1.Ellipse(center, radiusX, radiusY), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
+            realRenderer.renderTarget.DrawEllipse(new Ellipse(center, radiusX, radiusY), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
         }
         public void DrawLine(Point start, Point end, UBrush brush, UStroke stroke)
         {
@@ -80,7 +81,7 @@ namespace NoForms.Renderers
         }
         public void DrawRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush, UStroke stroke)
         {
-            var rr = new SharpDX.Direct2D1.RoundedRectangle()
+            var rr = new RoundedRectangle()
             {
                 Rect = rect,
                 RadiusX = radX,
@@ -90,7 +91,7 @@ namespace NoForms.Renderers
         }
         public void FillRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush)
         {
-            var rr = new SharpDX.Direct2D1.RoundedRectangle()
+            var rr = new RoundedRectangle()
             {
                 Rect = rect,
                 RadiusX = radX,
@@ -100,21 +101,21 @@ namespace NoForms.Renderers
         }
         public void DrawText(UText textObject, Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
         {
-            var tl = textObject.GetD2D(dwFact, realRenderer.renderTarget);
+            var tl = CreateTextElements(textObject);
 
             foreach (var ord in textObject.SafeGetStyleRanges)
             {
-                if (ord.bgOveride != null)
+                if (ord.bgOverride != null)
                 {
-                    foreach (var r in textObject.HitTextRange(ord.start, ord.length, location))
-                        FillRectangle(r, ord.bgOveride);
+                    foreach (var r in HitTextRange(ord.start, ord.length, location, textObject))
+                        FillRectangle(r, ord.bgOverride);
                 }
             }
 
             if (clientRendering)
             {
                 // set default foreground brush
-                tl.textRenderer.defaultEffect.fgBrush = defBrush;
+                tl.textRenderer.defaultEffect.fgBrush = CreateBrush(defBrush);
 
                 // Draw the text (foreground & background in the client renderer)
                 tl.textLayout.Draw(new Object[] { location, textObject }, tl.textRenderer, location.X, location.Y);
@@ -122,29 +123,66 @@ namespace NoForms.Renderers
             else
             {
                 // Use D2D implimentation of text layout rendering
-                realRenderer.renderTarget.DrawTextLayout(location, tl.textLayout, defCreateBrush(brush));
+                realRenderer.renderTarget.DrawTextLayout(location, tl.textLayout, CreateBrush(defBrush));
             }
         }
 
         // Text Measuring
         public UTextHitInfo HitPoint(Point hitPoint, UText text)
         {
-            throw new NotImplementedException();
+            var textLayout = CreateTextElements(text).textLayout;
+            SharpDX.Bool trailing, inside;
+            var htm = textLayout.HitTestPoint(hitPoint.X, hitPoint.Y, out trailing, out inside);
+            return new UTextHitInfo()
+            {
+                charPos = htm.TextPosition,
+                leading = hitPoint.X > htm.Left + htm.Width / 2,
+                isText = htm.IsText
+            };
         }
 
         public Point HitText(int pos, bool trailing, UText text)
         {
-            throw new NotImplementedException();
+            var textLayout = CreateTextElements(text).textLayout;
+            float hx, hy;
+            var htm = textLayout.HitTestTextPosition(pos, trailing, out hx, out hy);
+            return new Point(hx, hy);
         }
 
         public IEnumerable<Rectangle> HitTextRange(int start, int length, Point offset, UText text)
         {
-            throw new NotImplementedException();
+            var textLayout = CreateTextElements(text).textLayout;
+            foreach (var htm in textLayout.HitTestTextRange(start, length, offset.X, offset.Y))
+                yield return new Rectangle(htm.Left, htm.Top, htm.Width, htm.Height);
         }
 
         public UTextInfo GetTextInfo(UText text)
         {
-            throw new NotImplementedException();
+            // The textlayout is cached ok.
+            var textLayout = CreateTextElements(text).textLayout;
+            // linked indexed cacheing on the textinfo
+            return text.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => NewTextInfo(textLayout)), "textinfo") as UTextInfo;
+        }
+
+        public UTextInfo NewTextInfo(TextLayout textLayout)
+        {
+            UTextInfo ret = new UTextInfo();
+            // get size of the render
+            float minHeight = 0;
+            ret.numLines = 0;
+            ret.lineLengths = new int[textLayout.Metrics.LineCount];
+            ret.lineNewLineLength = new int[textLayout.Metrics.LineCount];
+            int i = 0;
+            foreach (var tlm in textLayout.GetLineMetrics())
+            {
+                minHeight += tlm.Height;
+                ret.numLines++;
+                ret.lineLengths[i] = tlm.Length;
+                ret.lineNewLineLength[i] = tlm.NewlineLength;
+                i++;
+            }
+            ret.minSize = new Size(textLayout.DetermineMinWidth(), minHeight);
+            return ret;
         }
 
         // Element Creators
@@ -165,18 +203,18 @@ namespace NoForms.Renderers
             else if (b is ULinearGradientBrush)
             {
                 var lb = b as ULinearGradientBrush;
-                SharpDX.Direct2D1.LinearGradientBrush lgb = new SharpDX.Direct2D1.LinearGradientBrush(realRenderer.renderTarget,
-                new SharpDX.Direct2D1.LinearGradientBrushProperties()
+                LinearGradientBrush lgb = new LinearGradientBrush(realRenderer.renderTarget,
+                new LinearGradientBrushProperties()
                 {
                     StartPoint = lb.point1,
                     EndPoint = lb.point2
                 },
-                new SharpDX.Direct2D1.GradientStopCollection(realRenderer.renderTarget,
-                new SharpDX.Direct2D1.GradientStop[] {
-                    new SharpDX.Direct2D1.GradientStop() { Color = lb.color1, Position = 0f },
-                    new SharpDX.Direct2D1.GradientStop() { Color = lb.color2, Position = 1f } },
-                    SharpDX.Direct2D1.Gamma.StandardRgb,
-                    SharpDX.Direct2D1.ExtendMode.Clamp)
+                new GradientStopCollection(realRenderer.renderTarget,
+                new GradientStop[] {
+                    new GradientStop() { Color = lb.color1, Position = 0f },
+                    new GradientStop() { Color = lb.color2, Position = 1f } },
+                    Gamma.StandardRgb,
+                    ExtendMode.Clamp)
                 );
                 ret =  lgb;
             }
@@ -200,7 +238,7 @@ namespace NoForms.Renderers
             }
             else bm = new System.Drawing.Bitmap(b.bitmapFile);
             SharpDX.WIC.Bitmap wbm = new SharpDX.WIC.Bitmap(wicFact, bm, SharpDX.WIC.BitmapAlphaChannelOption.UseAlpha);
-            var bmd =  SharpDX.Direct2D1.Bitmap.FromWicBitmap(realRenderer.renderTarget, wbm);
+            var bmd =  Bitmap.FromWicBitmap(realRenderer.renderTarget, wbm);
             realRenderer.renderTarget.Disposed += new EventHandler<EventArgs>((o, e) => b.Invalidate());
             return bmd;
         }
@@ -222,7 +260,7 @@ namespace NoForms.Renderers
         StrokeStyle CreateNewStroke(UStroke s)
         {
             StrokeStyle ret;
-            var sp = new SharpDX.Direct2D1.StrokeStyleProperties()
+            var sp = new StrokeStyleProperties()
             {
                 DashCap = Translate(s.dashCap),
                 EndCap = Translate(s.endCap),
@@ -273,6 +311,178 @@ namespace NoForms.Renderers
                 default: return DashStyle.Solid;
             }
         }
-        
+
+        Geometry CreatePath(UPath p)
+        {
+            return p.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewGeometry(p))) as Geometry;
+        }
+        Geometry CreateNewGeometry(UPath p)
+        {
+            var pg = new PathGeometry(realRenderer.renderTarget.Factory);
+            var gs = pg.Open();
+            foreach (var f in p.figures)
+            {
+                gs.BeginFigure(f.startPoint, f.filled ? FigureBegin.Filled : FigureBegin.Hollow);
+                foreach (var gb in f.geoElements) AppendGeometry(gs, gb);
+                gs.EndFigure(f.open ? FigureEnd.Open : FigureEnd.Closed);
+            }
+            gs.Close();
+            return pg;
+        }
+
+        // FIXME another example of type switching.  Cant put d2d code on other side of bridge in eg UGeometryBase abstraction
+        //       and also, using a factory to create the UGeometryBase will make d2d specific versions.
+        // IDEA  This is possible:  Use factory (DI?) and check the Uxxx instances when passed to this type of class, and recreate
+        //       a portion of the Uxxx if it doesnt match D2D?  Factory could be configured for d2d/ogl etc.  This links in with cacheing
+        //       code too? Not sure if this will static compile :/ thats kinda the point...  we'd need the Uxxx.ICreateStuff to be a specific
+        //       D2D interface...could subclass... would check if(ICreateStuff is D2DCreator) as d2dcreator else Icreatestuff=new d2dcreator...
+        void AppendGeometry(GeometrySink sink, UGeometryBase geo)
+        {
+            if (geo is UArc)
+            {
+                UArc arc = geo as UArc;
+                sink.AddArc(new ArcSegment()
+                {
+                    SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
+                    RotationAngle = arc.rotation,
+                    ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
+                    Point = arc.endPoint,
+                    Size = arc.arcSize
+                });
+            }
+            else if (geo is ULine)
+            {
+                ULine line = geo as ULine;
+                sink.AddLine(line.endPoint);
+            }
+            else if (geo is UBeizer)
+            {
+                UBeizer beizer = geo as UBeizer;
+                sink.AddBezier(new BezierSegment()
+                {
+                    Point1 = beizer.controlPoint1,
+                    Point2 = beizer.controlPoint2,
+                    Point3 = beizer.endPoint
+                });
+            }
+            else throw new NotImplementedException();
+        }
+
+        public D2D_TextElements CreateTextElements(UText t)
+        {
+            return t.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewTextElements(t))) as D2D_TextElements;
+        }
+        public D2D_TextElements CreateNewTextElements(UText t)
+        {
+            var textLayout = new TextLayout(dwFact, t.text, new TextFormat(
+                dwFact,
+                t.font.name,
+                t.font.bold ? FontWeight.Bold : FontWeight.Normal,
+                t.font.italic ? FontStyle.Italic : FontStyle.Normal,
+                t.font.size)
+            {
+                ParagraphAlignment = Translate(t.valign),
+                TextAlignment = Translate(t.halign),
+                WordWrapping = t.wrapped ? WordWrapping.Wrap : WordWrapping.NoWrap
+            }, t.width, t.height);
+
+            // Set font ranges... textLayout just created, dont worry about any leftover ranges.
+            foreach (var sr in t.SafeGetStyleRanges)
+            {
+                var tr = new TextRange(sr.start, sr.length);
+                if (sr.fontOverride != null)
+                {
+                    UFont ft = (UFont)sr.fontOverride;
+                    textLayout.SetFontFamilyName(ft.name, tr);
+                    textLayout.SetFontSize(ft.size, tr);
+                    textLayout.SetFontStyle(ft.italic ? FontStyle.Italic : FontStyle.Normal, tr);
+                    textLayout.SetFontWeight(ft.bold ? FontWeight.Bold : FontWeight.Normal, tr);
+                }
+                if (sr.fgOverride != null || sr.bgOverride != null)
+                {
+                    ClientTextEffect cte = new ClientTextEffect();
+                    if (sr.fgOverride != null)
+                        cte.fgBrush = CreateBrush(sr.fgOverride);
+                    if (sr.bgOverride != null)
+                        cte.bgBrush = CreateBrush(sr.bgOverride);
+                    textLayout.SetDrawingEffect(cte, tr);
+                }
+            }
+
+            // Set renderer with a default brush
+            var def = new USolidBrush() { color = new Color(0) };
+            var textRenderer = new D2D_ClientTextRenderer(realRenderer.renderTarget, new ClientTextEffect() { fgBrush = CreateBrush(def) });
+
+            var ret = new D2D_TextElements(textLayout, textRenderer);
+            realRenderer.renderTarget.Disposed += new EventHandler<EventArgs>((o, e) => t.Invalidate());
+            return ret;
+        }
+        ParagraphAlignment Translate(UVAlign v)
+        {
+            switch (v)
+            {
+                case UVAlign.Top: return ParagraphAlignment.Near;
+                case UVAlign.Middle: return ParagraphAlignment.Center;
+                case UVAlign.Bottom: return ParagraphAlignment.Far;
+                default: return ParagraphAlignment.Near;
+            }
+        }
+        TextAlignment Translate(UHAlign h)
+        {
+            switch (h)
+            {
+                case UHAlign.Left: return TextAlignment.Leading;
+                case UHAlign.Center: return TextAlignment.Center;
+                case UHAlign.Right: return TextAlignment.Trailing;
+                default: return TextAlignment.Leading;
+            }
+        }
+    }
+        public class D2D_TextElements : IDisposable
+    {
+        public TextLayout textLayout;
+        public D2D_ClientTextRenderer textRenderer;
+
+        public D2D_TextElements(TextLayout textLayout, D2D_ClientTextRenderer textRenderer)
+        {
+            this.textLayout = textLayout;
+            this.textRenderer = textRenderer;
+        }
+
+        public void Dispose()
+        {
+            textRenderer.Dispose();
+            textLayout.Dispose();
+        }
+    }
+    public class ClientTextEffect : SharpDX.ComObject
+    {
+        public Brush fgBrush;
+        public Brush bgBrush;
+    }
+    public class D2D_ClientTextRenderer : TextRendererBase
+    {
+        internal ClientTextEffect defaultEffect;
+        RenderTarget rt;
+        public D2D_ClientTextRenderer(RenderTarget rt, ClientTextEffect defaultEffect)
+        {
+            this.rt = rt;
+            this.defaultEffect = defaultEffect;
+        }
+
+        public override SharpDX.Result DrawGlyphRun(object clientDrawingContext, float baselineOriginX, float baselineOriginY, MeasuringMode measuringMode, GlyphRun glyphRun, GlyphRunDescription glyphRunDescription, SharpDX.ComObject clientDrawingEffect)
+        {
+            var cce = (ClientTextEffect)clientDrawingEffect;
+            var args = (Object[])clientDrawingContext;
+            var ofs = (Point)args[0];
+            var ut = (UText)args[1];
+
+            Point origin = new Point(baselineOriginX, baselineOriginY);
+
+            var fgb = cce == null ? defaultEffect.fgBrush : cce.fgBrush;
+            rt.DrawGlyphRun(origin, glyphRun, fgb, MeasuringMode.Natural);
+
+            return SharpDX.Result.Ok;
+        }
     }
 }
