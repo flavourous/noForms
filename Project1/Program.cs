@@ -349,7 +349,7 @@ namespace testapp
         
     }
 
-    class MainContainer : NoForms.Controls.Templates.Container
+    class MainContainer : NoForms.Controls.Templates.Component
     {
         public StoryListContainer backlog, planned, inprogress,moreinfo, testing, deploy, done;
         StoryListContainer[] slcs;
@@ -405,7 +405,7 @@ namespace testapp
         }
     }
 
-    class StoryListContainer : NoForms.Controls.Templates.Container
+    class StoryListContainer : NoForms.Controls.Templates.Component
     {
         public String name;
         public StoryState state;
@@ -498,7 +498,7 @@ namespace testapp
 
     
 
-    class Story : NoForms.Controls.Templates.Container
+    class Story : NoForms.Controls.Templates.Component
     {
         NoForms.Controls.Scribble cx;
         public Story(String title, String txt, StoryState state, String project)
@@ -658,9 +658,6 @@ namespace testapp
             base.MouseUpDown(mea,mbs,inComponent,amClipped);
         }
         bool maybeDrag = false;
-        public override void FocusChange(bool focus)
-        {
-        }
     }
 
     class StoryEditDialog : NoForm

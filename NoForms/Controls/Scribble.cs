@@ -5,9 +5,9 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class Scribble : Templates.Containable
+    public class Scribble : Templates.Component
     {
-        public override void DrawBase(IRenderType renderArgument)
+        public override void Draw(IRenderType renderArgument)
         {
             draw(renderArgument.uDraw, tehBrush, tehStroke);
         }

@@ -17,14 +17,18 @@ namespace NoForms
         void EndRender(MethodInvoker endedCallback);
         NoForm noForm { get; set; }
     }
+
+    // FIXME ISP?
     public interface IComponent
     {
         /// <summary>
         /// So that we can query the parent displayrectangle
         /// </summary>
-        IContainer Parent { get; set; }
+        IComponent Parent { get; set; }
+        ComponentCollection components { get; }
 
         // Properties
+        Point Location { get; set; }
         Rectangle DisplayRectangle { get; set; }
         bool visible { get; set; }
 
@@ -37,31 +41,23 @@ namespace NoForms
         // Mouse events
         void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped);
         void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped);
-    }
-
-    public interface IRenderType
-    {
-        // TODO Unified interface for render objects, incase we want to add more to existing ones.
-        Renderers.IUnifiedDraw uDraw { get; }
-        Renderers.IRenderElements backRenderer { get; }
-        Renderers.UnifiedEffects uAdvanced { get; }
-    }
-
-    public interface IContainer
-    {
-        Rectangle DisplayRectangle { get; set; }
-        ComponentCollection components { get; }
-        IContainer Parent { get; set; }
-
-        // Clipping control
-        void ReClipAll(IRenderType renderArgument);
-        void UnClipAll(IRenderType renderArgument);
-
-        Point Location { get; set; }
 
         // A container is focusable...
         // Key Events
         void KeyDown(System.Windows.Forms.Keys key);
         void KeyUp(System.Windows.Forms.Keys key);
+        void KeyPress(char c);
+
+        // Clipping control FIXME belongs here?
+        void ReClipAll(IRenderType renderArgument);
+        void UnClipAll(IRenderType renderArgument);
     }
+
+    public interface IRenderType
+    {
+        Renderers.IUnifiedDraw uDraw { get; }
+        Renderers.IRenderElements backRenderer { get; }
+        Renderers.UnifiedEffects uAdvanced { get; }
+    }
+
 }

@@ -4,7 +4,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class MoveHandle : Templates.Containable
+    public class MoveHandle : Templates.Component
     {
         NoForm controlled;
         public MoveHandle(NoForm MoveControl)
@@ -19,9 +19,6 @@ namespace NoForms.Controls
         public override void KeyUp(System.Windows.Forms.Keys key)
         {
         }
-        public override void FocusChange(bool focus)
-        {
-        }
 
         public override void KeyPress(char c)
         {
@@ -31,7 +28,7 @@ namespace NoForms.Controls
         USolidBrush back = new USolidBrush() { color = new Color(1.0f, 0f, 0f, 0f) };
         UStroke stroke = new UStroke() { strokeWidth = 2f };
         // Render methody
-        public override void DrawBase(IRenderType ra)
+        public override void Draw(IRenderType ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle,back);
             

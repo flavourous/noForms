@@ -26,8 +26,8 @@ namespace NoForms
             // 3) go back to 1
 
             // (0)
-            if (me is IContainer)
-                foreach (var ic in (me as IContainer).components)
+            if (me is IComponent)
+                foreach (var ic in (me as IComponent).components)
                     if (PointInRect(loc, ic.DisplayRectangle))
                         return false;
 
@@ -40,7 +40,7 @@ namespace NoForms
                     if (PointInRect(loc, me.Parent.components[i].DisplayRectangle))
                         return false;
 
-            IContainer par = me.Parent;
+            IComponent par = me.Parent;
             while (true)
             {
                 if (par.Parent == null) break; // (1)
@@ -74,7 +74,7 @@ namespace NoForms
         }
         public static System.Drawing.Point GetTopLevelLocation(IComponent inc)
         {
-            IContainer par = inc.Parent;
+            IComponent par = inc.Parent;
             while (par.Parent != null)
                 par = par.Parent;
             return par.Location;

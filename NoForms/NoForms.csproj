@@ -47,9 +47,8 @@
     <Compile Include="Controls\ListBox.cs" />
     <Compile Include="Controls\MoveHandle.cs" />
     <Compile Include="Controls\Scribble.cs" />
-    <Compile Include="Controls\Templates\Containable.cs" />
-    <Compile Include="Controls\Templates\Container.cs" />
-    <Compile Include="Controls\Templates\Focusable.cs" />
+    <Compile Include="Controls\Templates\Component.cs" />
+    <Compile Include="Common\Managers.cs" />
     <Compile Include="Controls\TextLabel.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
     <Compile Include="Renderers\D2DSwapChain.cs" />

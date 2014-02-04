@@ -4,7 +4,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class TextLabel : Templates.Containable
+    public class TextLabel : Templates.Component
     {
         public Object tag = null;
         public USolidBrush background = new USolidBrush() { color = new Color(0, 0, 0, 0) };
@@ -28,7 +28,7 @@ namespace NoForms.Controls
         }
 
         public event System.Windows.Forms.MethodInvoker clicked;
-        public override void DrawBase(IRenderType ra)
+        public override void Draw(IRenderType ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle, background);
             ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions.None,false);

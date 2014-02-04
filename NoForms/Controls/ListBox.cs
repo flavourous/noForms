@@ -4,7 +4,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class ListBox : Templates.Container
+    public class ListBox : Templates.Component
     {
         public override void Draw(IRenderType renderArgument)
         {

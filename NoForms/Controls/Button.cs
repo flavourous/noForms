@@ -7,7 +7,7 @@ namespace NoForms.Controls
     public enum ButtonType { Basic, Win8 };
     enum ButtonState { Normal, Hover, Click };
     public enum FontStyle { Normal, Bold, Italic };
-    public class Button : Templates.Containable
+    public class Button : Templates.Component
     {
         // Properties
         ButtonType _type = ButtonType.Basic;
@@ -53,7 +53,7 @@ namespace NoForms.Controls
         }
 
         // Render methody
-        public override void DrawBase(IRenderType rt)
+        public override void Draw(IRenderType rt)
         {
             float lt = edge.strokeWidth;
             float bv = lt / 2;
@@ -85,6 +85,7 @@ namespace NoForms.Controls
 
         void SetBrushColors()
         {
+            bool focus = FocusManager.FocusGet(this);
             if (type == ButtonType.Basic)
             {
                 switch (state)
@@ -146,7 +147,7 @@ namespace NoForms.Controls
             if (mbs == MouseButtonState.DOWN && inComponent)
             {
                 md = true;
-                focus = true;
+                FocusManager.FocusSet(this, true);
                 state = ButtonState.Click;
             }
             if (mbs == MouseButtonState.UP && md)
@@ -165,12 +166,8 @@ namespace NoForms.Controls
         public override void KeyUp(System.Windows.Forms.Keys key)
         {
         }
-        public override void FocusChange(bool focus)
-        {
-        }
         public override void KeyPress(char c)
         {
         }
-
     }
 }

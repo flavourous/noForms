@@ -12,14 +12,9 @@ namespace NoForms
     /// <summary>
     /// You would create a noform, and to it add INoComponent, and it would handle stuff.
     /// </summary>
-    public class NoForm : IContainer
+    public class NoForm : IComponent
     {
-        public IContainer Parent 
-        {
-            get { return null; }
-            set { return; }
-        }
-
+        public IComponent Parent { get { return null; } set { } }
         ComponentCollection _components;
         public ComponentCollection components
         {
@@ -32,11 +27,11 @@ namespace NoForms
         public Cursor FormCursor
         {
             get { return theForm.Cursor; }
-            set { theForm.Cursor = value; } 
+            set { theForm.Cursor = value; }
         }
 
         // Some Model Elements...
-        Point _Location = new Point(0,0);
+        Point _Location = new Point(0, 0);
         public Point Location
         {
             get { return _Location; }
@@ -48,7 +43,7 @@ namespace NoForms
                     mi();
             }
         }
-        Size _Size = new Size(200,300);
+        Size _Size = new Size(200, 300);
         /// <summary>
         /// This mirrors the size propterty at 0,0
         /// </summary>
@@ -68,7 +63,7 @@ namespace NoForms
             set
             {
                 _Size = new Size(
-                    Math.Max(Math.Min(value.width,MaxSize.width),MinSize.width),
+                    Math.Max(Math.Min(value.width, MaxSize.width), MinSize.width),
                     Math.Max(Math.Min(value.height, MaxSize.height), MinSize.height)
                     );
 
@@ -82,8 +77,8 @@ namespace NoForms
         public delegate void Act();
         public event Act SizeChanged;
         public event Act LocationChanged;
-        public Size MinSize = new Size(50,50);
-        public Size MaxSize = new Size(9000,9000);
+        public Size MinSize = new Size(50, 50);
+        public Size MaxSize = new Size(9000, 9000);
 
         public System.Drawing.Icon icon = null;
         public String title = "";
@@ -102,7 +97,7 @@ namespace NoForms
         {
             theForm.MouseDown += new MouseEventHandler(MouseDown);
             theForm.MouseUp += new MouseEventHandler(MouseUp);
-            theForm.MouseMove +=new MouseEventHandler(MouseMove);
+            theForm.MouseMove += new MouseEventHandler(MouseMove);
             theForm.KeyDown += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyDown(e.KeyCode); });
             theForm.KeyUp += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUp(e.KeyCode); });
             theForm.KeyPress += new KeyPressEventHandler((Object o, KeyPressEventArgs e) => { KeyPress(e.KeyChar); });
@@ -111,22 +106,19 @@ namespace NoForms
         public void KeyPress(char c)
         {
             foreach (IComponent inc in components)
-                if (inc is Focusable)
-                    (inc as Focusable).KeyPress(c);
+                inc.KeyPress(c);
         }
-        
+
         // Key Events
         public void KeyDown(System.Windows.Forms.Keys key)
         {
             foreach (IComponent inc in components)
-                if (inc is Focusable)
-                    (inc as Focusable).KeyDown(key);
+                inc.KeyDown(key);
         }
         public void KeyUp(System.Windows.Forms.Keys key)
         {
             foreach (IComponent inc in components)
-                if (inc is Focusable)
-                    (inc as Focusable).KeyUp(key);
+                inc.KeyUp(key);
         }
 
 
@@ -157,7 +149,7 @@ namespace NoForms
                 foreach (ClickedEventHandler cevent in Clicked.GetInvocationList())
                     cevent(ceventargs);
             foreach (IComponent inc in components)
-                if(inc.visible)
+                if (inc.visible)
                     inc.MouseUpDown(mea, mbs, Util.CursorInRect(inc.DisplayRectangle, Location), !Util.CursorInRect(DisplayRectangle, Location));
         }
         public struct ClickedEventArgs
@@ -187,17 +179,9 @@ namespace NoForms
                     inc.MouseMove(location, Util.CursorInRect(inc.DisplayRectangle, Location), !Util.CursorInRect(DisplayRectangle, Location));
         }
 
-        // Dont care.
-        public void ReClipAll(IRenderType rt)
-        {
-        }
-        public void UnClipAll(IRenderType rt)
-        {
-        }
-
         public void DrawBase(IRenderType rt)
         {
-            rt.uDraw.Clear(new Color(0,0,0,0)); // this lets alphas to desktop happen.
+            rt.uDraw.Clear(new Color(0, 0, 0, 0)); // this lets alphas to desktop happen.
             rt.uDraw.FillRectangle(DisplayRectangle, background);
 
             Draw(rt);
@@ -233,7 +217,7 @@ namespace NoForms
             });
             theForm.FormClosing += new FormClosingEventHandler((object o, FormClosingEventArgs e) =>
             {
-                if(!okClose) e.Cancel = true;
+                if (!okClose) e.Cancel = true;
                 renderMethod.EndRender(new MethodInvoker(() => Close(true)));
             });
 
@@ -241,7 +225,6 @@ namespace NoForms
             {
                 Application.EnableVisualStyles();
                 Application.Run(theForm);
-
             }
             else
             {
@@ -260,17 +243,17 @@ namespace NoForms
             theForm.Close();
         }
 
-
-
-
-
-        
+        // FIXME some isp could avoid this and keep the hierachy intact..
+        public bool visible
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+        public void RecalculateDisplayRectangle() { throw new NotImplementedException(); }
+        public void RecalculateLocation() { throw new NotImplementedException(); }
+        public void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
+        public void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
+        public void ReClipAll(IRenderType renderArgument) { throw new NotImplementedException(); }
+        public void UnClipAll(IRenderType renderArgument) { throw new NotImplementedException(); }
     }
-
-
-
-    
-
-    
- 
 }

@@ -7,8 +7,8 @@ namespace NoForms
 {
     public class ComponentCollection : ICollection<IComponent>
     {
-        IContainer myParent;
-        public ComponentCollection(IContainer myParent)
+        IComponent myParent;
+        public ComponentCollection(IComponent myParent)
         {
             this.myParent = myParent;
         }

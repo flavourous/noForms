@@ -5,13 +5,13 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class SizeHandle : Templates.Containable
+    public class SizeHandle : Templates.Component
     {
         NoForm controlled;
         public SizeHandle(NoForm MoveControl)
         {
             controlled = MoveControl;
-            MoveControl.MouseMoved+= new NoForm.MouseMoveEventHandler(ResizeMove);
+            MoveControl.MouseMoved += new NoForm.MouseMoveEventHandler(ResizeMove);
         }
 
         public override void KeyPress(char c)
@@ -23,15 +23,12 @@ namespace NoForms.Controls
         public override void KeyUp(System.Windows.Forms.Keys key)
         {
         }
-        public override void FocusChange(bool focus)
-        {
-        }
 
         // Render methody
         public UBrush background = new USolidBrush() { color = new Color(0) };
         public UBrush foreground = new USolidBrush() { color = new Color(1) };
         public UStroke lineStroke = new UStroke() { strokeWidth = 2f };
-        public override void DrawBase(IRenderType renderArg)
+        public override void Draw(IRenderType renderArg)
         {
             renderArg.uDraw.FillRectangle(DisplayRectangle, background);
             float epad = 3;

@@ -5,7 +5,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class ComboBox : Templates.Container
+    public class ComboBox : Templates.Component
     {
         
         ListBox lb;

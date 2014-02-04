@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NoForms.Controls
 {
-    public class Textfield : Templates.Containable
+    public class Textfield : Templates.Component
     {
         public enum LayoutStyle { OneLine, MultiLine, WrappedMultiLine };
         public LayoutStyle _layout = LayoutStyle.OneLine;
@@ -105,7 +105,7 @@ namespace NoForms.Controls
         public UBrush selectFG = new USolidBrush() { color = new Color(1f) };
 
         System.Collections.Generic.Queue<Action<IRenderType>> runNextRender = new System.Collections.Generic.Queue<Action<IRenderType>>();
-        public override void DrawBase(IRenderType rt)
+        public override void Draw(IRenderType rt)
         {
             if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
             while (runNextRender.Count > 0)
@@ -116,7 +116,7 @@ namespace NoForms.Controls
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
 
             rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), new USolidBrush() { color = new Color(0) }, UTextDrawOptions.None, true);
-            if (focus) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
+            if (FocusManager.FocusGet(this)) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
 
             rt.uDraw.PopAxisAlignedClip();
         }
@@ -186,7 +186,7 @@ namespace NoForms.Controls
 
         public override void KeyDown(System.Windows.Forms.Keys key)
         {
-            if (!focus) return;
+            if (!FocusManager.FocusGet(this)) return;
             MKeys(key, true);
             if (alt) return;
 
@@ -506,7 +506,7 @@ namespace NoForms.Controls
         public override void KeyPress(char c)
         {
             // FIXME unprintable chars
-            if (!focus) return;
+            if (!FocusManager.FocusGet(this)) return;
             if (ctrl || alt || win) return;
             if (c != '\b')
                 if ((c != '\r' && c != '\n') || layout != LayoutStyle.OneLine)
@@ -548,7 +548,6 @@ namespace NoForms.Controls
             {
                 if (mouseSelect && inComponent && !amClipped)
                 {
-
                     Point tl = TopLevelForm.Location;
                     Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
                     UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
@@ -565,7 +564,7 @@ namespace NoForms.Controls
             {
                 if (mbs == MouseButtonState.DOWN)
                 {
-                    focus = inComponent;
+                    FocusManager.FocusSet(this, inComponent);
                     if (inComponent && !amClipped)
                     {
 
@@ -582,9 +581,6 @@ namespace NoForms.Controls
                     mouseSelect = false;
                 }
             }));
-        }
-        public override void FocusChange(bool focus)
-        {
         }
     }
 }
