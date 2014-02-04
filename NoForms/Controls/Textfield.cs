@@ -54,7 +54,7 @@ namespace NoForms.Controls
             if (!(caretBrush is USolidBrush)) return;
             var cb = caretBrush as USolidBrush;
 
-            if (cb.color == new Color(0))
+            if (cb.color.a == 1f)
             {
                 cb.color = new Color(0, 0, 0, 0);
                 (sender as System.Timers.Timer).Interval = 300;
@@ -564,7 +564,6 @@ namespace NoForms.Controls
             {
                 if (mbs == MouseButtonState.DOWN)
                 {
-                    FocusManager.FocusSet(this, inComponent);
                     if (inComponent && !amClipped)
                     {
 
@@ -573,6 +572,8 @@ namespace NoForms.Controls
                         int extra = 0;
                         if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
                         caretPos = hti.charPos + extra;
+                        UpdateTextLayout(rt);
+                        FocusManager.FocusSet(this, inComponent);
                         mouseSelect = true;
                     }
                 }
