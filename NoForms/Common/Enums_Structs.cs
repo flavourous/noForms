@@ -5,7 +5,7 @@ namespace NoForms
     // mouse stuff
     public enum MouseButton { LEFT, RIGHT };
     public enum MouseButtonState { DOWN, UP };
-    public class Color
+    public struct Color
     {
         public float a, r, g, b;
         public Color(float a, float r, float g, float b)
@@ -115,6 +115,15 @@ namespace NoForms
             return String.Format("({0},{1})", X, Y);
         }
 
+        public static Point operator -(Point me, Point other)
+        {
+            return new Point(me.X - other.X, me.Y - other.Y);
+        }
+        public static Point operator +(Point me, Point other)
+        {
+            return new Point(me.X + other.X, me.Y + other.Y);
+        }
+
         public static implicit operator Point(System.Drawing.Point you)
         {
             return new Point(you.X, you.Y);
@@ -129,8 +138,32 @@ namespace NoForms
         }
     }
 
+    public struct Thickness
+    {
+        public Thickness(float amt)
+        {
+            this.top = this.left = this.right = this.bottom = amt;
+        }
+        public Thickness(float left, float top, float right, float bottom)
+        {
+            this.left = left;
+            this.top = top;
+            this.right = right;
+            this.bottom = bottom;
+        }
+        public float left;
+        public float top;
+        public float right;
+        public float bottom;
+    }
+
     public struct Rectangle
     {
+
+        public static Rectangle operator -(Rectangle me, Point subby)
+        {
+            return new Rectangle(me.left - subby.X, me.top - subby.Y, me.width, me.height);
+        }
 
         public static Rectangle Empty
         {
@@ -180,11 +213,11 @@ namespace NoForms
         public Size Size;
         public Point Location;
 
-        public Rectangle Inflated(float amount)
+        public Rectangle Inflated(Thickness amount)
         {
-            return new Rectangle(left-amount, top-amount, width+2f*amount, height+2f*amount);
+            return new Rectangle(left-amount.left, top-amount.top, width+amount.left+amount.right, height+amount.top + amount.bottom);
         }
-        public Rectangle Deflated(Rectangle amount)
+        public Rectangle Deflated(Thickness amount)
         {
             Rectangle ret = new Rectangle(left, top, width, height);
             ret.left += amount.left;

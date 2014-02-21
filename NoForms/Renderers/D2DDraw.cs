@@ -35,13 +35,21 @@ namespace NoForms.Renderers
         {
             realRenderer = els;
         }
-        public void PushAxisAlignedClip(Rectangle clipRect)
+        public void PushAxisAlignedClip(Rectangle clipRect, bool ignoreRenderOffset)
         {
-            realRenderer.renderTarget.PushAxisAlignedClip(clipRect, AntialiasMode.PerPrimitive);
+            var cr = clipRect;
+            if (ignoreRenderOffset) cr -= new Point(realRenderer.renderTarget.Transform.M31, realRenderer.renderTarget.Transform.M32);
+            realRenderer.renderTarget.PushAxisAlignedClip(cr, AntialiasMode.PerPrimitive);
         }
         public void PopAxisAlignedClip()
         {
             realRenderer.renderTarget.PopAxisAlignedClip();
+        }
+        public void SetRenderOffset(Point offset)
+        {
+            var rtt = realRenderer.renderTarget.Transform;
+            rtt = new SharpDX.Matrix3x2(rtt.M11, rtt.M12, rtt.M21, rtt.M22, offset.X, offset.Y);
+            realRenderer.renderTarget.Transform = rtt;
         }
         public void Clear(Color color)
         {
@@ -158,10 +166,8 @@ namespace NoForms.Renderers
 
         public UTextInfo GetTextInfo(UText text)
         {
-            // The textlayout is cached ok.
             var textLayout = CreateTextElements(text).textLayout;
-            // linked indexed cacheing on the textinfo
-            return text.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => NewTextInfo(textLayout)), "textinfo") as UTextInfo;
+            return NewTextInfo(textLayout);
         }
 
         public UTextInfo NewTextInfo(TextLayout textLayout)

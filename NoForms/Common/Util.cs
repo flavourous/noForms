@@ -28,16 +28,16 @@ namespace NoForms
             // (0)
             if (me is IComponent)
                 foreach (var ic in (me as IComponent).components)
-                    if (PointInRect(loc, ic.DisplayRectangle))
+                    if (PointInRect(loc, ic.DisplayRectangle) && ic.visible)
                         return false;
-
+        
             int myIdx;
             myIdx = me.Parent.components.IndexOf(me);
 
             //(2) for me which might not be a container...
             if (myIdx < me.Parent.components.Count - 1)
                 for (int i = myIdx + 1; i < me.Parent.components.Count; i++)
-                    if (PointInRect(loc, me.Parent.components[i].DisplayRectangle))
+                    if (PointInRect(loc, me.Parent.components[i].DisplayRectangle) && me.Parent.components[i].visible)
                         return false;
 
             IComponent par = me.Parent;
@@ -49,7 +49,7 @@ namespace NoForms
                 //(2)
                 if (myIdx < par.Parent.components.Count - 1)
                     for (int i = myIdx + 1; i < par.Parent.components.Count; i++)
-                        if (PointInRect(loc, par.Parent.components[i].DisplayRectangle))
+                        if (PointInRect(loc, par.Parent.components[i].DisplayRectangle) && par.Parent.components[i].visible)
                             return false;
 
                 par = par.Parent;
@@ -65,30 +65,19 @@ namespace NoForms
             ccl.Y -= topLevelLocation.Y;
             return PointInRect(ccl, dr);
         }
-        static bool PointInRect(Point ccl, Rectangle dr)
+        public static bool PointInRect(Point ccl, Rectangle dr)
         {
             if (ccl.X >= dr.left && ccl.X <= dr.right)
                 if (ccl.Y >= dr.top && ccl.Y <= dr.bottom)
                     return true;
             return false;
         }
-        public static System.Drawing.Point GetTopLevelLocation(IComponent inc)
+        public static Point GetTopLevelLocation(IComponent inc)
         {
             IComponent par = inc.Parent;
             while (par.Parent != null)
                 par = par.Parent;
             return par.Location;
         }
-
-        public static void Set2DTransform<RenderType>(RenderType renderArgument, System.Drawing.Point trans)
-        {
-            if (renderArgument is SharpDX.Direct2D1.RenderTarget)
-            {
-                var rt = renderArgument as SharpDX.Direct2D1.RenderTarget;
-                //rt.Transform = // fuck
-            }
-        }
-        
-        
     }
 }

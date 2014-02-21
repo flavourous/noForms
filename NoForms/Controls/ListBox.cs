@@ -4,7 +4,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class ListBox : Templates.Component
+    public class ListBox : Abstract.BasicContainer
     {
         public override void Draw(IRenderType renderArgument)
         {
@@ -12,7 +12,7 @@ namespace NoForms.Controls
             PoisitionItems();
             renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);
             // so that the box overdraws the childrens
-            renderArgument.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), brushy1, strokey);
+            renderArgument.uDraw.DrawRectangle(DisplayRectangle.Inflated(new Thickness(-.5f)), brushy1, strokey);
             if (breakForCombo) ReClipAll(renderArgument);
         }
         UBrush brushy1 = new USolidBrush() { color = new Color(0) };

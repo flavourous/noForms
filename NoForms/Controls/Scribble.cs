@@ -5,7 +5,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class Scribble : Templates.Component
+    public class Scribble : Abstract.BasicContainer
     {
         public override void Draw(IRenderType renderArgument)
         {
@@ -16,26 +16,6 @@ namespace NoForms.Controls
         public delegate void scribble(IUnifiedDraw uDraw, USolidBrush tehBrush, UStroke strk);
         public event scribble draw = delegate { };
         
-        System.Windows.Forms.Cursor pCurs = null;
-        void OnpleaseChangeCursor(System.Windows.Forms.Cursor c)
-        {
-            if (pleaseChangeCursor != null)
-                pleaseChangeCursor(c);
-        }
-        public event Action<System.Windows.Forms.Cursor> pleaseChangeCursor;
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
-        {
-            if (inComponent && pCurs == null)
-            {
-                pCurs = System.Windows.Forms.Cursor.Current;
-                OnpleaseChangeCursor(System.Windows.Forms.Cursors.Hand);
-            }
-            if (pCurs != null && !inComponent)
-            {
-                OnpleaseChangeCursor(pCurs);
-                pCurs = null;
-            }
-        }
         public delegate void ClickDelegate(Point loc);
         public event ClickDelegate Clicked;
         bool downed = false;

@@ -5,7 +5,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class ComboBox : Templates.Component
+    public class ComboBox : Abstract.BasicContainer
     {
         
         ListBox lb;
@@ -50,13 +50,13 @@ namespace NoForms.Controls
         void dropArrowThing_draw(IUnifiedDraw ud, USolidBrush brsh, UStroke strk)
         {
             var ddr = dropArrowThing.DisplayRectangle;
-            Rectangle rr = ddr.Inflated(-1f);
+            Rectangle rr = ddr.Inflated(new Thickness(-1f));
             float rad = (float)ddr.Size.height / 4f;
 
             brsh.color = new NoForms.Color(0.6f);
             ud.FillRoundedRectangle(rr, rad, rad, brsh);
             brsh.color = new NoForms.Color(0.7f);
-            rr = ddr.Inflated(-.5f);
+            rr = ddr.Inflated(new Thickness(-.5f));
             strk.strokeWidth = 1f;
             ud.DrawRoundedRectangle(rr, rad, rad, brsh, strk);
             brsh.color = new NoForms.Color(0);
@@ -102,7 +102,7 @@ namespace NoForms.Controls
         {
             // Draw bg
             ra.uDraw.FillRectangle(DisplayRectangle, back);
-            ra.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), edge, edgeStroke);
+            ra.uDraw.DrawRectangle(DisplayRectangle.Inflated(new Thickness(-.5f)), edge, edgeStroke);
             if (SelectionOptions.Count > 0) 
             {
                 Point tp = new Point(DisplayRectangle.left + textPad, DisplayRectangle.top + textPad);

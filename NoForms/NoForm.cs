@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
-using NoForms.Controls.Templates;
+using NoForms.Controls.Abstract;
 using NoForms.Renderers;
 
 namespace NoForms
@@ -24,11 +24,8 @@ namespace NoForms
         protected IRender renderMethod;
         internal Form theForm;
 
-        public Cursor FormCursor
-        {
-            get { return theForm.Cursor; }
-            set { theForm.Cursor = value; }
-        }
+        public Cursor Cursor { get; set; }
+        public bool Scrollable { get; set; } // Begins to be irellivant FIXME?
 
         // Some Model Elements...
         Point _Location = new Point(0, 0);
@@ -171,12 +168,25 @@ namespace NoForms
         public void MouseMove(System.Drawing.Point location)
         {
             if (MouseMoved == null) return;
+            bool foundCompHere = false;
 
             foreach (MouseMoveEventHandler mevent in MouseMoved.GetInvocationList())
                 mevent(location);
             foreach (IComponent inc in components)
-                if (inc.visible)
-                    inc.MouseMove(location, Util.CursorInRect(inc.DisplayRectangle, Location), !Util.CursorInRect(DisplayRectangle, Location));
+            {
+                bool clip = !Util.CursorInRect(DisplayRectangle, Location);
+                bool inComponent = Util.CursorInRect(inc.DisplayRectangle, Location);
+                if (inc.visible) inc.MouseMove(location, inComponent, clip);
+                if (inc.visible && !clip && inComponent)
+                    if (Util.AmITopZOrder(inc, location - Util.GetTopLevelLocation(inc)))
+                    {
+                        if (theForm.Cursor != (inc.Cursor ?? Cursors.Default))
+                            theForm.Cursor = inc.Cursor ?? Cursors.Default;
+                        foundCompHere = true;
+                    }
+            }
+            if(!foundCompHere && theForm.Cursor != (Cursor ?? Cursors.Default))
+                    theForm.Cursor = Cursor ?? Cursors.Default;
         }
 
         public void DrawBase(IRenderType rt)
@@ -187,7 +197,7 @@ namespace NoForms
             Draw(rt);
 
             // Now we need to draw our childrens....
-            rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
+            rt.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
                 if (c.visible) c.DrawBase(rt);
             rt.uDraw.PopAxisAlignedClip();

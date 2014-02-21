@@ -2,20 +2,18 @@
 using System.Windows.Forms;
 using SysRect = System.Drawing.Rectangle;
 
-namespace NoForms.Controls.Templates
+namespace NoForms.Controls.Abstract
 {
     public abstract class Component : IComponent
     {
         public IComponent Parent { get; set; }
-        ComponentCollection _components;
-        public ComponentCollection components
+        ComponentCollection _components = new AlwaysEmptyComponentCollection(null);
+        public virtual ComponentCollection components
         {
-            get { return _components; }
-        }
-
-        public Component()
-        {
-            _components = new ComponentCollection(this);
+            get
+            {
+                return _components;
+            }
         }
 
         protected Rectangle _DisplayRectangle = Rectangle.Empty;
@@ -105,7 +103,7 @@ namespace NoForms.Controls.Templates
                 c.RecalculateLocation();
         }
 
-        Rectangle clipSet = Rectangle.Empty;
+        protected Rectangle clipSet = Rectangle.Empty;
         public void UnClipAll(IRenderType rt)
         {
             if (!doClip) return;
@@ -116,62 +114,12 @@ namespace NoForms.Controls.Templates
         {
             if (!doClip) return;
             Parent.ReClipAll(rt);
-            rt.uDraw.PushAxisAlignedClip(clipSet);
+            rt.uDraw.PushAxisAlignedClip(clipSet,false);
         }
         internal bool doClip = true;
 
-        /// <summary>
-        /// You MUST call this base method when you override, at the end of your method, to
-        /// draw the children.
-        /// </summary>
-        /// <typeparam name="RenderType"></typeparam>
-        /// <param name="renderArgument"></param>
-        /// <param name="parentDisplayRectangle"></param>
-        public void DrawBase(IRenderType renderArgument)
-        {
-            Draw(renderArgument);
-            if(doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle);
-            foreach (IComponent c in components)
-                if (c.visible)
-                    c.DrawBase(renderArgument);
-            if (doClip) renderArgument.uDraw.PopAxisAlignedClip();
-        }
-        public abstract void Draw(IRenderType renderArgument);
-        public virtual void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
-        {
-            foreach (IComponent c in components)
-            {
-                if (c.visible)
-                    c.MouseMove(location,
-                        Util.CursorInRect(c.DisplayRectangle,
-                        Util.GetTopLevelLocation(this)), amClipped ? true : 
-                            !Util.CursorInRect(DisplayRectangle, Util.GetTopLevelLocation(this)));
-            }
-        }
-        public virtual void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
-        {
-            foreach (IComponent c in components)
-            {
-                if (c.visible)
-                    c.MouseUpDown(mea, mbs, Util.CursorInRect(c.DisplayRectangle, Util.GetTopLevelLocation(c)), 
-                        amClipped ? true : !Util.CursorInRect(DisplayRectangle, Util.GetTopLevelLocation(this)));
-            }
-        }
-        public virtual void KeyDown(System.Windows.Forms.Keys key)
-        {
-            foreach (IComponent inc in components)
-                    inc.KeyDown(key);
-        }
-        public virtual void KeyUp(System.Windows.Forms.Keys key)
-        {
-            foreach (IComponent inc in components)
-                    inc.KeyUp(key);
-        }
-        public virtual void KeyPress(char c)
-        {
-            foreach (IComponent inc in components)
-                    inc.KeyPress(c);
-        }
+        public abstract void DrawBase(IRenderType renderArgument);
+
 
         bool _visible = true;
         public bool visible
@@ -180,15 +128,14 @@ namespace NoForms.Controls.Templates
             set { _visible = value; }
         }
 
-        public NoForm TopLevelForm
-        {
-            get
-            {
-                IComponent ic = Parent;
-                while (ic.Parent != null)
-                    ic = ic.Parent;
-                return ic as NoForm;
-            }
-        }
+        public Cursor Cursor { get; set; }
+        public bool _Scrollable = true;
+        public bool Scrollable { get { return _Scrollable; } set { _Scrollable = value; } }
+
+        public virtual void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { }
+        public virtual void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { }
+        public virtual void KeyDown(Keys key) { }
+        public virtual void KeyUp(Keys key) { }
+        public virtual void KeyPress(char c) { }
     }
 }

@@ -6,9 +6,12 @@ namespace NoForms.Renderers
 {
     public interface IUnifiedDraw // This is a combined replacement for 2d2RenderTarget, drawing.graphics etc
     {
-        // Drawing Methods
-        void PushAxisAlignedClip(Rectangle clipRect);
+        // Render tools
+        void PushAxisAlignedClip(Rectangle clipRect, bool ignoreRenderOffset);
         void PopAxisAlignedClip();
+        void SetRenderOffset(Point renderOffset);
+
+        // Drawing Methods
         void Clear(Color color);
         void FillPath(UPath path, UBrush brush);
         void DrawPath(UPath path, UBrush brush, UStroke stroke);
@@ -31,38 +34,35 @@ namespace NoForms.Renderers
 
     // Cached base object for drawing objects
     public class DDis : IDisposable { public void Dispose() { } }
-    public delegate Object NoCacheDelegate();
+    public delegate IDisposable NoCacheDelegate();
     public abstract class ObjStore : IDisposable
     {
         Type storedType = null; // nothing stored to begin with
         bool storedValid = false;
-        Dictionary<String, Object> storedObjects = new Dictionary<string, Object>(); // nothing stored...
+        IDisposable storedObject = new DDis(); // nothing stored...
         Object validationLock = new Object(); // FIXME actually, it's up to framework not to destroy the Retrieved value until it's done with.
         public void Invalidate()
         {
             lock (validationLock)
                 storedValid = false;
         }
-        public Object Retreive<RetreiverType>(NoCacheDelegate noCacheAction, String key = "default") where RetreiverType : class, IRenderElements
+        public Object Retreive<RetreiverType>(NoCacheDelegate noCacheAction) where RetreiverType : class, IRenderElements
         {
             lock (validationLock)
             {
-                if (!storedValid || storedType != typeof(RetreiverType) || !storedObjects.ContainsKey(key))
+                if (!storedValid || storedType != typeof(RetreiverType))
                 {
-                    if(storedObjects.ContainsKey(key) && storedObjects[key] is IDisposable)
-                        (storedObjects[key] as IDisposable).Dispose();
-                    storedObjects[key] = noCacheAction();
+                    Dispose();
+                    storedObject = noCacheAction();
                     storedValid = true;
                     storedType = typeof(RetreiverType);
-                } 
-                return storedObjects[key];
+                }
+                return storedObject;
             }
         }
         public void Dispose()
         {
-            foreach(var id in storedObjects.Values)
-                if(id is IDisposable)
-                    (id as IDisposable).Dispose();
+            storedObject.Dispose();
         }
     }
 
@@ -148,10 +148,10 @@ namespace NoForms.Renderers
     }
     public class UTextInfo
     {
-        public Size minSize;
-        public int numLines;
-        public int[] lineLengths;
-        public int[] lineNewLineLength;
+        public Size minSize = new Size(0,0);
+        public int numLines =0;
+        public int[] lineLengths = new int[0];
+        public int[] lineNewLineLength = new int[0];
     }
 
     public struct UFont

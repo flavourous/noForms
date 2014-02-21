@@ -42,13 +42,15 @@
     <Compile Include="Common\Enums_Structs.cs" />
     <Compile Include="Common\ComponentCollection.cs" />
     <Compile Include="Common\Interfaces.cs" />
+    <Compile Include="Controls\Abstract\BasicContainer.cs" />
     <Compile Include="Controls\Button.cs" />
     <Compile Include="Controls\ComboBox.cs" />
     <Compile Include="Controls\ListBox.cs" />
     <Compile Include="Controls\MoveHandle.cs" />
     <Compile Include="Controls\Scribble.cs" />
-    <Compile Include="Common\Component.cs" />
+    <Compile Include="Controls\Abstract\Component.cs" />
     <Compile Include="Common\Managers.cs" />
+    <Compile Include="Controls\Abstract\ScrollContainer.cs" />
     <Compile Include="Controls\TextLabel.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
     <Compile Include="Renderers\D2DSwapChain.cs" />

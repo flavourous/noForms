@@ -4,7 +4,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class MoveHandle : Templates.Component
+    public class MoveHandle : Abstract.BasicContainer
     {
         NoForm controlled;
         public MoveHandle(NoForm MoveControl)

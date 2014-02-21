@@ -4,7 +4,7 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
-    public class TextLabel : Templates.Component
+    public class TextLabel : Abstract.BasicContainer
     {
         public Object tag = null;
         public USolidBrush background = new USolidBrush() { color = new Color(0, 0, 0, 0) };

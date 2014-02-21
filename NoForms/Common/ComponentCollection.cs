@@ -5,6 +5,23 @@ using System.Collections.Specialized;
 
 namespace NoForms
 {
+    // I do so little. FIXME what are the implications of using new vs virtial/override or a common base class/interface
+    public class AlwaysEmptyComponentCollection : ComponentCollection
+    {
+        public AlwaysEmptyComponentCollection(IComponent dontCare) : base(null) { }
+        public new bool Contains(IComponent item) { return false; }
+        public new void Add(IComponent item) { }
+        public new void Push(IComponent item) { }
+        public new bool Remove(IComponent item) { return false; }
+        public new bool RemoveAt(int idx) { return false; }
+        public new void Clear() { }
+        public new int IndexOf(IComponent ic) { return -1; }
+        public new bool IsReadOnly { get { return true; } }
+        public new void CopyTo(IComponent[] arr, int idx) { }
+        public new IEnumerator<IComponent> GetEnumerator() { yield break; }
+        public new IComponent this[int i] { get { return null; } }
+    }
+
     public class ComponentCollection : ICollection<IComponent>
     {
         IComponent myParent;

@@ -7,7 +7,7 @@ namespace NoForms.Controls
     public enum ButtonType { Basic, Win8 };
     enum ButtonState { Normal, Hover, Click };
     public enum FontStyle { Normal, Bold, Italic };
-    public class Button : Templates.Component
+    public class Button : Abstract.BasicContainer
     {
         // Properties
         ButtonType _type = ButtonType.Basic;
@@ -47,7 +47,7 @@ namespace NoForms.Controls
 
         void Button_SizeChanged(Size obj)
         {
-            var ir = DisplayRectangle.Inflated(-edge.strokeWidth);
+            var ir = DisplayRectangle.Inflated(new Thickness(-edge.strokeWidth));
             textData.width = ir.width;
             textData.height = ir.height;
         }
@@ -57,8 +57,8 @@ namespace NoForms.Controls
         {
             float lt = edge.strokeWidth;
             float bv = lt / 2;
-            var lr = DisplayRectangle.Inflated(-bv);
-            var ir = DisplayRectangle.Inflated(-lt);
+            var lr = DisplayRectangle.Inflated(new Thickness(-bv));
+            var ir = DisplayRectangle.Inflated(new Thickness(-lt));
 
             rt.uDraw.FillRectangle(ir, brushFill);
             rt.uDraw.DrawRectangle(lr, brushLine, edge);

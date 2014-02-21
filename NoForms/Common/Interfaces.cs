@@ -29,6 +29,7 @@ namespace NoForms
 
         // Properties
         Point Location { get; set; }
+        Size Size { get; set; }
         Rectangle DisplayRectangle { get; set; }
         bool visible { get; set; }
 
@@ -36,7 +37,7 @@ namespace NoForms
         void RecalculateLocation();
 
         // Rendering Support, passing one object for requesting each rendering type
-        void DrawBase(IRenderType renderArgument) /* where RenderType : IRenderType */;
+        void DrawBase(IRenderType renderArgument);
 
         // Mouse events
         void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped);
@@ -47,6 +48,10 @@ namespace NoForms
         void KeyDown(System.Windows.Forms.Keys key);
         void KeyUp(System.Windows.Forms.Keys key);
         void KeyPress(char c);
+
+        // cursor...
+        Cursor Cursor { get; set; }
+        bool Scrollable { get; set; }
 
         // Clipping control FIXME belongs here?
         void ReClipAll(IRenderType renderArgument);

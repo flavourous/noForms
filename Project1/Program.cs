@@ -24,7 +24,7 @@ namespace testapp
 
             NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
             NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
-            NoForm nf = rootForm = new MyNoForm(d2dswapchain);
+            NoForm nf = rootForm = new MyNoForm(d2dlayered);
             nf.title = "Test App";
             nf.Size = new System.Drawing.Size(700, 500);
             nf.MinSize = new System.Drawing.Size(700, 300);
@@ -101,7 +101,6 @@ namespace testapp
     
     class MyNoForm : NoForm 
     {
-        public static Action<System.Windows.Forms.Cursor> SetCursor = null;
         MoveHandle mh;
         SizeHandle sh;
         MainContainer mc;
@@ -122,7 +121,6 @@ namespace testapp
             components.Add(mc);
 
             SizeChanged += new Act(MyNoForm_OnSizeChanged);
-            SetCursor = new Action<System.Windows.Forms.Cursor>(cur => FormCursor = cur);
 
             cbProject = new ComboBox();
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
@@ -166,8 +164,8 @@ namespace testapp
         {
             scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var dr = newProject.DisplayRectangle;
-            var ir = dr.Inflated(-3.5f);
-            var or = dr.Inflated(-.5f);
+            var ir = dr.Inflated(new Thickness(-3.5f));
+            var or = dr.Inflated(new Thickness(-.5f));
             ud.FillRectangle(or, scb);
             scb.color = new NoForms.Color(1, 0, 0, 1);
             ud.DrawRectangle(or, scb, stroke);
@@ -196,13 +194,14 @@ namespace testapp
         {
             scb.color = new NoForms.Color(.5f, 1, 1, 1);
             var dr = delProject.DisplayRectangle;
-            var ir = dr.Inflated(-3.5f);
-            var or = dr.Inflated(-.5f);
+            var ir = dr.Inflated(new Thickness(-3.5f));
+            var or = dr.Inflated(new Thickness(-.5f));
             ud.FillRectangle(or, scb);
             scb.color = new NoForms.Color(1, 1, 0, 0);
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
+
             ud.DrawText(d,delProject.DisplayRectangle.Location, scb, UTextDrawOptions.Clip,false);
         }
 
@@ -255,8 +254,8 @@ namespace testapp
         void editProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new NoForms.Color(.5f, 1, 1, 1);
-            var ir = editProject.DisplayRectangle.Inflated(-3.5f);
-            var or = editProject.DisplayRectangle.Inflated(-.5f);
+            var ir = editProject.DisplayRectangle.Inflated(new Thickness(-3.5f));
+            var or = editProject.DisplayRectangle.Inflated(new Thickness(-.5f));
             ud.FillRectangle(or, scb);
             scb.color = new NoForms.Color(1, 0, 1, 0);
             ud.DrawRectangle(or, scb, stroke);
@@ -349,7 +348,7 @@ namespace testapp
         
     }
 
-    class MainContainer : NoForms.Controls.Templates.Component
+    class MainContainer : NoForms.Controls.Abstract.BasicContainer
     {
         public StoryListContainer backlog, planned, inprogress,moreinfo, testing, deploy, done;
         StoryListContainer[] slcs;
@@ -377,23 +376,32 @@ namespace testapp
             MainContainer_SizeChanged(Size);
         }
 
+        Object renderInterlock = new object();
+
         float titleHeight = 25;
         float pad = 5;
         void MainContainer_SizeChanged(Size obj)
         {
-            float slcWidth =  (Size.width - pad * (slcs.Length +1)) / (float)slcs.Length;
-            float slcHeight = Size.height -  pad - titleHeight;
-            float remain = (float)Math.Round(Size.width -(int)slcWidth * slcs.Length - pad*(slcs.Length+1));
+            // Makes no difference, could just do here.  Except the unneccessary but minor performance hit.
+            needLayout = true;
+        }
+
+        bool needLayout = false;
+        void DoLayout()
+        {
+            float slcWidth = (Size.width - pad * (slcs.Length + 1)) / (float)slcs.Length;
+            float slcHeight = Size.height - pad - titleHeight;
+            float remain = (float)Math.Round(Size.width - (int)slcWidth * slcs.Length - pad * (slcs.Length + 1));
             int rc = 0;
-            for (int i = 0; i < slcs.Length;i++ )
+            for (int i = 0; i < slcs.Length; i++)
             {
-                int rem = (int)(remain-->0 ? 1:0);
+                int rem = (int)(remain-- > 0 ? 1 : 0);
 
-                slcs[i].Size = new System.Drawing.Size((int)slcWidth+rem, (int)slcHeight);
-                slcs[i].Location = new System.Drawing.Point((int)(pad + slcWidth) * i + (int)pad +rc,  (int)titleHeight);
+                slcs[i].Size = new System.Drawing.Size((int)slcWidth + rem, (int)slcHeight);
+                slcs[i].Location = new System.Drawing.Point((int)(pad + slcWidth) * i + (int)pad + rc, (int)titleHeight);
 
-                slcts[i].Size = new System.Drawing.Size((int)slcWidth+rem, (int)titleHeight);
-                slcts[i].Location = new System.Drawing.Point((int)(pad + slcWidth) * i + (int)pad  +rc, 0);
+                slcts[i].Size = new System.Drawing.Size((int)slcWidth + rem, (int)titleHeight);
+                slcts[i].Location = new System.Drawing.Point((int)(pad + slcWidth) * i + (int)pad + rc, 0);
 
                 rc += rem;
             }
@@ -401,11 +409,11 @@ namespace testapp
 
         public override void Draw(IRenderType renderArgument)
         {
-            
+            if (needLayout) DoLayout();
         }
     }
 
-    class StoryListContainer : NoForms.Controls.Templates.Component
+    class StoryListContainer : NoForms.Controls.Abstract.ScrollContainer
     {
         public String name;
         public StoryState state;
@@ -413,12 +421,11 @@ namespace testapp
             : base()
         {
             this.name = name;
-            add = new Scribble();
+            add = new Scribble() { Scrollable = false };
             components.Add(add);
             SizeChanged += new Action<Size>(StoryListContainer_SizeChanged);
             add.draw += new Scribble.scribble(add_draw);
             add.Clicked += new Scribble.ClickDelegate(add_Clicked);
-            add.pleaseChangeCursor += new Action<System.Windows.Forms.Cursor>(c => Program.rootForm.FormCursor = c);
             StoryListContainer_SizeChanged(Size);
         }
 
@@ -450,17 +457,15 @@ namespace testapp
         void StoryListContainer_SizeChanged(Size obj)
         {
             add.Size = new Size(10, 10);
-            add.Location = new Point(Size.width - 15, Size.height - 15);
+            add.Location = new Point(Size.width - 15 - (VerticalScrollbarVisible?VerticalScrollbarWidth:0), Size.height - 15);
         }
         Scribble add;
         public override void Draw(IRenderType ra)
         {
-            float lt = 1.0f;
-            float bv = lt / 2;
-            var ir = DisplayRectangle.Inflated(-lt);
-            var lr = DisplayRectangle.Inflated(-bv);
-            ra.uDraw.DrawRectangle(lr, borderBrush, edge);
+            var dr = DisplayRectangle;
+            var ir = DisplayRectangle.Deflated(new Thickness(.5f,.5f,.5f,.5f)); // float positioning...
             ra.uDraw.FillRectangle(ir, fillBrush);
+            ra.uDraw.DrawRectangle(ir, borderBrush, edge);
 
             float startY = 0;
             foreach (var s in Program.Stories)
@@ -472,7 +477,7 @@ namespace testapp
                     if (s.Parent == this)
                     {
                         s.Location = new Point(0, startY);
-                        s.Size = new NoForms.Size(Size.width, s.Size.height);
+                        s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), s.Size.height);
                         startY += s.DisplayRectangle.height;
                     }
                 }
@@ -498,7 +503,7 @@ namespace testapp
 
     
 
-    class Story : NoForms.Controls.Templates.Component
+    class Story : NoForms.Controls.Abstract.BasicContainer
     {
         NoForms.Controls.Scribble cx;
         public Story(String title, String txt, StoryState state, String project)
@@ -516,7 +521,6 @@ namespace testapp
             
             cx.draw += new Scribble.scribble(cx_draw);
             cx.Clicked += new Scribble.ClickDelegate(cx_Clicked);
-            cx.pleaseChangeCursor += new Action<System.Windows.Forms.Cursor>(c=>Program.rootForm.FormCursor = c);
             Story_SizeChanged(Size);
         }
 
@@ -526,7 +530,6 @@ namespace testapp
             state = StoryState.undefined;
             Parent.components.Remove(this);
             Program.Stories.Remove(this);
-            Program.rootForm.FormCursor = System.Windows.Forms.Cursors.Default;
         }
 
         void cx_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
@@ -548,20 +551,28 @@ namespace testapp
         public String storyTitle;
         public String storyText;
         public StoryState state;
-        public Rectangle padding = new Rectangle() { top = 5, left = 5, right = 5, bottom = 0 };
+        public Thickness padding = new Thickness() { top = 5, left = 5, right = 5, bottom = 0 };
         float boxHeight = 100;
 
         UBrush red = new USolidBrush() { color = new Color(1, 1, 0, 0) };
         UBrush white = new USolidBrush() { color = new Color(1) };
 
+        public override void DrawBase(IRenderType renderArgument)
+        {
+            var cr = Parent.DisplayRectangle.Deflated(new Thickness(5));
+            renderArgument.uDraw.PushAxisAlignedClip(cr, true);
+            base.DrawBase(renderArgument);
+            renderArgument.uDraw.PopAxisAlignedClip();
+        }
+
         // Drawybit
         public override void Draw(IRenderType ra)
         {
+            
+
             Size = new Size(Size.width, boxHeight);
             // do bottom padding on the slc
             Rectangle clr = DisplayRectangle;
-            clr.bottom = Parent.DisplayRectangle.bottom - 5;
-            ra.uDraw.PushAxisAlignedClip(clr);
 
             Rectangle inRect = DisplayRectangle.Deflated(padding);
             ra.uDraw.FillRectangle(inRect, scb_back);
@@ -581,11 +592,8 @@ namespace testapp
             ct += 3 * padding.top;
             boxHeight = (int)Math.Round(ct);
 
-            ra.uDraw.PushAxisAlignedClip(inRect2);
             ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions.None,false);
-            ra.uDraw.PopAxisAlignedClip();
 
-            ra.uDraw.PopAxisAlignedClip();
         }
         
         USolidBrush scb_back = new USolidBrush() { color = new Color(.4f, .2f, .2f, .2f) };

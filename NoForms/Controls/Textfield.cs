@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NoForms.Controls
 {
-    public class Textfield : Templates.Component
+    public class Textfield : Abstract.BasicContainer
     {
         public enum LayoutStyle { OneLine, MultiLine, WrappedMultiLine };
         public LayoutStyle _layout = LayoutStyle.OneLine;
@@ -40,7 +40,7 @@ namespace NoForms.Controls
             }
         }
 
-        public Rectangle padding = new Rectangle() { left = 5, right = 5, top = 5, bottom = 5 };
+        public Thickness padding = new Thickness() { left = 5, right = 5, top = 5, bottom = 5 };
         public Rectangle PaddedRectangle
         {
             get
@@ -75,6 +75,8 @@ namespace NoForms.Controls
             selectRange = new UStyleRange(0,0, null, selectFG, selectBG);
             data.styleRanges.Add(selectRange);
 
+            Cursor = System.Windows.Forms.Cursors.IBeam;
+
             UpdateTextLayout();
             System.Timers.Timer tm = new System.Timers.Timer(800) { AutoReset = true };
             tm.Elapsed += new System.Timers.ElapsedEventHandler(tm_Elapsed);
@@ -104,7 +106,9 @@ namespace NoForms.Controls
         public UBrush selectBG = new USolidBrush() { color = new Color(.5f, .5f, .5f, 1f) };
         public UBrush selectFG = new USolidBrush() { color = new Color(1f) };
 
+        UBrush defBrush = new USolidBrush() { color = new Color(0) };
         System.Collections.Generic.Queue<Action<IRenderType>> runNextRender = new System.Collections.Generic.Queue<Action<IRenderType>>();
+        UTextInfo lastTextInfo = new UTextInfo();
         public override void Draw(IRenderType rt)
         {
             if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
@@ -112,10 +116,10 @@ namespace NoForms.Controls
                 runNextRender.Dequeue()(rt);
             
             rt.uDraw.FillRectangle(DisplayRectangle, background);
-            rt.uDraw.DrawRectangle(DisplayRectangle.Inflated(-.5f), borderBrush, borderStroke);
-            rt.uDraw.PushAxisAlignedClip(DisplayRectangle);
+            rt.uDraw.DrawRectangle(DisplayRectangle.Inflated(new Thickness(-.5f)), borderBrush, borderStroke);
+            rt.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
 
-            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), new USolidBrush() { color = new Color(0) }, UTextDrawOptions.None, true);
+            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), defBrush, UTextDrawOptions.None, true);
             if (FocusManager.FocusGet(this)) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
 
             rt.uDraw.PopAxisAlignedClip();
@@ -147,7 +151,7 @@ namespace NoForms.Controls
                 selectRange.length = Math.Abs(caretPos-shiftOrigin);
 
                 // get size of the render
-                var ti=sendMe.uDraw.GetTextInfo(data);
+                var ti = lastTextInfo = sendMe.uDraw.GetTextInfo(data);
                 int lines=ti.numLines;
                 Size tms = ti.minSize;
                 float lineHeight = tms.height / (float) lines;
@@ -171,6 +175,15 @@ namespace NoForms.Controls
         bool ctrl = false, alt = false, win = false, shift = false;
         int shiftOrigin = 0;
 
+        void SetClip(String cs)
+        {
+            System.Windows.Forms.Clipboard.SetText(cs);
+        }
+        String GetClip()
+        {
+            return System.Windows.Forms.Clipboard.GetText();
+        }
+
         void MKeys(System.Windows.Forms.Keys key, bool down)
         {
             if (key == System.Windows.Forms.Keys.Control || key == System.Windows.Forms.Keys.ControlKey)
@@ -186,142 +199,145 @@ namespace NoForms.Controls
 
         public override void KeyDown(System.Windows.Forms.Keys key)
         {
-            if (!FocusManager.FocusGet(this)) return;
-            MKeys(key, true);
-            if (alt) return;
+                if (!FocusManager.FocusGet(this)) return;
+                MKeys(key, true);
+                if (alt) return;
 
-            // Copy
-            if (ctrl && key == System.Windows.Forms.Keys.C)
-                System.Windows.Forms.Clipboard.SetText(BoundSubString(data.text, caretPos, shiftOrigin));
+            // We dont like \r\n or \r in our text!
+                data.text = text.Replace("\r\n", "\n").Replace("\r", "\n");
 
-            // Cut 
-            if (ctrl && key == System.Windows.Forms.Keys.X)
-            {
-                System.Windows.Forms.Clipboard.SetText(BoundSubString(data.text, caretPos, shiftOrigin));
-                ReplaceSelectionWithText("");
-            }
+                // Copy
+                if (ctrl && key == System.Windows.Forms.Keys.C)
+                {
+                    String cs = BoundSubString(data.text, caretPos, shiftOrigin);
+                    if (cs != "") SetClip(cs);
+                }
 
-            // Paste
-            if (ctrl && key == System.Windows.Forms.Keys.V)
-                ReplaceSelectionWithText(System.Windows.Forms.Clipboard.GetText());
-
-            // Selcet all
-            if (ctrl && key == System.Windows.Forms.Keys.A)
-            {
-                caretPos = data.text.Length;
-                shiftOrigin = 0;
-            }
-
-
-            // Backspace
-            if (key == System.Windows.Forms.Keys.Back && caretPos > 0)
-            {
-                if (caretPos != shiftOrigin)
+                // Cut 
+                if (ctrl && key == System.Windows.Forms.Keys.X)
+                {
+                    String cs = BoundSubString(data.text, caretPos, shiftOrigin);
+                    if (cs != "") SetClip(cs);
                     ReplaceSelectionWithText("");
-                else
-                {
-                    data.text = data.text.Substring(0, caretPos - 1) + data.text.Substring(caretPos);
-                    caretPos--;
                 }
-            }
 
-            if (shift && caretPos == shiftOrigin)
-            {
-                // cut line
-                if (key == System.Windows.Forms.Keys.Delete)
+                // Paste
+                if (ctrl && key == System.Windows.Forms.Keys.V)
+                    ReplaceSelectionWithText(GetClip());
+
+                // Selcet all
+                if (ctrl && key == System.Windows.Forms.Keys.A)
                 {
-                    int start,end;
-                    GetLineRange(out start, out end);
-                    System.Windows.Forms.Clipboard.SetText(BoundSubString(data.text, start, end));
-                    data.text = data.text.Substring(0, start) + data.text.Substring(end, data.text.Length-end);
-                    caretPos=shiftOrigin=start;
+                    caretPos = data.text.Length;
+                    shiftOrigin = 0;
                 }
-                // paste line
-                if (key == System.Windows.Forms.Keys.Insert)
+
+
+                // Backspace
+                if (key == System.Windows.Forms.Keys.Back && caretPos > 0)
                 {
-                    int lineNum, linePos;
-                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    if (caretPos != shiftOrigin)
+                        ReplaceSelectionWithText("");
+                    else
                     {
-                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        data.text = data.text.Substring(0, caretPos - 1) + data.text.Substring(caretPos);
+                        caretPos--;
+                    }
+                }
+
+                if (shift && caretPos == shiftOrigin)
+                {
+                    // cut line
+                    if (key == System.Windows.Forms.Keys.Delete)
+                    {
+                        int start, end;
+                        GetLineRange(out start, out end);
+                        String cs = BoundSubString(data.text, start, end);
+                        if (cs != "") SetClip(cs);
+                        data.text = data.text.Substring(0, start) + data.text.Substring(end, data.text.Length - end);
+                        caretPos = shiftOrigin = start;
+                    }
+                    // paste line
+                    if (key == System.Windows.Forms.Keys.Insert)
+                    {
+                        int lineNum, linePos;
+                        UTextInfo ti = lastTextInfo;
                         FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                         _caretPos = shiftOrigin = caretPos - linePos;
-                        ReplaceSelectionWithText(System.Windows.Forms.Clipboard.GetText().TrimEnd('\r', '\n') + "\n");
-                    }));
-                }
-            }
-
-            // Delete
-            else if (key == System.Windows.Forms.Keys.Delete && caretPos < data.text.Length && !ctrl)
-            {
-                if (caretPos != shiftOrigin)
-                    ReplaceSelectionWithText("");
-                else
-                {
-                    data.text = data.text.Substring(0, caretPos) + data.text.Substring(caretPos+1);
-                }
-            }
-
-            if (key == System.Windows.Forms.Keys.Left && caretPos >0)
-            {
-                if (ctrl)
-                {
-                    String lText = data.text.Substring(0, caretPos).Replace("\r", "\n").Replace("\n"," ");
-                    var reg = new Regex(@"\s+");
-                    var mt = reg.Matches(lText);
-                    int cp = 0;
-                    if (mt.Count > 0)
-                        cp = mt[mt.Count - 1].Index + mt[mt.Count - 1].Length;
-                    if (cp == caretPos)
-                    {
-                        if (mt.Count > 1)
-                            cp = caretPos = mt[mt.Count - 2].Index + mt[mt.Count - 2].Length;
-                        else
-                            cp = 0;
+                        ReplaceSelectionWithText(GetClip().TrimEnd('\r', '\n') + "\n");
                     }
-                    caretPos = cp;
                 }
-                else caretPos--;
-            }
-            if (key == System.Windows.Forms.Keys.Right && caretPos < data.text.Length)
-            {
-                if (ctrl)
+
+                // Delete
+                else if (key == System.Windows.Forms.Keys.Delete && caretPos < data.text.Length && !ctrl)
                 {
-                    String rText = data.text.Substring(caretPos, data.text.Length - caretPos).Replace("\r", "\n").Replace("\n", " ");
-                    var reg = new Regex(@"\s+");
-                    var mt = reg.Matches(rText);
-                    int cp = 0;
-                    if (mt.Count > 0)
-                        cp = mt[0].Index + mt[0].Length;
-                    else cp = rText.Length;
-                    caretPos += cp;
-                }
-                else caretPos++;
-            }
-            if (key == System.Windows.Forms.Keys.Up)
-            {
-                if (ctrl)
-                {
-                    String lText = data.text.Substring(0, caretPos).Replace("\r\n","\nI").Replace("\r","\n");
-                    var reg = new Regex("\n\n", RegexOptions.Multiline);
-                    var mt = reg.Matches(lText);
-                    int cp =0;
-                    if (mt.Count > 0)
-                        cp = mt[mt.Count-1].Index + mt[mt.Count-1].Length;
-                    if (cp == caretPos)
+                    if (caretPos != shiftOrigin)
+                        ReplaceSelectionWithText("");
+                    else
                     {
-                        if (mt.Count > 1)
-                            cp = caretPos = mt[mt.Count - 2].Index + mt[mt.Count - 2].Length;
-                        else
-                            cp = 0;
+                        data.text = data.text.Substring(0, caretPos) + data.text.Substring(caretPos + 1);
                     }
-                    caretPos = cp;
                 }
-                else
+
+                if (key == System.Windows.Forms.Keys.Left && caretPos > 0)
                 {
-                    int lineNum, linePos;
-                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    if (ctrl)
                     {
-                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        String lText = data.text.Substring(0, caretPos).Replace("\r", "\n").Replace("\n", " ");
+                        var reg = new Regex(@"\s+");
+                        var mt = reg.Matches(lText);
+                        int cp = 0;
+                        if (mt.Count > 0)
+                            cp = mt[mt.Count - 1].Index + mt[mt.Count - 1].Length;
+                        if (cp == caretPos)
+                        {
+                            if (mt.Count > 1)
+                                cp = caretPos = mt[mt.Count - 2].Index + mt[mt.Count - 2].Length;
+                            else
+                                cp = 0;
+                        }
+                        caretPos = cp;
+                    }
+                    else caretPos--;
+                }
+                if (key == System.Windows.Forms.Keys.Right && caretPos < data.text.Length)
+                {
+                    if (ctrl)
+                    {
+                        String rText = data.text.Substring(caretPos, data.text.Length - caretPos).Replace("\r", "\n").Replace("\n", " ");
+                        var reg = new Regex(@"\s+");
+                        var mt = reg.Matches(rText);
+                        int cp = 0;
+                        if (mt.Count > 0)
+                            cp = mt[0].Index + mt[0].Length;
+                        else cp = rText.Length;
+                        caretPos += cp;
+                    }
+                    else caretPos++;
+                }
+                if (key == System.Windows.Forms.Keys.Up)
+                {
+                    if (ctrl)
+                    {
+                        String lText = data.text.Substring(0, caretPos);
+                        var reg = new Regex("[^\n]\n\n+[^\n]", RegexOptions.Multiline);
+                        var mt = reg.Matches(lText);
+                        int cp = 0;
+                        if (mt.Count > 0)
+                            cp = mt[mt.Count - 1].Index + mt[mt.Count - 1].Length-1;
+                        if (cp == caretPos)
+                        {
+                            if (mt.Count > 1)
+                                cp = mt[mt.Count - 2].Index + mt[mt.Count - 2].Length;
+                            else
+                                cp = 0;
+                        }
+                        caretPos = cp;
+                    }
+                    else
+                    {
+                        int lineNum, linePos;
+                        UTextInfo ti = lastTextInfo;
                         FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                         if (lineNum != 0) // cant go up there!
                         {
@@ -332,28 +348,25 @@ namespace NoForms.Controls
                             if (linePos > prevLineLen) linePos = prevLineLen;
                             caretPos = prevLine + linePos;
                         }
-                    }));
+                    }
                 }
-            }
-            if (key == System.Windows.Forms.Keys.Down)
-            {
-                if (ctrl)
+                if (key == System.Windows.Forms.Keys.Down)
                 {
-                    String rText = data.text.Substring(caretPos, data.text.Length-caretPos).Replace("\r\n", "\nI").Replace("\r", "\n");
-                    var reg = new Regex("\n\n", RegexOptions.Multiline);
-                    var mt = reg.Matches(rText);
-                    int cp = 0;
-                    if (mt.Count > 0)
-                        cp = mt[0].Index + mt[0].Length;
-                    else cp = rText.Length;
-                    caretPos += cp;
-                }
-                else
-                {
-                    int lineNum, linePos;
-                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    if (ctrl)
                     {
-                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        String rText = data.text.Substring(caretPos, data.text.Length - caretPos);
+                        var reg = new Regex("[^\n]\n\n+[^\n]", RegexOptions.Multiline);
+                        var mt = reg.Matches(rText);
+                        int cp = 0;
+                        if (mt.Count > 0)
+                            cp = mt[0].Index + mt[0].Length-1;
+                        else cp = rText.Length;
+                        caretPos += cp;
+                    }
+                    else
+                    {
+                        int lineNum, linePos;
+                        UTextInfo ti = lastTextInfo;
                         FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                         if (lineNum != ti.numLines - 1) // cant go down there!
                         {
@@ -364,18 +377,16 @@ namespace NoForms.Controls
                             if (linePos > nextLineLen) linePos = nextLineLen;
                             caretPos = nextLine + linePos;
                         }
-                    }));
+                    }
                 }
-            }
-            if (key == System.Windows.Forms.Keys.End)
-            {
-                if (ctrl) caretPos = data.text.Length;
-                else
+                if (key == System.Windows.Forms.Keys.End)
                 {
-                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    if (ctrl) caretPos = data.text.Length;
+                    else
                     {
+
                         int lineNum, linePos;
-                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        UTextInfo ti = lastTextInfo;
                         FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                         int cp = caretPos + ti.lineLengths[lineNum] - linePos - 1;
 
@@ -383,33 +394,27 @@ namespace NoForms.Controls
                         while ((c = data.text[cp]) == '\r' || c == '\n')
                             cp--;
 
-                        caretPos = cp + 1;
-                    }));
+                        int el = WrappedEndLine(ti,lineNum) ? 0 : 1;
+                        caretPos = cp + el;
+                    }
                 }
-            }
-            if (key == System.Windows.Forms.Keys.Home)
-            {
-                if (ctrl) caretPos = 0;
-                else
+                if (key == System.Windows.Forms.Keys.Home)
                 {
-                    runNextRender.Enqueue(new Action<IRenderType>(rt =>
+                    if (ctrl) caretPos = 0;
+                    else
                     {
+
                         int lineNum, linePos;
-                        UTextInfo ti = rt.uDraw.GetTextInfo(data);
+                        UTextInfo ti = lastTextInfo;
                         FindMyLine(caretPos, ti.lineLengths, out lineNum, out linePos);
                         caretPos -= linePos;
-                    }));
+                    }
                 }
-            }
-            
         }
-
-        
 
         public override void KeyUp(System.Windows.Forms.Keys key)
         {
             MKeys(key, false);
-            
         }
 
         void GetLineRange(out int start, out int end)
@@ -442,6 +447,17 @@ namespace NoForms.Controls
                 }
                 else if (c == '\r') end++;
             }
+        }
+
+        bool WrappedEndLine(UTextInfo ti, int lineNum)
+        {
+            if (ti.lineNewLineLength[lineNum] == 0)
+            {
+                // could be last line, could be wrapped
+                if (ti.numLines == (lineNum + 1)) return false;
+                else return true;
+            }
+            return false;
         }
 
         void FindMyLine(int myPos, int[] linelens, out int lineNum, out int linePos)
@@ -505,15 +521,15 @@ namespace NoForms.Controls
 
         public override void KeyPress(char c)
         {
-            // FIXME unprintable chars
-            if (!FocusManager.FocusGet(this)) return;
-            if (ctrl || alt || win) return;
-            if (c != '\b')
-                if ((c != '\r' && c != '\n') || layout != LayoutStyle.OneLine)
-                {
-                    String cc = c == '\r' ? "\n" : "" + c;
-                    ReplaceSelectionWithText(cc);
-                }
+                // FIXME unprintable chars
+                if (!FocusManager.FocusGet(this)) return;
+                if (ctrl || alt || win) return;
+                if (c != '\b')
+                    if ((c != '\r' && c != '\n') || layout != LayoutStyle.OneLine)
+                    {
+                        String cc = c == '\r' ? "\n" : "" + c;
+                        ReplaceSelectionWithText(cc);
+                    }
         }
         void ReplaceSelectionWithText(String text)
         {
@@ -522,33 +538,25 @@ namespace NoForms.Controls
             bool ord = caretPos > shiftOrigin;
             st = ord ? shiftOrigin : caretPos;
             en = ord ? caretPos : shiftOrigin;
-           
-            data.text = data.text.Substring(0, st) + text + data.text.Substring(en);
+
+            String nled = text.Replace("\r\n", "\n").Replace("\r", "\n");
+            String foroneline = nled;
+            if (this.layout == LayoutStyle.OneLine && nled.Contains("\n"))
+                foroneline = nled.Substring(0, nled.IndexOf("\n"));
+
+            data.text = data.text.Substring(0, st) + foroneline + data.text.Substring(en);
 
             _caretPos = st + text.Length;
             shiftOrigin = caretPos;
             UpdateTextLayout();
         }
-        System.Windows.Forms.Cursor pc = null;
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
-            
-                // LETS NOT FORGET THIS IS relative to the SCREEN (FIXME?)
-                if (inComponent && !amClipped && pc == null)
-                {
-                    pc = TopLevelForm.FormCursor;
-                    TopLevelForm.FormCursor = System.Windows.Forms.Cursors.IBeam;
-                }
-                if (!inComponent && pc != null)
-                {
-                    TopLevelForm.FormCursor = pc;
-                    pc = null;
-                }
             runNextRender.Enqueue(new Action<IRenderType>(rt =>
             {
                 if (mouseSelect && inComponent && !amClipped)
                 {
-                    Point tl = TopLevelForm.Location;
+                    Point tl = Util.GetTopLevelLocation(this); // FIXME is this noform.location? :/
                     Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
                     UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
                     int extra = 0;
@@ -566,13 +574,11 @@ namespace NoForms.Controls
                 {
                     if (inComponent && !amClipped)
                     {
-
                         Point tfPoint = new Point(mea.Location.X - Location.X + roX, mea.Location.Y - Location.Y + roY);
                         var hti = rt.uDraw.HitPoint(tfPoint, data);
                         int extra = 0;
                         if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
                         caretPos = hti.charPos + extra;
-                        UpdateTextLayout(rt);
                         FocusManager.FocusSet(this, inComponent);
                         mouseSelect = true;
                     }
