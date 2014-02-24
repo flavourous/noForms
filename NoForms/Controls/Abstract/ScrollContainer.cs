@@ -78,6 +78,31 @@ namespace NoForms.Controls.Abstract
         protected float hFrac, vFrac;
         protected float hVis, vVis;
 
+        uint _cycle = 20;
+        public uint cycle
+        {
+            get
+            {
+                return _cycle;
+            }
+            set
+            {
+                _cycle = upButton.cycle = downButton.cycle = leftButton.cycle = rightButton.cycle = value;
+            }
+        }
+        uint _step = 20;
+        public uint step
+        {
+            get
+            {
+                return _step;
+            }
+            set
+            {
+                _step = upButton.step = downButton.step = leftButton.step = rightButton.step = value;
+            }
+        }
+
         ScrollBarContainer verticalContainer = new ScrollBarContainer();
         ScrollBarButton upButton;
         ScrollBarButton downButton;
@@ -167,8 +192,7 @@ namespace NoForms.Controls.Abstract
                 base.MouseUpDown(mea, mbs, inComponent, amClipped);
                 if (inComponent && !amClipped && tzo && mbs == MouseButtonState.DOWN)
                 {
-                    TimeCB(null);
-                    scrollTimer.Change(delay, cycle);
+                    scrollTimer.Change(0, cycle);
                     (butBrsh as USolidBrush).color = new Color(.6f, .5f, .7f, .5f);
                 }
                 else
@@ -179,7 +203,6 @@ namespace NoForms.Controls.Abstract
             }
             public uint step = 1;
             public uint cycle = 20;
-            public uint delay = 50;
             System.Threading.Timer scrollTimer;
             void TimeCB(Object o)
             {
@@ -254,7 +277,6 @@ namespace NoForms.Controls.Abstract
         public sealed override void DrawBase(IRenderType renderArgument)
         {
             // trimSize is the size sans scrollbars.  but maybe we should just let the thing overdraw...
-            ScrollContainer_SizeChanged(Size);
             Size trimSize = DetermineScrollBars();
             Draw(renderArgument);
             if (doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle,false);

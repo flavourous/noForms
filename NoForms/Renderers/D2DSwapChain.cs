@@ -136,15 +136,18 @@ namespace NoForms.Renderers
             // Resize the form and backbuffer to noForm.Size
             Resize();
 
-            // Do Drawing stuff
-            DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
-            d2dRenderTarget.BeginDraw();
-            d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
-            noForm.DrawBase(this);
-            d2dRenderTarget.PopAxisAlignedClip();
-            d2dRenderTarget.EndDraw();
+            lock (noForm)
+            {
+                // Do Drawing stuff
+                DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
+                d2dRenderTarget.BeginDraw();
+                d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
+                noForm.DrawBase(this);
+                d2dRenderTarget.PopAxisAlignedClip();
+                d2dRenderTarget.EndDraw();
 
-            swapchain.Present(0, PresentFlags.None);
+                swapchain.Present(0, PresentFlags.None);
+            }
         }
         void Resize()
         {

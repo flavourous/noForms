@@ -130,31 +130,34 @@ namespace NoForms.Renderers
         public NoForm noForm { get; set; }
         void RenderPass()
         {
-            // Resize the form and backbuffer to noForm.Size
+            // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
             Resize();
 
-            // Do Drawing stuff
-            DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
-            d2dRenderTarget.BeginDraw();
-            d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
-            noForm.DrawBase(this);
-            d2dRenderTarget.PopAxisAlignedClip();
+            lock (noForm)
+            {
+                // Do Drawing stuff
+                DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
+                d2dRenderTarget.BeginDraw();
+                d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
+                noForm.DrawBase(this);
+                d2dRenderTarget.PopAxisAlignedClip();
 
-            // Fill with transparency the edgeBuffer!
-            d2dRenderTarget.FillRectangle(new RectangleF(0,noForm.Size.height,noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize),scbTrans);
-            d2dRenderTarget.FillRectangle(new RectangleF(noForm.Size.width, 0, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
-            d2dRenderTarget.EndDraw();
+                // Fill with transparency the edgeBuffer!
+                d2dRenderTarget.FillRectangle(new RectangleF(0, noForm.Size.height, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
+                d2dRenderTarget.FillRectangle(new RectangleF(noForm.Size.width, 0, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
+                d2dRenderTarget.EndDraw();
 
-            // Present DC to windows (ugh layered windows sad times)
-            IntPtr dxHdc = surface.GetDC(false);
-            System.Drawing.Graphics dxdc = System.Drawing.Graphics.FromHdc(dxHdc);
-            Win32.Point dstPoint = new Win32.Point((int)noForm.Location.X, (int)noForm.Location.Y);
-            Win32.Point srcPoint = new Win32.Point(0, 0);
-            Win32.Size pSize = new Win32.Size(rtSize.Width, rtSize.Height);
-            Win32.BLENDFUNCTION bf = new Win32.BLENDFUNCTION() { SourceConstantAlpha = 255, AlphaFormat = Win32.AC_SRC_ALPHA, BlendFlags = 0, BlendOp = 0 };
-            bool suc = Win32.UpdateLayeredWindow(winHandle, someDC, ref dstPoint, ref pSize, dxHdc, ref srcPoint, 1, ref bf, 2);
-            surface.ReleaseDC();
-            dxdc.Dispose();
+                // Present DC to windows (ugh layered windows sad times)
+                IntPtr dxHdc = surface.GetDC(false);
+                System.Drawing.Graphics dxdc = System.Drawing.Graphics.FromHdc(dxHdc);
+                Win32.Point dstPoint = new Win32.Point((int)noForm.Location.X, (int)noForm.Location.Y);
+                Win32.Point srcPoint = new Win32.Point(0, 0);
+                Win32.Size pSize = new Win32.Size(rtSize.Width, rtSize.Height);
+                Win32.BLENDFUNCTION bf = new Win32.BLENDFUNCTION() { SourceConstantAlpha = 255, AlphaFormat = Win32.AC_SRC_ALPHA, BlendFlags = 0, BlendOp = 0 };
+                bool suc = Win32.UpdateLayeredWindow(winHandle, someDC, ref dstPoint, ref pSize, dxHdc, ref srcPoint, 1, ref bf, 2);
+                surface.ReleaseDC();
+                dxdc.Dispose();
+            }
         }
         public int edgeBufferSize = 128;
         void Resize()

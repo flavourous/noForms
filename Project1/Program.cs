@@ -427,6 +427,8 @@ namespace testapp
             add.draw += new Scribble.scribble(add_draw);
             add.Clicked += new Scribble.ClickDelegate(add_Clicked);
             StoryListContainer_SizeChanged(Size);
+            cycle = 20;
+            step = 5;
         }
 
         void add_Clicked(Point loc)

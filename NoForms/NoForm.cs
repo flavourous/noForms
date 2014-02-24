@@ -59,16 +59,19 @@ namespace NoForms
             get { return _Size; }
             set
             {
-                _Size = new Size(
-                    Math.Max(Math.Min(value.width, MaxSize.width), MinSize.width),
-                    Math.Max(Math.Min(value.height, MaxSize.height), MinSize.height)
-                    );
+                lock (this)
+                {
+                    _Size = new Size(
+                        Math.Max(Math.Min(value.width, MaxSize.width), MinSize.width),
+                        Math.Max(Math.Min(value.height, MaxSize.height), MinSize.height)
+                        );
 
-                _DisplayRectangle.Size = new Size(Size.width, Size.height);
+                    _DisplayRectangle.Size = new Size(Size.width, Size.height);
 
-                if (SizeChanged == null) return;
-                foreach (Act mi in SizeChanged.GetInvocationList())
-                    mi();
+                    if (SizeChanged == null) return;
+                    foreach (Act mi in SizeChanged.GetInvocationList())
+                        mi();
+                }
             }
         }
         public delegate void Act();
