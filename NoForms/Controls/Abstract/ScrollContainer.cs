@@ -128,12 +128,18 @@ namespace NoForms.Controls.Abstract
 
             horizontalContainer.Scrollable = verticalContainer.Scrollable = false;
 
-            SizeChanged += ScrollContainer_SizeChanged;
-            ScrollContainer_SizeChanged(Size);
         }
 
-        void ScrollContainer_SizeChanged(Size obj)
+        protected override void OnSizeChanged()
         {
+            LayoutScrollbarElements();
+            base.OnSizeChanged();
+        }
+
+        void LayoutScrollbarElements()
+        {
+            DetermineScrollBars();
+
             verticalContainer.Location = new Point(Size.width - VerticalScrollbarWidth, 0);
             verticalContainer.Size = new Size(VerticalScrollbarWidth, Size.height);
             upButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
@@ -167,7 +173,7 @@ namespace NoForms.Controls.Abstract
             public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
             {
                 base.MouseUpDown(mea, mbs, inComponent, amClipped);
-                if (inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location - Util.GetTopLevelLocation(this)) && mbs == MouseButtonState.DOWN)
+                if (inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location) && mbs == MouseButtonState.DOWN)
                     (trackBrush as USolidBrush).color = new Color(0.8f);
                 else (trackBrush as USolidBrush).color = new Color(0.6f);
             }
@@ -188,7 +194,7 @@ namespace NoForms.Controls.Abstract
             UBrush butArrF = new USolidBrush() { color = new Color(0) };
             public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
             {
-                bool tzo = Util.AmITopZOrder(this, mea.Location - Util.GetTopLevelLocation(this));
+                bool tzo = Util.AmITopZOrder(this, mea.Location);
                 base.MouseUpDown(mea, mbs, inComponent, amClipped);
                 if (inComponent && !amClipped && tzo && mbs == MouseButtonState.DOWN)
                 {
@@ -263,7 +269,7 @@ namespace NoForms.Controls.Abstract
             {
 
                 base.MouseUpDown(mea, mbs, inComponent, amClipped);
-                bool topz = Util.AmITopZOrder(this, mea.Location - Util.GetTopLevelLocation(this));
+                bool topz = Util.AmITopZOrder(this, mea.Location);
                 if (inComponent && !amClipped && topz && mbs == MouseButtonState.DOWN)
                     (background as USolidBrush).color = new Color(.8f);
                 else (background as USolidBrush).color = new Color(.7f);
@@ -277,7 +283,6 @@ namespace NoForms.Controls.Abstract
         public sealed override void DrawBase(IRenderType renderArgument)
         {
             // trimSize is the size sans scrollbars.  but maybe we should just let the thing overdraw...
-            Size trimSize = DetermineScrollBars();
             Draw(renderArgument);
             if (doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle,false);
             foreach (IComponent c in components)
@@ -306,10 +311,7 @@ namespace NoForms.Controls.Abstract
                     c.MouseMove(location + scrollOffset, 
                         Util.CursorInRect(c.DisplayRectangle,tll - scrollOffset),
                         amClipped ? true : !Util.CursorInRect(clipDr, tll));
-            }
-            foreach (IComponent c in components)
-            {
-                if (c.visible && !c.Scrollable)
+                else if(!c.Scrollable) 
                     c.MouseMove(location,
                         Util.CursorInRect(c.DisplayRectangle, tll),
                         amClipped ? true : !Util.CursorInRect(DisplayRectangle, tll));
@@ -331,10 +333,7 @@ namespace NoForms.Controls.Abstract
                 if (c.visible && c.Scrollable)
                     c.MouseUpDown(mea2, mbs, Util.CursorInRect(c.DisplayRectangle, tll - scrollOffset),
                         amClipped ? true : !Util.CursorInRect(clipDr, tll));
-            }
-            foreach (IComponent c in components)
-            {
-                if (c.visible && !c.Scrollable)
+                else if(!c.Scrollable)
                     c.MouseUpDown(mea, mbs, Util.CursorInRect(c.DisplayRectangle, tll),
                         amClipped ? true : !Util.CursorInRect(DisplayRectangle, tll));
             }

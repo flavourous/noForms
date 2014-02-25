@@ -323,10 +323,8 @@ namespace testapp
                 if (s.state == StoryState.none)
                     if (s.Parent != this)
                     {
-                        var dl = s.DisplayRectangle;
                         iAmDropped_oldParent = (s.Parent as StoryListContainer).state;
                         components.Add(s);
-                        s.DisplayRectangle = dl;
                         iAmDropped = s;
                     }
             if (iAmDropped != null && (iAmDropped as Story).state != StoryState.none)
@@ -356,13 +354,13 @@ namespace testapp
         public MainContainer()
             : base()
         {
-            backlog = new StoryListContainer("Backlog") { state = StoryState.backlog };
-            planned = new StoryListContainer("Planned") { state = StoryState.planned };
-            inprogress = new StoryListContainer("In Progress") { state = StoryState.inprogress };
-            moreinfo = new StoryListContainer("More Info") { state = StoryState.moreinfo };
-            testing = new StoryListContainer("Testing") { state = StoryState.testing };
-            deploy = new StoryListContainer("To Deploy") { state = StoryState.deploy };
-            done = new StoryListContainer("Done") { state = StoryState.done };
+            backlog = new StoryListContainer("Backlog", StoryState.backlog);
+            planned = new StoryListContainer("Planned",StoryState.planned);
+            inprogress = new StoryListContainer("In Progress",StoryState.inprogress);
+            moreinfo = new StoryListContainer("More Info",StoryState.moreinfo);
+            testing = new StoryListContainer("Testing",StoryState.testing);
+            deploy = new StoryListContainer("To Deploy",StoryState.deploy);
+            done = new StoryListContainer("Done",StoryState.done);
             slcs = new StoryListContainer[] { backlog, planned, inprogress, moreinfo, testing, deploy, done };
             slcts = new TextLabel[slcs.Length];
             for (int i=0;i<slcs.Length;i++)
@@ -376,17 +374,13 @@ namespace testapp
             MainContainer_SizeChanged(Size);
         }
 
-        Object renderInterlock = new object();
-
         float titleHeight = 25;
         float pad = 5;
         void MainContainer_SizeChanged(Size obj)
         {
-            // Makes no difference, could just do here.  Except the unneccessary but minor performance hit.
-            needLayout = true;
+            DoLayout();
         }
 
-        bool needLayout = false;
         void DoLayout()
         {
             float slcWidth = (Size.width - pad * (slcs.Length + 1)) / (float)slcs.Length;
@@ -409,7 +403,6 @@ namespace testapp
 
         public override void Draw(IRenderType renderArgument)
         {
-            if (needLayout) DoLayout();
         }
     }
 
@@ -417,18 +410,19 @@ namespace testapp
     {
         public String name;
         public StoryState state;
-        public StoryListContainer(String name)
+        public StoryListContainer(String name, StoryState state)
             : base()
         {
             this.name = name;
+            this.state = state;
             add = new Scribble() { Scrollable = false };
+            add.Cursor = System.Windows.Forms.Cursors.Hand;
             components.Add(add);
-            SizeChanged += new Action<Size>(StoryListContainer_SizeChanged);
             add.draw += new Scribble.scribble(add_draw);
             add.Clicked += new Scribble.ClickDelegate(add_Clicked);
-            StoryListContainer_SizeChanged(Size);
             cycle = 20;
             step = 5;
+            GrabStories();
         }
 
         void add_Clicked(Point loc)
@@ -456,11 +450,28 @@ namespace testapp
             ud.DrawLine(new Point(crt.left, crt.top + crt.height / 2), new Point(crt.right, crt.top + crt.height / 2), scb, stroke);
         }
 
-        void StoryListContainer_SizeChanged(Size obj)
+        protected override void OnSizeChanged()
         {
+            LayoutStories();
+            base.OnSizeChanged();
             add.Size = new Size(10, 10);
-            add.Location = new Point(Size.width - 15 - (VerticalScrollbarVisible?VerticalScrollbarWidth:0), Size.height - 15);
+            add.Location = new Point(Size.width - 15 - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), Size.height - 15);
         }
+
+        public void LayoutStories()
+        {
+            float startY = 0;
+            foreach (var s in components)
+            {
+                if (s is Story)
+                {
+                    s.Location = new Point(0, startY);
+                    s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), s.Size.height);
+                    startY += s.DisplayRectangle.height;
+                }
+            }
+        }
+
         Scribble add;
         public override void Draw(IRenderType ra)
         {
@@ -468,22 +479,19 @@ namespace testapp
             var ir = DisplayRectangle.Deflated(new Thickness(.5f,.5f,.5f,.5f)); // float positioning...
             ra.uDraw.FillRectangle(ir, fillBrush);
             ra.uDraw.DrawRectangle(ir, borderBrush, edge);
-
-            float startY = 0;
+            GrabStories();
+        }
+        public void GrabStories()
+        {
+            bool grabbed = false;
             foreach (var s in Program.Stories)
-            {
                 if (s.state == state && s.projectName == Program.selectedProject.name)
-                {
                     if (s.Parent == null)
-                        components.Push(s); // was dropped in
-                    if (s.Parent == this)
                     {
-                        s.Location = new Point(0, startY);
-                        s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), s.Size.height);
-                        startY += s.DisplayRectangle.height;
+                        components.Push(s); // was dropped in, or grabbed on init...
+                        grabbed = true;
                     }
-                }
-            }
+            if(grabbed) LayoutStories();
         }
         UBrush borderBrush = new USolidBrush() { color = new NoForms.Color(0.7f, 0, 0, 0) };
         UBrush fillBrush = new USolidBrush() { color = new NoForms.Color(0.3f, .7f, .7f, .7f) };
@@ -520,7 +528,13 @@ namespace testapp
             cx = new Scribble();
             components.Add(cx);
             SizeChanged += new Action<Size>(Story_SizeChanged);
-            
+
+            cx.Cursor = System.Windows.Forms.Cursors.Hand;
+
+            bsr = new UStyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false), red, null);
+            textyTime = new UText("", UHAlign.Left, UVAlign.Top, true, inRect2.width, 0) { font = new UFont("Arial", 10f, false, false) };
+            textyTime.styleRanges.Add(bsr);
+
             cx.draw += new Scribble.scribble(cx_draw);
             cx.Clicked += new Scribble.ClickDelegate(cx_Clicked);
             Story_SizeChanged(Size);
@@ -570,32 +584,36 @@ namespace testapp
         // Drawybit
         public override void Draw(IRenderType ra)
         {
-            
+            DetermineTextAndSize(ra.uDraw);
+            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions.None,false);
+        }
 
-            Size = new Size(Size.width, boxHeight);
+        Rectangle inRect2;
+        UText textyTime;
+        UStyleRange bsr;
+
+        public void DetermineTextAndSize(IUnifiedDraw ud) 
+        {
             // do bottom padding on the slc
             Rectangle clr = DisplayRectangle;
 
             Rectangle inRect = DisplayRectangle.Deflated(padding);
-            ra.uDraw.FillRectangle(inRect, scb_back);
-            Rectangle inRect2 = inRect.Deflated(padding);
+            ud.FillRectangle(inRect, scb_back);
+            inRect2 = inRect.Deflated(padding);
 
-            UText textyTime = new UText(
-                storyTitle + "\r\n" + Program.BreakSentance(storyText, 50),
-                UHAlign.Left, UVAlign.Top, true, inRect2.width,0) 
-                { font = new UFont("Arial",10f,false,false) };
+            textyTime.width = inRect2.width;
+            textyTime.text = storyTitle + "\r\n" + Program.BreakSentance(storyText, 50);
+            bsr.length = storyTitle.Length;
 
-            textyTime.styleRanges.Add(new UStyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false),
-                red, null));
-
-            var ti = ra.uDraw.GetTextInfo(textyTime);
+            var ti = ud.GetTextInfo(textyTime);
             int nlines = ti.numLines;
             float ct = ti.minSize.height;
             ct += 3 * padding.top;
+            float obh = boxHeight;
             boxHeight = (int)Math.Round(ct);
-
-            ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions.None,false);
-
+            Size = new Size(Size.width, boxHeight);
+            if (Parent is StoryListContainer && obh != boxHeight)
+                (Parent as StoryListContainer).LayoutStories(); // FIXME should be able to LayoutStory(this), worth it?
         }
         
         USolidBrush scb_back = new USolidBrush() { color = new Color(.4f, .2f, .2f, .2f) };

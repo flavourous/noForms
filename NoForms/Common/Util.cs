@@ -8,7 +8,7 @@ namespace NoForms
     public static class Util
     {
         /// <summary>
-        /// The point loc must be relative to the top level component (NoForm)
+        /// This is now the point relative to the screen!!
         /// </summary>
         /// <param name="me"></param>
         /// <param name="loc"></param>

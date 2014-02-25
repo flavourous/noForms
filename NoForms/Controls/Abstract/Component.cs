@@ -32,7 +32,7 @@ namespace NoForms.Controls.Abstract
             }
         }
         protected event Action<Size> SizeChanged;
-        protected void OnSizeChanged()
+        protected virtual void OnSizeChanged()
         {
             if (SizeChanged != null)
                 foreach (Action<Size> se in SizeChanged.GetInvocationList())
@@ -51,7 +51,7 @@ namespace NoForms.Controls.Abstract
             }
         }
         protected event Action<Point> LocationChanged;
-        protected void OnLocationChanged()
+        protected virtual void OnLocationChanged()
         {
             if (LocationChanged != null)
                 foreach (Action<Point> pe in LocationChanged.GetInvocationList())

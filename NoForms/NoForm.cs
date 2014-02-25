@@ -180,16 +180,32 @@ namespace NoForms
                 bool clip = !Util.CursorInRect(DisplayRectangle, Location);
                 bool inComponent = Util.CursorInRect(inc.DisplayRectangle, Location);
                 if (inc.visible) inc.MouseMove(location, inComponent, clip);
+            }
+            foreach(IComponent inc in RecurseAllComponents(this))
+            {
+                bool clip = !Util.CursorInRect(DisplayRectangle, Location);
+                bool inComponent = Util.CursorInRect(inc.DisplayRectangle, Location);
                 if (inc.visible && !clip && inComponent)
-                    if (Util.AmITopZOrder(inc, location - Util.GetTopLevelLocation(inc)))
+                    if (Util.AmITopZOrder(inc, location))
                     {
                         if (theForm.Cursor != (inc.Cursor ?? Cursors.Default))
                             theForm.Cursor = inc.Cursor ?? Cursors.Default;
                         foundCompHere = true;
+                        break;
                     }
             }
             if(!foundCompHere && theForm.Cursor != (Cursor ?? Cursors.Default))
                     theForm.Cursor = Cursor ?? Cursors.Default;
+        }
+
+        IEnumerable<IComponent> RecurseAllComponents(IComponent root)
+        {
+            foreach (IComponent inc in root.components)
+            {
+                yield return inc;
+                foreach (IComponent inc2 in RecurseAllComponents(inc))
+                    yield return inc2;
+            }
         }
 
         public void DrawBase(IRenderType rt)
