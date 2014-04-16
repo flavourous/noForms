@@ -24,11 +24,13 @@ namespace NoForms.Controls.Abstract
             {
                 c.SizeChanged += (ChildSizeChange);
                 c.LocationChanged += (ChildLocationChange);
+                LayoutScrollbarElements();
             });
             components.ComponentRemoved += new Action<IComponent>(c =>
             {
                 c.SizeChanged -= (ChildSizeChange);
                 c.LocationChanged -= (ChildLocationChange);
+                LayoutScrollbarElements();
             });
         }
 
