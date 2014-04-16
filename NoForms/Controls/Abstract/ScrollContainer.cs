@@ -9,6 +9,8 @@ namespace NoForms.Controls.Abstract
     {
         public ScrollContainer() : base()
         {
+            _components = new ScrollComponentCollection(this, horizontalContainer, verticalContainer);
+
             VerticalScrollbarWidth = HorizontalScrollbarHeight = 10;
             upButton = new ScrollBarButton(Direction.u, this);
             downButton = new ScrollBarButton(Direction.d, this);
@@ -155,19 +157,16 @@ namespace NoForms.Controls.Abstract
         void GenerateScrollbarElements()
         {
             // vertical scrolly
-            components.Add(verticalContainer);
             verticalContainer.components.Add(upButton);
             verticalContainer.components.Add(downButton);
             verticalContainer.components.Add(verticalTracker);
 
             // horizontal scrolly
-            components.Add(horizontalContainer);
             horizontalContainer.components.Add(leftButton);
             horizontalContainer.components.Add(rightButton);
             horizontalContainer.components.Add(horizontalTracker);
 
             horizontalContainer.Scrollable = verticalContainer.Scrollable = false;
-
         }
 
         protected override void OnSizeChanged()
@@ -180,8 +179,11 @@ namespace NoForms.Controls.Abstract
         {
             DetermineScrollBars();
 
+            float hgap = HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;
+            float vgap = VerticalScrollbarVisible ? VerticalScrollbarWidth: 0;
+
             verticalContainer.Location = new Point(Size.width - VerticalScrollbarWidth, 0);
-            verticalContainer.Size = new Size(VerticalScrollbarWidth, Size.height);
+            verticalContainer.Size = new Size(VerticalScrollbarWidth, Size.height - hgap);
             upButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
             upButton.Location = new Point(.5f, .5f);
             downButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
@@ -193,7 +195,7 @@ namespace NoForms.Controls.Abstract
             // b1 + (tot - b1 -b2 - trac)*frac = pos
 
             horizontalContainer.Location = new Point(0, Size.height - HorizontalScrollbarHeight);
-            horizontalContainer.Size = new Size(Size.width, HorizontalScrollbarHeight);
+            horizontalContainer.Size = new Size(Size.width -vgap, HorizontalScrollbarHeight);
             leftButton.Location = new Point(.5f, .5f);
             leftButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
             rightButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
@@ -328,14 +330,14 @@ namespace NoForms.Controls.Abstract
                         a3 = new Point(dr.left + 2 * gx, dr.top + 3*gy);
                         break;
                     case Direction.l:
-                        a1 = new Point(dr.left + gx, dr.top + 3 * gy);
-                        a2 = new Point(dr.left + 3 * gx, dr.top + 3 * gy);
-                        a3 = new Point(dr.left + 2 * gx, dr.top + gy);
+                        a1 = new Point(dr.left + 3 * gx, dr.top+ gy);
+                        a2 = new Point(dr.left + 3 * gx, dr.top+ 3 * gy);
+                        a3 = new Point(dr.left + gx, dr.top + 2 * gy);
                         break;
                     case Direction.r:
-                        a1 = new Point(dr.left + gx, dr.top + 3 * gy);
-                        a2 = new Point(dr.left + 3 * gx, dr.top + 3 * gy);
-                        a3 = new Point(dr.left + 2 * gx, dr.top + gy);
+                        a1 = new Point(dr.left + gx, dr.top +  gy);
+                        a2 = new Point(dr.left +  gx, dr.top + 3 * gy);
+                        a3 = new Point(dr.left + 3* gx, dr.top + 2*gy);
                         break;
                     default: throw new NotImplementedException("what direction?");
                 }
@@ -350,9 +352,10 @@ namespace NoForms.Controls.Abstract
             }
         }
 
+        public static UBrush background = new USolidBrush() { color = new Color(.7f) };
         class ScrollBarContainer : Abstract.BasicContainer
         {
-            public UBrush background = new USolidBrush() { color = new Color(.7f) };
+
             public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
             {
 
@@ -368,18 +371,72 @@ namespace NoForms.Controls.Abstract
             }
         }
 
+        class ScrollComponentCollection : ComponentCollection
+        {
+            // We will make sure that stuff gets inserted before the ScrollBarContainers
+            public ScrollComponentCollection(IComponent parent, params ScrollBarContainer[] scs) : base(parent) 
+            {
+                foreach (var s in scs)
+                    base.Add(s);
+            }
+
+            public override void Add(IComponent item)
+            {
+                base.Insert(Count-2,item);
+            }
+
+            public override void Push(IComponent item)
+            {
+                base.Push(item);
+            }
+            /// <summary>
+            /// dont go thinking you can insert past the scrollbars ;)
+            /// </summary>
+            /// <param name="index"></param>
+            /// <param name="item"></param>
+            public override void Insert(int index, IComponent item)
+            {
+                if (index > Count) index = Count - 2;
+                base.Insert(index, item);
+            }
+        }
+
         public sealed override void DrawBase(IRenderType renderArgument)
         {
+            bool offset = false;
+
             // trimSize is the size sans scrollbars.  but maybe we should just let the thing overdraw...
             Draw(renderArgument);
             if (doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle,false);
             foreach (IComponent c in components)
-                if (c.visible && !c.Scrollable) c.DrawBase(renderArgument);            
-            renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
-            foreach (IComponent c in components)
-                if (c.visible && c.Scrollable) c.DrawBase(renderArgument);
-            renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
+            {
+                if (!c.visible) continue;
+                if (c.Scrollable)
+                {
+                    if (!offset)
+                    {
+                        renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
+                        offset = true;
+                    }
+                    c.DrawBase(renderArgument);
+                }
+                else
+                {
+                    if (offset)
+                    {
+                        renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
+                        offset = false;
+                    }
+                    c.DrawBase(renderArgument);
+                }
+            }
             if (doClip) renderArgument.uDraw.PopAxisAlignedClip();
+            if (offset) renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
+
+            float hgap = HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;
+            float vgap = VerticalScrollbarVisible ? VerticalScrollbarWidth : 0;
+            renderArgument.uDraw.FillRectangle(new Rectangle(Location.X + Size.width - vgap, Location.Y+ Size.height - hgap, vgap, hgap), background);
+
         }
         public Thickness InnerPadding = new Thickness(0, 0, 0, 0);
         

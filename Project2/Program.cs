@@ -52,11 +52,12 @@ namespace Easy
             scont.Location = new Point(30, 90);
             scont.Size = new Size(Size.width - 60, Size.height - 60);
             components.Add(scont);
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 2e2; i++)
             {
                 UText ut = new UText("Things " + i, UHAlign.Left, UVAlign.Middle, false, 200,20);
                 ut.font = new UFont("Arial", 12, false, false);
                 TextLabel tll = new TextLabel() { textData = ut };
+                tll.background = new USolidBrush() { color = new Color(1, 1, 0, 0) };
                 float h = 20;
                 tll.Location = new Point(5, 5 + i * (h + 2));
                 tll.Size = new Size(200, h);

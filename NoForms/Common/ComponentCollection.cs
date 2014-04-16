@@ -34,35 +34,42 @@ namespace NoForms
         public event Action<IComponent> ComponentAdded = delegate { };
         public event Action<IComponent> ComponentRemoved = delegate { };
 
-        Collection<IComponent> back = new Collection<IComponent>();
+        protected Collection<IComponent> back = new Collection<IComponent>();
         public bool Contains(IComponent item)
         {
             return back.Contains(item);
         }
-        public void Add(IComponent item) { Add(item, false); }
-        void Add(IComponent item, bool force)
+        public virtual void Add(IComponent item)
         {
             lock (lo) back.Add(item);
             if (item.Parent != null)
                 lock (item.Parent.components.lo)
-                    item.Parent.components.Remove(item, force);
+                    item.Parent.components.Remove(item);
             item.Parent = myParent;
             item.RecalculateDisplayRectangle();
             ComponentAdded(item);
         }
-        public void Push(IComponent item) { Push(item, false); }
-        void Push(IComponent item, bool force)
+        public virtual void Push(IComponent item)
         {
             lock (lo) back.Insert(0, item);
             if (item.Parent != null)
                 lock (item.Parent.components.lo)
-                    item.Parent.components.Remove(item, force);
+                    item.Parent.components.Remove(item);
             item.Parent = myParent;
             item.RecalculateDisplayRectangle();
             ComponentAdded(item);
         }
-        public bool Remove(IComponent item) { return Remove(item, false); }
-        bool Remove(IComponent item, bool force)
+        public virtual void Insert(int index, IComponent item)
+        {
+            lock (lo) back.Insert(index, item);
+            if (item.Parent != null)
+                lock (item.Parent.components.lo)
+                    item.Parent.components.Remove(item);
+            item.Parent = myParent;
+            item.RecalculateDisplayRectangle();
+            ComponentAdded(item);
+        }
+        public bool Remove(IComponent item)
         {
             if (!Contains(item)) return false;
                     lock(lo) back.Remove(item);
@@ -71,8 +78,7 @@ namespace NoForms
                     ComponentRemoved(item);
             return true;
         }
-        public bool RemoveAt(int index) { return RemoveAt(index, false); }
-        bool RemoveAt(int index, bool force)
+        public bool RemoveAt(int index)
         {
             if (back.Count <= index) return false;
                 var item = back[index];

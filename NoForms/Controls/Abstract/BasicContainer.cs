@@ -7,7 +7,7 @@ namespace NoForms.Controls.Abstract
 {
     public abstract class BasicContainer : Component
     {
-        private ComponentCollection _components;
+        protected ComponentCollection _components;
         public override ComponentCollection components
         {
             get { return _components; }
