@@ -32,6 +32,11 @@ namespace NoForms
         Size Size { get; set; }
         Rectangle DisplayRectangle { get; set; }
         bool visible { get; set; }
+        bool IsDisplayRectangleCalculated { get; }
+
+        // events
+        event Action<Size> SizeChanged;
+        event Action<Point> LocationChanged;
 
         void RecalculateDisplayRectangle();
         void RecalculateLocation();

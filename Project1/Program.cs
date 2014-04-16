@@ -120,7 +120,7 @@ namespace testapp
             mc = new MainContainer();
             components.Add(mc);
 
-            SizeChanged += new Act(MyNoForm_OnSizeChanged);
+            SizeChanged += new Action<Size>(MyNoForm_OnSizeChanged);
 
             cbProject = new ComboBox();
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
@@ -149,7 +149,7 @@ namespace testapp
             var barColor = bordercolor.Scale(0.2f);
             brushBars = new USolidBrush() { color = barColor };
 
-            MyNoForm_OnSizeChanged();
+            MyNoForm_OnSizeChanged(Size);
         }
         USolidBrush scb, scb1, brushBars;
         void cbProject_selectionChanged(int obj)
@@ -281,7 +281,7 @@ namespace testapp
             editDlg.Create(false, true);
         }
 
-        void MyNoForm_OnSizeChanged()
+        void MyNoForm_OnSizeChanged(Size sz)
         {
             mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
             sh.DisplayRectangle = new Rectangle(Size.width - 30, Size.height - 30, 20, 20);
@@ -323,20 +323,28 @@ namespace testapp
                 if (s.state == StoryState.none)
                     if (s.Parent != this)
                     {
-                        iAmDropped_oldParent = (s.Parent as StoryListContainer).state;
-                        components.Add(s);
-                        iAmDropped = s;
+                        s.IsDisplayRectangleCalculated = false;
+                        var sp = (s.Parent as StoryListContainer);
+                        lock (sp)
+                        {
+                            iAmDropped_oldParent = sp.state;
+                            components.Add(s);
+                            iAmDropped = s;
+                        }
                     }
-            if (iAmDropped != null && (iAmDropped as Story).state != StoryState.none)
+            Story ias = (iAmDropped as Story);
+            if (ias != null && ias.state != StoryState.none)
             { // we have a pickup...
                 components.Remove(iAmDropped);
+                ias.IsDisplayRectangleCalculated = true;
                 iAmDropped = null;
             }
-            if(iAmDropped != null && (iAmDropped as Story).state == StoryState.none)
+            if(ias != null && ias.state == StoryState.none)
                 if ((iAmDropped as Story).dragtime == false)
                 {
                     components.Remove(iAmDropped);
-                    (iAmDropped as Story).state = iAmDropped_oldParent;
+                    ias.state = iAmDropped_oldParent;
+                    ias.IsDisplayRectangleCalculated = true;
                     iAmDropped = null;
                 }
         }
@@ -457,17 +465,18 @@ namespace testapp
             add.Size = new Size(10, 10);
             add.Location = new Point(Size.width - 15 - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), Size.height - 15);
         }
-
+        
         public void LayoutStories()
         {
-            float startY = 0;
+            float padStories = 5;
+            float startY = padStories; // very top padding
             foreach (var s in components)
             {
                 if (s is Story)
                 {
-                    s.Location = new Point(0, startY);
-                    s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), s.Size.height);
-                    startY += s.DisplayRectangle.height;
+                    s.Location = new Point(padStories, startY);
+                    s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0) - 2*padStories, s.Size.height);
+                    startY += s.DisplayRectangle.height + padStories;
                 }
             }
         }
@@ -475,23 +484,35 @@ namespace testapp
         Scribble add;
         public override void Draw(IRenderType ra)
         {
-            var dr = DisplayRectangle;
-            var ir = DisplayRectangle.Deflated(new Thickness(.5f,.5f,.5f,.5f)); // float positioning...
-            ra.uDraw.FillRectangle(ir, fillBrush);
-            ra.uDraw.DrawRectangle(ir, borderBrush, edge);
-            GrabStories();
+            lock (this)
+            {
+                GrabStories();
+                CheckLayout();
+
+                var dr = DisplayRectangle;
+                var ir = DisplayRectangle.Deflated(new Thickness(.5f, .5f, .5f, .5f)); // float positioning...
+                ra.uDraw.FillRectangle(ir, fillBrush);
+                ra.uDraw.DrawRectangle(ir, borderBrush, edge);
+            }
         }
-        public void GrabStories()
+        void GrabStories()
         {
-            bool grabbed = false;
             foreach (var s in Program.Stories)
                 if (s.state == state && s.projectName == Program.selectedProject.name)
                     if (s.Parent == null)
-                    {
                         components.Push(s); // was dropped in, or grabbed on init...
-                        grabbed = true;
-                    }
-            if(grabbed) LayoutStories();
+        }
+        int lastStories = 0;
+        void CheckLayout()
+        {
+            int nowStories=0;
+            foreach(var c in components)
+                if(c is Story) nowStories++;
+            if (lastStories != nowStories)
+            {
+                LayoutStories();
+                lastStories = nowStories;
+            }
         }
         UBrush borderBrush = new USolidBrush() { color = new NoForms.Color(0.7f, 0, 0, 0) };
         UBrush fillBrush = new USolidBrush() { color = new NoForms.Color(0.3f, .7f, .7f, .7f) };
@@ -499,10 +520,9 @@ namespace testapp
 
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (inComponent && mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP)
-                if (MyNoForm.iAmDropped != null && MyNoForm.iAmDropped is Story)
+                if (inComponent && mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP)
+                    if (MyNoForm.iAmDropped != null && MyNoForm.iAmDropped is Story)
                         (MyNoForm.iAmDropped as Story).state = state;
-
             base.MouseUpDown(mea, mbs, inComponent,amClipped);
         }
         
@@ -561,25 +581,24 @@ namespace testapp
         void Story_SizeChanged(Size obj)
         {
             cx.Size = new System.Drawing.Size(7, 7);
-            cx.Location = new Point(Size.width - 10 - padding.right, Size.height - 10);
+            cx.Location = new Point(Size.width - 10, Size.height - 10);
         }
         public String projectName;
         public String storyTitle;
         public String storyText;
         public StoryState state;
-        public Thickness padding = new Thickness() { top = 5, left = 5, right = 5, bottom = 0 };
         float boxHeight = 100;
 
         UBrush red = new USolidBrush() { color = new Color(1, 1, 0, 0) };
         UBrush white = new USolidBrush() { color = new Color(1) };
 
-        public override void DrawBase(IRenderType renderArgument)
-        {
-            var cr = Parent.DisplayRectangle.Deflated(new Thickness(5));
-            renderArgument.uDraw.PushAxisAlignedClip(cr, true);
-            base.DrawBase(renderArgument);
-            renderArgument.uDraw.PopAxisAlignedClip();
-        }
+        //public override void DrawBase(IRenderType renderArgument)
+        //{
+        //    var cr = Parent.DisplayRectangle.Deflated(new Thickness(5));
+        //    renderArgument.uDraw.PushAxisAlignedClip(cr, true);
+        //    base.DrawBase(renderArgument);
+        //    renderArgument.uDraw.PopAxisAlignedClip();
+        //}
 
         // Drawybit
         public override void Draw(IRenderType ra)
@@ -597,9 +616,9 @@ namespace testapp
             // do bottom padding on the slc
             Rectangle clr = DisplayRectangle;
 
-            Rectangle inRect = DisplayRectangle.Deflated(padding);
+            Rectangle inRect = DisplayRectangle; // fill displayrect
             ud.FillRectangle(inRect, scb_back);
-            inRect2 = inRect.Deflated(padding);
+            inRect2 = inRect.Deflated(new  Thickness(5)); // text padding
 
             textyTime.width = inRect2.width;
             textyTime.text = storyTitle + "\r\n" + Program.BreakSentance(storyText, 50);
@@ -608,7 +627,7 @@ namespace testapp
             var ti = ud.GetTextInfo(textyTime);
             int nlines = ti.numLines;
             float ct = ti.minSize.height;
-            ct += 3 * padding.top;
+            ct += 5 +5; // top and bottom padding for text
             float obh = boxHeight;
             boxHeight = (int)Math.Round(ct);
             Size = new Size(Size.width, boxHeight);
@@ -641,7 +660,9 @@ namespace testapp
                 }
 
                 if (dragtime)
+                {
                     DisplayRectangle = new Rectangle(DisplayRectangle.left + dx, DisplayRectangle.top + dy, DisplayRectangle.width, DisplayRectangle.height);
+                }
             }
             base.MouseMove(location, inComponent,amClipped);
         }
@@ -738,8 +759,8 @@ namespace testapp
             });
             components.Add(bt);
 
-            SizeChanged += new Act(SED_OnSizeChanged);
-            SED_OnSizeChanged();
+            SizeChanged += new Action<Size>(SED_OnSizeChanged);
+            SED_OnSizeChanged(Size);
 
             var bordercolor = themeColor;
             bordercolor.a = 0.9f;
@@ -750,7 +771,7 @@ namespace testapp
             brushBars = new USolidBrush() { color = barColor };
         }
 
-        void SED_OnSizeChanged()
+        void SED_OnSizeChanged(Size sz)
         {
             mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
             sh.DisplayRectangle = new Rectangle(Size.width - 30, Size.height - barwid, 20, 20);
@@ -895,8 +916,8 @@ namespace testapp
             });
             components.Add(bt);
 
-            SizeChanged += new Act(SED_OnSizeChanged);
-            SED_OnSizeChanged();
+            SizeChanged += new Action<Size>(SED_OnSizeChanged);
+            SED_OnSizeChanged(Size);
 
             var bordercolor = themeColor;
             bordercolor.a = 0.9f;
@@ -907,7 +928,7 @@ namespace testapp
             brushBars = new USolidBrush() { color = barColor };
         }
 
-        void SED_OnSizeChanged()
+        void SED_OnSizeChanged(Size sz)
         {
             mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
             sh.DisplayRectangle = new Rectangle(Size.width - 30, Size.height - barwid, 20, 20);

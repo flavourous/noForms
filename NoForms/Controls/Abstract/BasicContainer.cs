@@ -17,6 +17,7 @@ namespace NoForms.Controls.Abstract
             _components = new ComponentCollection(this);
         }
 
+        // NOTE: No need to VisibilityChain in these events, because they terminate from the base.
         public override void DrawBase(IRenderType renderArgument)
         {
             Draw(renderArgument);

@@ -8,6 +8,22 @@ namespace NoForms
     public static class Util
     {
         /// <summary>
+        /// If self and all parent chain is visible
+        /// </summary>
+        /// <param name="me"></param>
+        /// <returns></returns>
+        public static bool VisibilityChain(IComponent me)
+        {
+            IComponent curr = me;
+            while (curr != null)
+            {
+                if (!curr.visible) return false;
+                curr = curr.Parent;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// This is now the point relative to the screen!!
         /// </summary>
         /// <param name="me"></param>
@@ -17,6 +33,9 @@ namespace NoForms
         {
             if (me.Parent == null && !(me is NoForm))
                 throw new Exception("How the fuck am I supposed to know?");
+
+            //oh yea...
+            if (!VisibilityChain(me)) return false;
 
             // assume true to start with, then check
 
@@ -28,7 +47,7 @@ namespace NoForms
             // (0)
             if (me is IComponent)
                 foreach (var ic in (me as IComponent).components)
-                    if (PointInRect(loc, ic.DisplayRectangle) && ic.visible)
+                    if (PointInRect(loc, ic.DisplayRectangle) && VisibilityChain(ic))
                         return false;
         
             int myIdx;
@@ -37,7 +56,7 @@ namespace NoForms
             //(2) for me which might not be a container...
             if (myIdx < me.Parent.components.Count - 1)
                 for (int i = myIdx + 1; i < me.Parent.components.Count; i++)
-                    if (PointInRect(loc, me.Parent.components[i].DisplayRectangle) && me.Parent.components[i].visible)
+                    if (PointInRect(loc, me.Parent.components[i].DisplayRectangle) && VisibilityChain(me.Parent.components[i]))
                         return false;
 
             IComponent par = me.Parent;
@@ -49,12 +68,11 @@ namespace NoForms
                 //(2)
                 if (myIdx < par.Parent.components.Count - 1)
                     for (int i = myIdx + 1; i < par.Parent.components.Count; i++)
-                        if (PointInRect(loc, par.Parent.components[i].DisplayRectangle) && par.Parent.components[i].visible)
+                        if (PointInRect(loc, par.Parent.components[i].DisplayRectangle) && VisibilityChain(par.Parent.components[i]))
                             return false;
 
                 par = par.Parent;
             } // (3)
-
 
             return true;
         }

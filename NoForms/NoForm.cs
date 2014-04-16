@@ -35,9 +35,7 @@ namespace NoForms
             set
             {
                 _Location = value;
-                if (LocationChanged == null) return;
-                foreach (Act mi in LocationChanged.GetInvocationList())
-                    mi();
+                LocationChanged(_Location);
             }
         }
         Size _Size = new Size(200, 300);
@@ -67,16 +65,12 @@ namespace NoForms
                         );
 
                     _DisplayRectangle.Size = new Size(Size.width, Size.height);
-
-                    if (SizeChanged == null) return;
-                    foreach (Act mi in SizeChanged.GetInvocationList())
-                        mi();
+                    SizeChanged(_Size);
                 }
             }
         }
-        public delegate void Act();
-        public event Act SizeChanged;
-        public event Act LocationChanged;
+        public event Action<Size> SizeChanged = delegate { };
+        public event Action<Point> LocationChanged = delegate { };
         public Size MinSize = new Size(50, 50);
         public Size MaxSize = new Size(9000, 9000);
 
@@ -275,14 +269,17 @@ namespace NoForms
         // FIXME some isp could avoid this and keep the hierachy intact..
         public bool visible
         {
-            get { throw new NotImplementedException(); }
+            get { return true; }
             set { throw new NotImplementedException(); }
         }
+        public bool IsDisplayRectangleCalculated { get { return false; } }
         public void RecalculateDisplayRectangle() { throw new NotImplementedException(); }
         public void RecalculateLocation() { throw new NotImplementedException(); }
         public void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
         public void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
         public void ReClipAll(IRenderType renderArgument) { throw new NotImplementedException(); }
         public void UnClipAll(IRenderType renderArgument) { throw new NotImplementedException(); }
+
+        
     }
 }

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms", "NoForms\NoForms.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test App", "Project1\Test App.csproj", "{0DBD0F40-91A7-4102-AA1C-C838F8BB38C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test Easy", "Project2\Test Easy.csproj", "{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,16 @@ Global
 		{0DBD0F40-91A7-4102-AA1C-C838F8BB38C4}.Release|Mixed Platforms.Build.0 = Release|x86
 		{0DBD0F40-91A7-4102-AA1C-C838F8BB38C4}.Release|x86.ActiveCfg = Release|x86
 		{0DBD0F40-91A7-4102-AA1C-C838F8BB38C4}.Release|x86.Build.0 = Release|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Debug|x86.ActiveCfg = Debug|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Debug|x86.Build.0 = Debug|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Release|Any CPU.ActiveCfg = Release|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Release|Mixed Platforms.Build.0 = Release|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Release|x86.ActiveCfg = Release|x86
+		{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

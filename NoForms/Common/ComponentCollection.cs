@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System;
 
 namespace NoForms
 {
@@ -29,9 +30,11 @@ namespace NoForms
         {
             this.myParent = myParent;
         }
-        
+
+        public event Action<IComponent> ComponentAdded = delegate { };
+        public event Action<IComponent> ComponentRemoved = delegate { };
+
         Collection<IComponent> back = new Collection<IComponent>();
-        List<DelayedProc> dprocs = new List<DelayedProc>();
         public bool Contains(IComponent item)
         {
             return back.Contains(item);
@@ -39,66 +42,52 @@ namespace NoForms
         public void Add(IComponent item) { Add(item, false); }
         void Add(IComponent item, bool force)
         {
-            if (!enumerating || force)
-            {
-                back.Add(item);
-                if (item.Parent != null)
-                    item.Parent.components.Remove(item,force);
-                item.Parent = myParent;
-                item.RecalculateDisplayRectangle();
-            }
-            else dprocs.Add(new DelayedProc(item, CCAction.Add));
+            lock (lo) back.Add(item);
+            if (item.Parent != null)
+                lock (item.Parent.components.lo)
+                    item.Parent.components.Remove(item, force);
+            item.Parent = myParent;
+            item.RecalculateDisplayRectangle();
+            ComponentAdded(item);
         }
         public void Push(IComponent item) { Push(item, false); }
         void Push(IComponent item, bool force)
         {
-            if (!enumerating || force)
-            {
-                back.Insert(0, item);
-                if (item.Parent != null)
-                    item.Parent.components.Remove(item,force);
-                item.Parent = myParent;
-                item.RecalculateDisplayRectangle();
-            }
-            else dprocs.Add(new DelayedProc(item, CCAction.Push));
+            lock (lo) back.Insert(0, item);
+            if (item.Parent != null)
+                lock (item.Parent.components.lo)
+                    item.Parent.components.Remove(item, force);
+            item.Parent = myParent;
+            item.RecalculateDisplayRectangle();
+            ComponentAdded(item);
         }
         public bool Remove(IComponent item) { return Remove(item, false); }
         bool Remove(IComponent item, bool force)
         {
             if (!Contains(item)) return false;
-            else
-            {
-                if (!enumerating || force)
-                {
-                    back.Remove(item);
+                    lock(lo) back.Remove(item);
                     item.Parent = null;
                     item.RecalculateDisplayRectangle();
-                }
-                else dprocs.Add(new DelayedProc(item, CCAction.Remove));
-            }
+                    ComponentRemoved(item);
             return true;
         }
         public bool RemoveAt(int index) { return RemoveAt(index, false); }
         bool RemoveAt(int index, bool force)
         {
             if (back.Count <= index) return false;
-            else
-            {
                 var item = back[index];
-                if (!enumerating || force)
-                {
-                    back.Remove(item);
+                    lock(lo) back.Remove(item);
                     item.Parent = null;
                     item.RecalculateDisplayRectangle();
-                }
-                else dprocs.Add(new DelayedProc(item, CCAction.Remove));
-            }
+                    ComponentRemoved(item);
             return true;
         }
         public void Clear()
         {
-            if (!enumerating) back.Clear();
-            else dprocs.Add(new DelayedProc(null, CCAction.Clear));
+            Collection<IComponent> remember = back;
+            lock (lo) back.Clear();
+            foreach (var c in remember) 
+                ComponentRemoved(c);
         }
         public int IndexOf(IComponent ic)
         {
@@ -110,29 +99,14 @@ namespace NoForms
         {
             back.CopyTo(arr, idx);
         }
-        bool enumerating = false;
         object lo = new object();
         public IEnumerator<IComponent> GetEnumerator()
         {
-            enumerating = true;
             lock (lo)
             {
                 foreach (IComponent t in back)
                     yield return t;
-                while (dprocs.Count > 0)
-                {
-                    var dp = dprocs[0];
-                    switch (dp.act)
-                    {
-                        case (CCAction.Add): Add(dp.cref,true); break;
-                        case (CCAction.Push): Push(dp.cref,true); break;
-                        case (CCAction.Remove): Remove(dp.cref,true); break;
-                        case (CCAction.Clear): Clear(); break;
-                    }
-                    dprocs.RemoveAt(0);
-                }
             }
-            enumerating = false;
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -142,17 +116,6 @@ namespace NoForms
         public IComponent this[int i]
         {
             get { return back[i]; }
-        }
-    }
-    enum CCAction { Add, Remove, Push, Clear };
-    struct DelayedProc
-    {
-        public IComponent cref;
-        public CCAction act;
-        public DelayedProc(IComponent ic, CCAction ca)
-        {
-            cref = ic;
-            act = ca;
         }
     }
 }

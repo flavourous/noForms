@@ -16,6 +16,8 @@ namespace NoForms.Controls.Abstract
             }
         }
 
+        bool idrs = true;
+        public bool IsDisplayRectangleCalculated { get { return idrs; } set { idrs = value; } }
         protected Rectangle _DisplayRectangle = Rectangle.Empty;
         /// <summary>
         /// Display rectangle is relative to the RenderType, i.e. the top level component
@@ -31,7 +33,7 @@ namespace NoForms.Controls.Abstract
                 Size = value.Size;
             }
         }
-        protected event Action<Size> SizeChanged;
+        public event Action<Size> SizeChanged;
         protected virtual void OnSizeChanged()
         {
             if (SizeChanged != null)
@@ -50,7 +52,7 @@ namespace NoForms.Controls.Abstract
                 OnSizeChanged();
             }
         }
-        protected event Action<Point> LocationChanged;
+        public event Action<Point> LocationChanged;
         protected virtual void OnLocationChanged()
         {
             if (LocationChanged != null)
@@ -78,15 +80,17 @@ namespace NoForms.Controls.Abstract
 
         public void RecalculateDisplayRectangle()
         {
-            Point ploc = new Point(0, 0);
-            if (Parent != null && !(Parent is NoForm))
-                ploc = Parent.DisplayRectangle.Location;
+            if (IsDisplayRectangleCalculated)
+            {
+                Point ploc = new Point(0, 0);
+                if (Parent != null && !(Parent is NoForm))
+                    ploc = Parent.DisplayRectangle.Location;
 
-            this._DisplayRectangle.Location = new Point(
-                    ploc.X + _Location.X,
-                    ploc.Y + _Location.Y
-                    );
-
+                this._DisplayRectangle.Location = new Point(
+                        ploc.X + _Location.X,
+                        ploc.Y + _Location.Y
+                        );
+            }
             foreach (IComponent c in components)
                 c.RecalculateDisplayRectangle();
         }
@@ -119,7 +123,6 @@ namespace NoForms.Controls.Abstract
         internal bool doClip = true;
 
         public abstract void DrawBase(IRenderType renderArgument);
-
 
         bool _visible = true;
         public bool visible

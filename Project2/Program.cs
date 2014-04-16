@@ -24,6 +24,7 @@ namespace Easy
         NoForms.Controls.SizeHandle sh;
         NoForms.Controls.MoveHandle mh;
         con cont;
+        s_con scont;
         public mnf(IRender ir)
             : base(ir)
         {
@@ -46,6 +47,21 @@ namespace Easy
             cont.Location = new Point(30, 90);
             cont.Size = new Size(Size.width - 60, Size.height - 60);
             //components.Add(cont);
+
+            scont = new s_con();
+            scont.Location = new Point(30, 90);
+            scont.Size = new Size(Size.width - 60, Size.height - 60);
+            components.Add(scont);
+            for (int i = 0; i < 100; i++)
+            {
+                UText ut = new UText("Things " + i, UHAlign.Left, UVAlign.Middle, false, 200,20);
+                ut.font = new UFont("Arial", 12, false, false);
+                TextLabel tll = new TextLabel() { textData = ut };
+                float h = 20;
+                tll.Location = new Point(5, 5 + i * (h + 2));
+                tll.Size = new Size(200, h);
+                scont.components.Add(tll);
+            }
 
             NoForms.Controls.Button bt = new NoForms.Controls.Button();
             bt.textData.text = "Hellos!";
@@ -72,9 +88,9 @@ namespace Easy
             scrib.draw += new Scribble.scribble((ud, scb, str) =>
             {
                 if(fc)
-                    ud.FillRectangle(scrib.DisplayRectangle.Inflated(-2f), scb);
+                    ud.FillRectangle(scrib.DisplayRectangle.Deflated(new Thickness(2f)), scb);
                 else 
-                    ud.DrawRectangle(scrib.DisplayRectangle.Inflated(-2.5f), scb, str);
+                    ud.DrawRectangle(scrib.DisplayRectangle.Deflated(new Thickness(2.5f)), scb, str);
             });
             scrib.Clicked += new Scribble.ClickDelegate(pt => { fc = !fc; });
             scrib.Size = new NoForms.Size(50, 50);
@@ -106,76 +122,31 @@ namespace Easy
             tf2.Location = new Point(5, 255);
             cont.components.Add(tf2);
 
-            SizeChanged += new Act(mnf_SizeChanged);
-            mnf_SizeChanged();
+            SizeChanged += new Action<Size>(mnf_SizeChanged);
+            mnf_SizeChanged(Size);
 
             
         }
 
-        void mnf_SizeChanged()
+        void mnf_SizeChanged(Size sz)
         {
             sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
             cont.Size = new Size(Size.width - 60, Size.height - 120);
+            scont.Size = new Size(Size.width - 60, Size.height - 120);
         }
 
         UBrush black = new USolidBrush() { color = new Color(1, 0, 0, 0) };
         UBrush red = new USolidBrush() { color = new Color(1, 1, 0, 0) };
-        Rectangle dr = new Rectangle(80, 80, 500, 300);
         public override void Draw(IRenderType rt)
         {
-            var el = rt.backRenderer as D2D_RenderElements;
-
-            var d2drt = el.renderTarget;
-            //d2drt.FillRectangle(dr, red.GetD2D(d2drt));
-
-            var tl = new SharpDX.DirectWrite.TextLayout(IUnifiedDraw.dwFact, "hello", new SharpDX.DirectWrite.TextFormat(IUnifiedDraw.dwFact, "Arial", 25f), 300, 0);
-
-            var cce = new D2D_ClientTextEffect() { brsh = red.GetD2D(d2drt) };
-            var cce2 = new D2D_ClientTextEffect() { brsh = black.GetD2D(d2drt) };
-            var trend = new D2D_ClientTextRenderer(d2drt);
-
-            tl.SetDrawingEffect(cce, new SharpDX.DirectWrite.TextRange(0, 2));
-            tl.SetDrawingEffect(cce2, new SharpDX.DirectWrite.TextRange(2, 3));
-
-            tl.Draw(trend, 50, 50);
-
-            var ut = new UText("haiiii\r\nKITTEN", UHAlign.Left, UVAlign.Top, false, 1000, 50) { font = new UFont("Arial", 40f, false, false) };
-
-            rt.uDraw.DrawText(ut, new Point(300, 300), red, UTextDrawOptions.Clip,false);
+            var ut = new UText("hello", UHAlign.Center, UVAlign.Middle,false, 100,100);
+            ut.font = new UFont("Arial",12,false,false);
+            ut.styleRanges.Add(new UStyleRange(0,2,new UFont("Courier New",12,false,true), red, null));
+            rt.uDraw.DrawText(ut, new Point(30, 30), black, UTextDrawOptions.Clip,true);
         }
     }
 
-    class D2D_ClientTextEffect : SharpDX.ComObject
-    {
-        public SharpDX.Direct2D1.Brush brsh;
-    }
-    class D2D_ClientTextRenderer : SharpDX.DirectWrite.TextRendererBase
-    {
-        SharpDX.Direct2D1.RenderTarget rt;
-        public D2D_ClientTextRenderer(SharpDX.Direct2D1.RenderTarget rt)
-        {
-            this.rt = rt;
-        }
-
-        public override SharpDX.Result DrawGlyphRun(object clientDrawingContext, float baselineOriginX, float baselineOriginY, SharpDX.Direct2D1.MeasuringMode measuringMode, SharpDX.DirectWrite.GlyphRun glyphRun, SharpDX.DirectWrite.GlyphRunDescription glyphRunDescription, SharpDX.ComObject clientDrawingEffect)
-        {
-            var cce = (D2D_ClientTextEffect)clientDrawingEffect;
-            var pg = new SharpDX.Direct2D1.PathGeometry(cce.brsh.Factory);
-            var sink = pg.Open();
-            glyphRun.FontFace.GetGlyphRunOutline(glyphRun.FontSize, glyphRun.Indices, glyphRun.Advances, glyphRun.Offsets, glyphRun.IsSideways, glyphRun.BidiLevel % 2 != 0, sink);
-            sink.Close();
-
-            var rtt = rt.Transform;
-            rt.Transform = new SharpDX.Matrix3x2(1, 0, 0, 1, baselineOriginX, baselineOriginY);
-            rt.DrawGeometry(pg, cce.brsh);
-            rt.FillGeometry(pg, cce.brsh);
-            rt.Transform = rtt;
-
-            return SharpDX.Result.Ok;
-        }
-    }
-
-    class con : NoForms.Controls.Templates.Container
+    class con : NoForms.Controls.Abstract.BasicContainer
     {
         public override void Draw(IRenderType renderArgument)
         {
@@ -186,6 +157,20 @@ namespace Easy
         ULinearGradientBrush lgb = new ULinearGradientBrush()
         {
             color1 = new Color(.8f,0,.3f,0), color2 = new Color(.8f,0,.5f,0)
+        };
+    }
+    class s_con : NoForms.Controls.Abstract.ScrollContainer
+    {
+        public override void Draw(IRenderType renderArgument)
+        {
+            lgb.point1 = DisplayRectangle.Location;
+            lgb.point2 = new Point(DisplayRectangle.right, DisplayRectangle.bottom);
+            renderArgument.uDraw.FillRectangle(DisplayRectangle, lgb);
+        }
+        ULinearGradientBrush lgb = new ULinearGradientBrush()
+        {
+            color1 = new Color(.8f, 0, .3f, 0),
+            color2 = new Color(.8f, 0, .5f, 0),
         };
     }
 }

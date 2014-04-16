@@ -160,6 +160,11 @@ namespace NoForms
     public struct Rectangle
     {
 
+        public override string ToString()
+        {
+            return "(" + left + "," + top + "; " + width + "x" + height + ")";
+        }
+
         public static Rectangle operator -(Rectangle me, Point subby)
         {
             return new Rectangle(me.left - subby.X, me.top - subby.Y, me.width, me.height);

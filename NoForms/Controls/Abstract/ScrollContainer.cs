@@ -14,18 +14,53 @@ namespace NoForms.Controls.Abstract
             downButton = new ScrollBarButton(Direction.d, this);
             leftButton = new ScrollBarButton(Direction.l, this);
             rightButton = new ScrollBarButton(Direction.r, this);
+            verticalTracker = new ScrollBarTracker(Orientation.v, this);
+            horizontalTracker = new ScrollBarTracker(Orientation.h, this);
             GenerateScrollbarElements();
+
+            components.ComponentAdded += new Action<IComponent>(c =>
+            {
+                c.SizeChanged += (ChildSizeChange);
+                c.LocationChanged += (ChildLocationChange);
+            });
+            components.ComponentRemoved += new Action<IComponent>(c =>
+            {
+                c.SizeChanged -= (ChildSizeChange);
+                c.LocationChanged -= (ChildLocationChange);
+            });
         }
+
+        void ChildSizeChange(Size csz)
+        {
+            LayoutScrollbarElements();
+        }
+        void ChildLocationChange(Point cpt)
+        {
+            LayoutScrollbarElements();
+        }
+
         float _xOffset = 0, _yOffset = 0;
         float xOffset
         {
             get { return _xOffset; }
-            set { if (value >= 0 && value <= ContentWidth-trimWidth) _xOffset = value; }
+            set 
+            {
+                var cw = ContentWidth;
+                if (value < 0) _xOffset = 0;
+                else if (value > cw - trimWidth) _xOffset = cw - trimWidth;
+                else _xOffset = value;
+            }
         }
         float yOffset
         {
             get { return _yOffset; }
-            set { if (value >= 0 && value <= ContentHeight-trimHeight) _yOffset = value; }
+            set
+            {
+                var ch = ContentHeight;
+                if (value < 0) _yOffset = 0;
+                else if (value > ch - trimHeight) _yOffset = ch - trimHeight;
+                else _yOffset = value;
+            }
         }
         protected float HorizontalScrollbarHeight, VerticalScrollbarWidth;
         public bool HorizontalScrollbarVisible { get; private set; }
@@ -58,11 +93,16 @@ namespace NoForms.Controls.Abstract
         {
             float cw = ContentWidth;
             float ch = ContentHeight;
+
+            // FIXME this is stupid code
             HorizontalScrollbarVisible = cw > Size.width;
             trimHeight = (Size.height - (HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0));
             VerticalScrollbarVisible = verticalContainer.visible = ch > trimHeight;
             trimWidth = (Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0));
             HorizontalScrollbarVisible = horizontalContainer.visible = cw > trimWidth;
+            trimHeight = (Size.height - (HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0));
+            VerticalScrollbarVisible = verticalContainer.visible = ch > trimHeight;
+            trimWidth = (Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0));
 
             if (cw - trimWidth < xOffset) xOffset = cw - trimWidth;
             if (ch - trimHeight < yOffset) yOffset = ch - trimHeight;
@@ -106,12 +146,12 @@ namespace NoForms.Controls.Abstract
         ScrollBarContainer verticalContainer = new ScrollBarContainer();
         ScrollBarButton upButton;
         ScrollBarButton downButton;
-        ScrollBarTracker verticalTracker = new ScrollBarTracker();
+        ScrollBarTracker verticalTracker;
 
         ScrollBarContainer horizontalContainer = new ScrollBarContainer();
         ScrollBarButton leftButton;
         ScrollBarButton rightButton;
-        ScrollBarTracker horizontalTracker = new ScrollBarTracker();
+        ScrollBarTracker horizontalTracker;
         void GenerateScrollbarElements()
         {
             // vertical scrolly
@@ -146,10 +186,11 @@ namespace NoForms.Controls.Abstract
             upButton.Location = new Point(.5f, .5f);
             downButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
             downButton.Location = new Point(.5f, verticalContainer.Size.height - (VerticalScrollbarWidth - 0.5f));
-            float remH = verticalContainer.Size.height - (upButton.Size.height + 1f) * 2f;
-            float tOfs = upButton.Size.height + 1f;
+            float remH = verticalContainer.Size.height - (upButton.Size.height) * 2f;
+            float tOfs = upButton.Size.height;
             verticalTracker.Size = new Size(VerticalScrollbarWidth, remH * vVis);
             verticalTracker.Location = new Point(0, tOfs + (verticalContainer.Size.height - tOfs*2 - verticalTracker.Size.height)*vFrac);
+            // b1 + (tot - b1 -b2 - trac)*frac = pos
 
             horizontalContainer.Location = new Point(0, Size.height - HorizontalScrollbarHeight);
             horizontalContainer.Size = new Size(Size.width, HorizontalScrollbarHeight);
@@ -157,54 +198,101 @@ namespace NoForms.Controls.Abstract
             leftButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
             rightButton.Size = new Size(VerticalScrollbarWidth - 1, VerticalScrollbarWidth - 1);
             rightButton.Location = new Point(horizontalContainer.Size.width - (HorizontalScrollbarHeight-.5f),.5f);
-            float lOfs = leftButton.Size.width + 1f;
-            float remW = horizontalContainer.Size.width - (leftButton.Size.width + 1f) * 2f;
+            float lOfs = leftButton.Size.width;
+            float remW = horizontalContainer.Size.width - (leftButton.Size.width) * 2f;
             horizontalTracker.Size = new Size(remW * hVis,HorizontalScrollbarHeight);
             horizontalTracker.Location = new Point(lOfs + (horizontalContainer.Size.width-lOfs*2-horizontalTracker.Size.width)*hFrac, 0);
         }
 
         class ScrollBarTracker : Abstract.Component
         {
+            ScrollContainer controlled;
+            Orientation orientation;
+            public ScrollBarTracker(Orientation orientation, ScrollContainer controlled)
+            {
+                this.controlled = controlled;
+                this.orientation = orientation;
+            }
             UBrush trackBrush = new USolidBrush() { color = new Color(.6f) };
             public override void DrawBase(IRenderType renderArgument)
             {
                 renderArgument.uDraw.FillRoundedRectangle(DisplayRectangle.Deflated(new Thickness(2f)), 5, 3, trackBrush);
             }
+            bool downed = false;
+            float downedOrigin, topOriginal;
             public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
             {
                 base.MouseUpDown(mea, mbs, inComponent, amClipped);
                 if (inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location) && mbs == MouseButtonState.DOWN)
+                {
+                    downed = true;
+                    var sloc = mea.Location + Util.GetTopLevelLocation(this);
+                    downedOrigin = orientation == Orientation.v ? sloc.Y : sloc.X;
+                    topOriginal = orientation == Orientation.v ? Location.Y : Location.X;
                     (trackBrush as USolidBrush).color = new Color(0.8f);
-                else (trackBrush as USolidBrush).color = new Color(0.6f);
+                }
+                else
+                {
+                    downed = false;
+                    (trackBrush as USolidBrush).color = new Color(0.6f);
+                }
+            }
+            public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+            {
+                base.MouseMove(location, inComponent, amClipped);
+                if (downed)
+                {
+                    // in order to move this trackbar, we need to change the offsetY of the controlled ScrollContainer appropriately
+                    float nowPos = orientation == Orientation.v ? location.Y : location.X;
+                    float want = topOriginal + (nowPos - downedOrigin);
+                    // |b1|-----| tack |-------|b2|
+                    // so we need to invert: top = b + frac*(total-2*b-tack)
+                    // that is (top-b1)/(total-b1-b2-tack) = frac
+                    float b1 = orientation == Orientation.v ? controlled.upButton.Size.height : controlled.leftButton.Size.width;
+                    float b2 = orientation == Orientation.v ? controlled.downButton.Size.height : controlled.rightButton.Size.width;
+                    float tot = orientation == Orientation.v ? controlled.verticalContainer.Size.height : controlled.horizontalContainer.Size.width;
+                    float tack = orientation == Orientation.v ? Size.height : Size.width;
+                    float fracWant = (want - b1) / (tot - b1 - b2 - tack);
+                    if (orientation == Orientation.v)
+                        controlled.yOffset = fracWant * (controlled.ContentHeight - controlled.trimHeight);
+                    if (orientation == Orientation.h)
+                        controlled.xOffset = fracWant * (controlled.ContentWidth - controlled.trimWidth);
+                    controlled.OnSizeChanged();
+                }
             }
         }
 
-        enum Direction { u, d, l, r };
+        enum Orientation {none,  v, h };
+        enum Direction { none, u, d, l, r };
         class ScrollBarButton : Abstract.Component
         {
             Direction type;
-            ScrollContainer parent;
+            ScrollContainer controlled;
             public ScrollBarButton(Direction dir, ScrollContainer parent)
             {
                 type = dir;
-                this.parent = parent;
+                this.controlled = parent;
                 scrollTimer =  new System.Threading.Timer(new System.Threading.TimerCallback(TimeCB), null, System.Threading.Timeout.Infinite, 200);
             }
             UBrush butBrsh = new USolidBrush() { color = new Color(.8f, .4f, .6f, .4f) };
             UBrush butArrF = new USolidBrush() { color = new Color(0) };
+            bool downed = false;
             public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
             {
-                bool tzo = Util.AmITopZOrder(this, mea.Location);
                 base.MouseUpDown(mea, mbs, inComponent, amClipped);
-                if (inComponent && !amClipped && tzo && mbs == MouseButtonState.DOWN)
+                bool tzo = Util.AmITopZOrder(this, mea.Location);
+                if (!downed && (!inComponent || amClipped || !tzo) ) return;
+                if (mbs == MouseButtonState.DOWN)
                 {
                     scrollTimer.Change(0, cycle);
                     (butBrsh as USolidBrush).color = new Color(.6f, .5f, .7f, .5f);
+                    downed = true;
                 }
-                else
+                else if(downed)
                 {
                     scrollTimer.Change(System.Threading.Timeout.Infinite, cycle);
                     (butBrsh as USolidBrush).color = new Color(.8f, .4f, .6f, .4f);
+                    downed = false;
                 }
             }
             public uint step = 1;
@@ -214,12 +302,12 @@ namespace NoForms.Controls.Abstract
             {
                 switch (type)
                 {
-                    case Direction.u: parent.yOffset -= step; break;
-                    case Direction.d: parent.yOffset += step; break;
-                    case Direction.l: parent.xOffset -= step; break;
-                    case Direction.r: parent.xOffset += step; break;
+                    case Direction.u: controlled.yOffset -= step; break;
+                    case Direction.d: controlled.yOffset += step; break;
+                    case Direction.l: controlled.xOffset -= step; break;
+                    case Direction.r: controlled.xOffset += step; break;
                 }
-                parent.OnSizeChanged();
+                controlled.OnSizeChanged();
             }
             public override void DrawBase(IRenderType renderArgument)
             {
