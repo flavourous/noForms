@@ -418,6 +418,7 @@ namespace testapp
     {
         public String name;
         public StoryState state;
+        Scribble botPad = new Scribble();
         public StoryListContainer(String name, StoryState state)
             : base()
         {
@@ -426,11 +427,17 @@ namespace testapp
             add = new Scribble() { Scrollable = false };
             add.Cursor = System.Windows.Forms.Cursors.Hand;
             components.Add(add);
+            components.Add(botPad);
             add.draw += new Scribble.scribble(add_draw);
             add.Clicked += new Scribble.ClickDelegate(add_Clicked);
+            botPad.draw += botPad_draw;
             cycle = 20;
             step = 5;
             GrabStories();
+        }
+
+        void botPad_draw(IUnifiedDraw uDraw, USolidBrush tehBrush, UStroke strk)
+        {
         }
 
         void add_Clicked(Point loc)
@@ -463,22 +470,26 @@ namespace testapp
             LayoutStories();
             base.OnSizeChanged();
             add.Size = new Size(10, 10);
-            add.Location = new Point(Size.width - 15 - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0), Size.height - 15);
+            add.Location = new Point(5, Size.height - 15);
         }
-        
+
         public void LayoutStories()
         {
             float padStories = 5;
             float startY = padStories; // very top padding
+
             foreach (var s in components)
             {
-                if (s is Story)
+                if (s is Story && s.visible)
                 {
                     s.Location = new Point(padStories, startY);
                     s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0) - 2*padStories, s.Size.height);
                     startY += s.DisplayRectangle.height + padStories;
                 }
             }
+
+            botPad.Size = new Size(0, 0);
+            botPad.Location = new Point(0, startY);
         }
 
         Scribble add;
@@ -528,10 +539,7 @@ namespace testapp
         
     }
 
-  
     enum StoryState { none, backlog, planned, inprogress,moreinfo, testing, deploy, done, undefined };
-
-    
 
     class Story : NoForms.Controls.Abstract.BasicContainer
     {
@@ -672,6 +680,7 @@ namespace testapp
         public StoryState os;
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
+            bool tzo = Util.AmITopZOrder(this, mea.Location);
             if (mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP && inComponent && !amClipped)
             {
                 var dt = DateTime.Now.Subtract(dtLastClick);
@@ -698,7 +707,7 @@ namespace testapp
             {
                 maybeDrag = false;
             }
-            if (inComponent && mbs == MouseButtonState.DOWN && mea.Button == System.Windows.Forms.MouseButtons.Left && !amClipped)
+            if (tzo && inComponent && mbs == MouseButtonState.DOWN && mea.Button == System.Windows.Forms.MouseButtons.Left && !amClipped)
             {
                 lloc = System.Windows.Forms.Cursor.Position;
                 maybeDrag = true;

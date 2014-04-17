@@ -90,11 +90,22 @@ namespace NoForms
                     return true;
             return false;
         }
-        public static Point GetTopLevelLocation(IComponent inc)
+        public static IComponent GetTopLevelComponent(IComponent inc)
         {
-            IComponent par = inc.Parent;
+            IComponent par = inc;
             while (par.Parent != null)
                 par = par.Parent;
+            return par;
+        }
+        public static Point GetTopLevelLocation(IComponent inc)
+        {
+            var par = GetTopLevelComponent(inc);
+            return par.Location;
+        }
+        public static Point GetTopLevelLocation(IComponent inc, out IComponent topLevelComponent)
+        {
+            var par = GetTopLevelComponent(inc);
+            topLevelComponent = par;
             return par.Location;
         }
     }

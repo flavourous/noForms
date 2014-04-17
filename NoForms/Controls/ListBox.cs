@@ -8,22 +8,14 @@ namespace NoForms.Controls
     {
         public override void Draw(IRenderType renderArgument)
         {
-            if (breakForCombo) UnClipAll(renderArgument);
             PoisitionItems();
             renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);
             // so that the box overdraws the childrens
             renderArgument.uDraw.DrawRectangle(DisplayRectangle.Inflated(new Thickness(-.5f)), brushy1, strokey);
-            if (breakForCombo) ReClipAll(renderArgument);
         }
         UBrush brushy1 = new USolidBrush() { color = new Color(0) };
         UBrush brushy2 = new USolidBrush() { color = new Color(0.98f) };
         UStroke strokey = new UStroke();
-
-        internal bool breakForCombo = false;
-        public ListBox() : base()
-        {
-            doClip = false;
-        }
 
         void PoisitionItems()
         {

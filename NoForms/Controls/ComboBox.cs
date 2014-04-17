@@ -7,7 +7,6 @@ namespace NoForms.Controls
 {
     public class ComboBox : Abstract.BasicContainer
     {
-        
         ListBox lb;
         Scribble dropArrowThing = new Scribble();
 
@@ -18,8 +17,6 @@ namespace NoForms.Controls
             lb = new ListBox();
             dropLength = 50;
             lb.selectionChanged += new Action<int>(lb_selectionChanged);
-            lb.breakForCombo = true;
-            components.Add(lb);
             lb.visible = false;
 
             // add a scribble
@@ -36,15 +33,26 @@ namespace NoForms.Controls
         void lb_selectionChanged(int obj)
         {
             lb.visible = false;
+            lb.Parent.components.Remove(lb);
             _selectedOption = obj;
             if (selectionChanged != null)
                 selectionChanged(obj);
         }
 
+        IComponent tlc;
         void dropArrowThing_Clicked(Point loc)
         {
             ComboBox_SizeChanged(Size);
+            tlc = Util.GetTopLevelComponent(this);
             lb.visible = true;
+            lb.Location = new Point(Location.X, Location.Y - lb.Size.height + 1);
+            tlc.components.Add(lb);
+        }
+
+        protected override void OnLocationChanged()
+        {
+            base.OnLocationChanged();
+            lb.Location = new Point(Location.X, Location.Y - lb.Size.height +1);
         }
 
         void dropArrowThing_draw(IUnifiedDraw ud, USolidBrush brsh, UStroke strk)

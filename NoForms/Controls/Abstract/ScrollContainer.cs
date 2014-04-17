@@ -75,7 +75,7 @@ namespace NoForms.Controls.Abstract
             {
                 float maxRight = 0,mr;
                 foreach (var c in components)
-                    if ((mr = c.Size.width + c.Location.X) > maxRight && c.Scrollable)
+                    if ((mr = c.Size.width + c.Location.X) > maxRight && c.Scrollable && c.visible)
                         maxRight = mr;
                 return maxRight;
             }
@@ -86,7 +86,7 @@ namespace NoForms.Controls.Abstract
             {
                 float maxBottom = 0, mb;
                 foreach (var c in components)
-                    if ((mb = c.Size.height + c.Location.Y) > maxBottom && c.Scrollable)
+                    if ((mb = c.Size.height + c.Location.Y) > maxBottom && c.Scrollable && c.visible)
                         maxBottom = mb;
                 return maxBottom;
             }

@@ -110,8 +110,8 @@ namespace NoForms
         {
             lock (lo)
             {
-                foreach (IComponent t in back)
-                    yield return t;
+                for (int i = 0; i < back.Count; i++) 
+                    yield return back[i];
             }
         }
         IEnumerator IEnumerable.GetEnumerator()
