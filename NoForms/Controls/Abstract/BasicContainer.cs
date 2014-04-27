@@ -21,11 +21,11 @@ namespace NoForms.Controls.Abstract
         public override void DrawBase(IRenderType renderArgument)
         {
             Draw(renderArgument);
-            if (doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle,false);
+            renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
                 if (c.visible)
                     c.DrawBase(renderArgument);
-            if (doClip) renderArgument.uDraw.PopAxisAlignedClip();
+            renderArgument.uDraw.PopAxisAlignedClip();
         }
         public abstract void Draw(IRenderType renderArgument);
 
@@ -50,15 +50,10 @@ namespace NoForms.Controls.Abstract
                         amClipped ? true : !Util.CursorInRect(DisplayRectangle, Util.GetTopLevelLocation(this)));
             }
         }
-        public override void KeyDown(System.Windows.Forms.Keys key)
+        public override void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
         {
             foreach (IComponent inc in components)
-                inc.KeyDown(key);
-        }
-        public override void KeyUp(System.Windows.Forms.Keys key)
-        {
-            foreach (IComponent inc in components)
-                inc.KeyUp(key);
+                inc.KeyUpDown(key, keyDown);
         }
         public override void KeyPress(char c)
         {

@@ -13,16 +13,6 @@ namespace NoForms.Controls
             MoveControl.MouseMoved += new NoForm.MouseMoveEventHandler(MoveMove);
         }
 
-        public override void KeyDown(System.Windows.Forms.Keys key)
-        {
-        }
-        public override void KeyUp(System.Windows.Forms.Keys key)
-        {
-        }
-
-        public override void KeyPress(char c)
-        {
-        }
 
         USolidBrush fore = new USolidBrush() { color = new Color(1.0f, 0.8f, 0.8f, 0.8f) };
         USolidBrush back = new USolidBrush() { color = new Color(1.0f, 0f, 0f, 0f) };

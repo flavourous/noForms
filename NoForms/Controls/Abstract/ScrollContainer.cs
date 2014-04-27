@@ -391,7 +391,7 @@ namespace NoForms.Controls.Abstract
 
             // trimSize is the size sans scrollbars.  but maybe we should just let the thing overdraw...
             Draw(renderArgument);
-            if (doClip) renderArgument.uDraw.PushAxisAlignedClip(clipSet = DisplayRectangle,false);
+            renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
             {
                 if (!c.visible) continue;
@@ -414,7 +414,7 @@ namespace NoForms.Controls.Abstract
                     c.DrawBase(renderArgument);
                 }
             }
-            if (doClip) renderArgument.uDraw.PopAxisAlignedClip();
+            renderArgument.uDraw.PopAxisAlignedClip();
             if (offset) renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
 
             float hgap = HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;

@@ -94,27 +94,22 @@ namespace NoForms
             theForm.MouseDown += new MouseEventHandler(MouseDown);
             theForm.MouseUp += new MouseEventHandler(MouseUp);
             theForm.MouseMove += new MouseEventHandler(MouseMove);
-            theForm.KeyDown += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyDown(e.KeyCode); });
-            theForm.KeyUp += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUp(e.KeyCode); });
+            theForm.KeyDown += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUpDown(e.KeyCode, true); });
+            theForm.KeyUp += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUpDown(e.KeyCode, false); });
             theForm.KeyPress += new KeyPressEventHandler((Object o, KeyPressEventArgs e) => { KeyPress(e.KeyChar); });
         }
 
+
+        // Key Events
+        public void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
+        {
+            foreach (IComponent inc in components)
+                inc.KeyUpDown(key, keyDown);
+        }
         public void KeyPress(char c)
         {
             foreach (IComponent inc in components)
                 inc.KeyPress(c);
-        }
-
-        // Key Events
-        public void KeyDown(System.Windows.Forms.Keys key)
-        {
-            foreach (IComponent inc in components)
-                inc.KeyDown(key);
-        }
-        public void KeyUp(System.Windows.Forms.Keys key)
-        {
-            foreach (IComponent inc in components)
-                inc.KeyUp(key);
         }
 
 

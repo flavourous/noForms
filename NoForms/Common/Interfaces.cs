@@ -51,17 +51,12 @@ namespace NoForms
 
         // A container is focusable...
         // Key Events
-        void KeyDown(System.Windows.Forms.Keys key);
-        void KeyUp(System.Windows.Forms.Keys key);
+        void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown);
         void KeyPress(char c);
 
         // cursor...
         Cursor Cursor { get; set; }
         bool Scrollable { get; set; }
-
-        // Clipping control FIXME belongs here?
-        void ReClipAll(IRenderType renderArgument);
-        void UnClipAll(IRenderType renderArgument);
     }
 
     public interface IRenderType

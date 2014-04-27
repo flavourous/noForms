@@ -14,16 +14,6 @@ namespace NoForms.Controls
             MoveControl.MouseMoved += new NoForm.MouseMoveEventHandler(ResizeMove);
         }
 
-        public override void KeyPress(char c)
-        {
-        } 
-        public override void KeyDown(System.Windows.Forms.Keys key)
-        {
-        }
-        public override void KeyUp(System.Windows.Forms.Keys key)
-        {
-        }
-
         // Render methody
         public UBrush background = new USolidBrush() { color = new Color(0) };
         public UBrush foreground = new USolidBrush() { color = new Color(1) };

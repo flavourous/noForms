@@ -197,7 +197,14 @@ namespace NoForms.Controls
                 shift = down;
         }
 
-        public override void KeyDown(System.Windows.Forms.Keys key)
+        public override void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
+        {
+            base.KeyUpDown(key, keyDown);
+            if (keyDown) KeyDown(key);
+            else KeyUp(key);
+        }
+
+        public void KeyDown(System.Windows.Forms.Keys key)
         {
                 if (!FocusManager.FocusGet(this)) return;
                 MKeys(key, true);
@@ -412,7 +419,7 @@ namespace NoForms.Controls
                 }
         }
 
-        public override void KeyUp(System.Windows.Forms.Keys key)
+        public void KeyUp(System.Windows.Forms.Keys key)
         {
             MKeys(key, false);
         }

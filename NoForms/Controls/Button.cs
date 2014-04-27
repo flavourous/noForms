@@ -160,14 +160,5 @@ namespace NoForms.Controls
             }
         }
 
-        public override void KeyDown(System.Windows.Forms.Keys key)
-        {
-        }
-        public override void KeyUp(System.Windows.Forms.Keys key)
-        {
-        }
-        public override void KeyPress(char c)
-        {
-        }
     }
 }

@@ -105,21 +105,6 @@ namespace NoForms.Controls.Abstract
                 c.RecalculateLocation();
         }
 
-        protected Rectangle clipSet = Rectangle.Empty;
-        public void UnClipAll(IRenderType rt)
-        {
-            if (!doClip) return;
-            rt.uDraw.PopAxisAlignedClip();
-            Parent.UnClipAll(rt);
-        }
-        public void ReClipAll(IRenderType rt)
-        {
-            if (!doClip) return;
-            Parent.ReClipAll(rt);
-            rt.uDraw.PushAxisAlignedClip(clipSet,false);
-        }
-        internal bool doClip = true;
-
         public abstract void DrawBase(IRenderType renderArgument);
 
         bool _visible = true;
@@ -135,8 +120,7 @@ namespace NoForms.Controls.Abstract
 
         public virtual void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { }
         public virtual void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { }
-        public virtual void KeyDown(Keys key) { }
-        public virtual void KeyUp(Keys key) { }
+        public virtual void KeyUpDown(Keys key, bool keyDown) { }
         public virtual void KeyPress(char c) { }
     }
 }
