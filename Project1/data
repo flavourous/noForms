@@ -47,8 +47,8 @@
     <Story state="2" text="This object will do layout of children within a parent.  Parent and children will not know about it, except due to calls to get_Size, set_Location and so on." title="Create ILayoutHelper" project="NoForms" />
     <Story state="1" text="cant delete with backspace (DEL IS OK) when selecting to char pos 0 with mouse or keyboard (ctrl+a is OK)." title="textblock bug" project="NoForms" />
     <Story state="1" text="for example, when child elements are changed (after)" title="scrollcontainer more recalc needed&#x9;" project="NoForms" />
-    <Story state="1" text="I dont think it needs IsDisplayRectangleCalculated? maybe it does...but in any case lets take a looksee" title="Tidy up IComponent" project="NoForms" />
-    <Story state="3" text="can only see mouseover cursor changes when window position =(0,0)" title="bug in cursor, screen/window coord mismatch" project="NoForms" />
+    <Story state="3" text="I dont think it needs IsDisplayRectangleCalculated? maybe it does...but in any case lets take a looksee" title="Tidy up IComponent" project="NoForms" />
+    <Story state="7" text="can only see mouseover cursor changes when window position =(0,0)&#xA;&#xA;the problem was that mouseupdown and mousemove were using screen/window coords, and this was breaking amitopzorder.  tidied that up." title="bug in cursor, screen/window coord mismatch" project="NoForms" />
   </Stories>
   <Projects>
     <Project name="NoForms" />

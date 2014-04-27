@@ -19,8 +19,6 @@ namespace NoForms.Controls.Abstract
         public int ZIndex { get { return _zindex; } set { _zindex = value; ZIndexChanged(this); } }
         public event Action<IComponent> ZIndexChanged = delegate { };
 
-        bool idrs = true;
-        public bool IsDisplayRectangleCalculated { get { return idrs; } set { idrs = value; } }
         protected Rectangle _DisplayRectangle = Rectangle.Empty;
         /// <summary>
         /// Display rectangle is relative to the RenderType, i.e. the top level component
@@ -83,17 +81,14 @@ namespace NoForms.Controls.Abstract
 
         public void RecalculateDisplayRectangle()
         {
-            if (IsDisplayRectangleCalculated)
-            {
-                Point ploc = new Point(0, 0);
-                if (Parent != null && !(Parent is NoForm))
-                    ploc = Parent.DisplayRectangle.Location;
+            Point ploc = new Point(0, 0);
+            if (Parent != null && !(Parent is NoForm))
+                ploc = Parent.DisplayRectangle.Location;
 
-                this._DisplayRectangle.Location = new Point(
-                        ploc.X + _Location.X,
-                        ploc.Y + _Location.Y
-                        );
-            }
+            this._DisplayRectangle.Location = new Point(
+                    ploc.X + _Location.X,
+                    ploc.Y + _Location.Y
+                    );
             foreach (IComponent c in components)
                 c.RecalculateDisplayRectangle();
         }

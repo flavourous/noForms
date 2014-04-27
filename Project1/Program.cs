@@ -106,7 +106,7 @@ namespace testapp
         MainContainer mc;
         ComboBox cbProject;
         Scribble editProject, delProject, newProject;
-
+        Button collectGC;
 
         public MyNoForm(IRender ir) : base(ir) 
         {
@@ -141,6 +141,11 @@ namespace testapp
             newProject.draw += new Scribble.scribble(newProject_draw);
             components.Add(newProject);
 
+            collectGC = new Button();
+            collectGC.textData = new UText("GC Collect", UHAlign.Center, UVAlign.Middle, false, 120, 30) { font = new UFont("Arial", 12, false, false) };
+            collectGC.ButtonClicked += clearGC_ButtonClicked;
+            components.Add(collectGC);
+
             var bordercolor = themeColor;
             bordercolor.a = 0.9f;
             scb = new USolidBrush() { color = bordercolor };
@@ -151,6 +156,12 @@ namespace testapp
 
             MyNoForm_OnSizeChanged(Size);
         }
+
+        void clearGC_ButtonClicked()
+        {
+            GC.Collect(0, GCCollectionMode.Forced);
+        }
+
         USolidBrush scb, scb1, brushBars;
         void cbProject_selectionChanged(int obj)
         {
@@ -295,6 +306,9 @@ namespace testapp
             d.width = delProject.DisplayRectangle.width; d.height = delProject.DisplayRectangle.height;
             newProject.DisplayRectangle = new Rectangle(Size.width - 10 - cbwid - 50 - 75, Size.height - 30, 20, 20);
             n.width = newProject.DisplayRectangle.width; n.height = newProject.DisplayRectangle.height;
+
+            collectGC.DisplayRectangle = new Rectangle(Size.width - 400, Size.height - 30, 100, 20);
+
         }
 
         float gap = 5;
@@ -323,12 +337,13 @@ namespace testapp
                 if (s.state == StoryState.none)
                     if (s.Parent != this)
                     {
-                        s.IsDisplayRectangleCalculated = false;
                         var sp = (s.Parent as StoryListContainer);
                         lock (sp)
                         {
                             iAmDropped_oldParent = sp.state;
+                            var odr = s.DisplayRectangle;
                             components.Add(s);
+                            s.Location = odr.Location;
                             iAmDropped = s;
                         }
                     }
@@ -336,7 +351,6 @@ namespace testapp
             if (ias != null && ias.state != StoryState.none)
             { // we have a pickup...
                 components.Remove(iAmDropped);
-                ias.IsDisplayRectangleCalculated = true;
                 iAmDropped = null;
             }
             if(ias != null && ias.state == StoryState.none)
@@ -344,7 +358,6 @@ namespace testapp
                 {
                     components.Remove(iAmDropped);
                     ias.state = iAmDropped_oldParent;
-                    ias.IsDisplayRectangleCalculated = true;
                     iAmDropped = null;
                 }
         }

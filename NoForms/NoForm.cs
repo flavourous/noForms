@@ -277,7 +277,6 @@ namespace NoForms
             get { return true; }
             set { throw new NotImplementedException(); }
         }
-        public bool IsDisplayRectangleCalculated { get { return false; } }
         public void RecalculateDisplayRectangle() { throw new NotImplementedException(); }
         public void RecalculateLocation() { throw new NotImplementedException(); }
         public void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { throw new NotImplementedException(); }

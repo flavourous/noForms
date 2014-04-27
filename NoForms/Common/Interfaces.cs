@@ -32,7 +32,6 @@ namespace NoForms
         Size Size { get; set; }
         Rectangle DisplayRectangle { get; set; }
         bool visible { get; set; }
-        bool IsDisplayRectangleCalculated { get; }
         int ZIndex { get; }
 
         // events
