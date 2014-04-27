@@ -20,6 +20,8 @@ namespace NoForms
         {
             get { return _components; }
         }
+        public int ZIndex { get { return 0; } }
+        public event Action<IComponent> ZIndexChanged = delegate { };
 
         protected IRender renderMethod;
         internal Form theForm;

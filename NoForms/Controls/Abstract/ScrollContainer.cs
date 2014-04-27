@@ -9,8 +9,6 @@ namespace NoForms.Controls.Abstract
     {
         public ScrollContainer() : base()
         {
-            _components = new ScrollComponentCollection(this, horizontalContainer, verticalContainer);
-
             VerticalScrollbarWidth = HorizontalScrollbarHeight = 10;
             upButton = new ScrollBarButton(Direction.u, this);
             downButton = new ScrollBarButton(Direction.d, this);
@@ -22,16 +20,27 @@ namespace NoForms.Controls.Abstract
 
             components.ComponentAdded += new Action<IComponent>(c =>
             {
+                c.ZIndexChanged += c_ZIndexChanged;
+                c_ZIndexChanged(c);
                 c.SizeChanged += (ChildSizeChange);
                 c.LocationChanged += (ChildLocationChange);
                 LayoutScrollbarElements();
             });
             components.ComponentRemoved += new Action<IComponent>(c =>
             {
+                c.ZIndexChanged -= c_ZIndexChanged;
                 c.SizeChanged -= (ChildSizeChange);
                 c.LocationChanged -= (ChildLocationChange);
                 LayoutScrollbarElements();
             });
+        }
+
+        void c_ZIndexChanged(IComponent c)
+        {
+            if (c.ZIndex >= verticalContainer.ZIndex)
+            {
+               verticalContainer.ZIndex = horizontalContainer.ZIndex = c.ZIndex + 1;
+            }
         }
 
         void ChildSizeChange(Size csz)
@@ -169,6 +178,9 @@ namespace NoForms.Controls.Abstract
             horizontalContainer.components.Add(horizontalTracker);
 
             horizontalContainer.Scrollable = verticalContainer.Scrollable = false;
+
+            components.Add(horizontalContainer);
+            components.Add(verticalContainer);
         }
 
         protected override void OnSizeChanged()
@@ -370,36 +382,6 @@ namespace NoForms.Controls.Abstract
             public override void Draw(IRenderType renderArgument)
             {
                 renderArgument.uDraw.FillRectangle(DisplayRectangle, background);
-            }
-        }
-
-        class ScrollComponentCollection : ComponentCollection
-        {
-            // We will make sure that stuff gets inserted before the ScrollBarContainers
-            public ScrollComponentCollection(IComponent parent, params ScrollBarContainer[] scs) : base(parent) 
-            {
-                foreach (var s in scs)
-                    base.Add(s);
-            }
-
-            public override void Add(IComponent item)
-            {
-                base.Insert(Count-2,item);
-            }
-
-            public override void Push(IComponent item)
-            {
-                base.Push(item);
-            }
-            /// <summary>
-            /// dont go thinking you can insert past the scrollbars ;)
-            /// </summary>
-            /// <param name="index"></param>
-            /// <param name="item"></param>
-            public override void Insert(int index, IComponent item)
-            {
-                if (index > Count) index = Count - 2;
-                base.Insert(index, item);
             }
         }
 

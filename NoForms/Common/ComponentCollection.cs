@@ -12,7 +12,6 @@ namespace NoForms
         public AlwaysEmptyComponentCollection(IComponent dontCare) : base(null) { }
         public new bool Contains(IComponent item) { return false; }
         public new void Add(IComponent item) { }
-        public new void Push(IComponent item) { }
         public new bool Remove(IComponent item) { return false; }
         public new bool RemoveAt(int idx) { return false; }
         public new void Clear() { }
@@ -29,6 +28,33 @@ namespace NoForms
         public ComponentCollection(IComponent myParent)
         {
             this.myParent = myParent;
+
+            // Preserving zorder
+            ComponentAdded += TrackZIndex_Add;
+            ComponentRemoved += TrackZIndex_Remove;
+        }
+
+        // FIXME some performance to be gained here
+        void TrackZIndex_Add(IComponent obj)
+        {
+            obj.ZIndexChanged += obj_ZIndexChanged;
+            obj_ZIndexChanged(obj);
+        }
+        void obj_ZIndexChanged(IComponent obj)
+        {
+            lock (lo)
+            {
+                back.Remove(obj);
+                int i = 0;
+                for (i = 0; i < back.Count; i++)
+                    if (back[i].ZIndex > obj.ZIndex)
+                        break;
+                back.Insert(i, obj);
+            }
+        }
+        void TrackZIndex_Remove(IComponent obj)
+        {
+            obj.ZIndexChanged -= obj_ZIndexChanged;
         }
 
         public event Action<IComponent> ComponentAdded = delegate { };
@@ -42,26 +68,6 @@ namespace NoForms
         public virtual void Add(IComponent item)
         {
             lock (lo) back.Add(item);
-            if (item.Parent != null)
-                lock (item.Parent.components.lo)
-                    item.Parent.components.Remove(item);
-            item.Parent = myParent;
-            item.RecalculateDisplayRectangle();
-            ComponentAdded(item);
-        }
-        public virtual void Push(IComponent item)
-        {
-            lock (lo) back.Insert(0, item);
-            if (item.Parent != null)
-                lock (item.Parent.components.lo)
-                    item.Parent.components.Remove(item);
-            item.Parent = myParent;
-            item.RecalculateDisplayRectangle();
-            ComponentAdded(item);
-        }
-        public virtual void Insert(int index, IComponent item)
-        {
-            lock (lo) back.Insert(index, item);
             if (item.Parent != null)
                 lock (item.Parent.components.lo)
                     item.Parent.components.Remove(item);

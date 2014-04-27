@@ -15,6 +15,9 @@ namespace NoForms.Controls.Abstract
                 return _components;
             }
         }
+        private int _zindex = 0;
+        public int ZIndex { get { return _zindex; } set { _zindex = value; ZIndexChanged(this); } }
+        public event Action<IComponent> ZIndexChanged = delegate { };
 
         bool idrs = true;
         public bool IsDisplayRectangleCalculated { get { return idrs; } set { idrs = value; } }

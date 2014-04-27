@@ -426,6 +426,7 @@ namespace testapp
             this.state = state;
             add = new Scribble() { Scrollable = false };
             add.Cursor = System.Windows.Forms.Cursors.Hand;
+            add.ZIndex = 1;
             components.Add(add);
             components.Add(botPad);
             add.draw += new Scribble.scribble(add_draw);
@@ -511,7 +512,7 @@ namespace testapp
             foreach (var s in Program.Stories)
                 if (s.state == state && s.projectName == Program.selectedProject.name)
                     if (s.Parent == null)
-                        components.Push(s); // was dropped in, or grabbed on init...
+                        components.Add(s); // was dropped in, or grabbed on init...
         }
         int lastStories = 0;
         void CheckLayout()

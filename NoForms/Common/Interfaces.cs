@@ -33,8 +33,10 @@ namespace NoForms
         Rectangle DisplayRectangle { get; set; }
         bool visible { get; set; }
         bool IsDisplayRectangleCalculated { get; }
+        int ZIndex { get; }
 
         // events
+        event Action<IComponent> ZIndexChanged;
         event Action<Size> SizeChanged;
         event Action<Point> LocationChanged;
 
