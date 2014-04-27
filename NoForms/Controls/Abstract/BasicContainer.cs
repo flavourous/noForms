@@ -34,10 +34,11 @@ namespace NoForms.Controls.Abstract
             foreach (IComponent c in components)
             {
                 if (c.visible)
-                    c.MouseMove(location,
-                        Util.CursorInRect(c.DisplayRectangle,
-                        Util.GetTopLevelLocation(this)), amClipped ? true :
-                            !Util.CursorInRect(DisplayRectangle, Util.GetTopLevelLocation(this)));
+                {
+                    bool child_inComponent = Util.PointInRect(location, c.DisplayRectangle);
+                    bool child_amClipped = amClipped ? true : !Util.PointInRect(location, DisplayRectangle);
+                    c.MouseMove(location, child_inComponent, child_amClipped);
+                }
             }
         }
         public override void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)

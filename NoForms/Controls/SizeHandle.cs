@@ -107,7 +107,7 @@ namespace NoForms.Controls
             if (mbs == MouseButtonState.DOWN && inComponent)
             {
                 defosit = new System.Drawing.Point(0, 0);
-                deltaLoc = System.Windows.Forms.Cursor.Position;
+                deltaLoc = mea.Location;
                 sizin = true;
                 controlled.theForm.Capture = true;
             }

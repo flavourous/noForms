@@ -653,7 +653,7 @@ namespace testapp
         {
             if (maybeDrag || dragtime)
             {
-                System.Drawing.Point nloc = System.Windows.Forms.Cursor.Position;
+                System.Drawing.Point nloc = location;
                 int dx = nloc.X - lloc.X;
                 int dy = nloc.Y - lloc.Y;
                 sdx += dx; sdy += dy;
@@ -710,7 +710,7 @@ namespace testapp
             }
             if (tzo && inComponent && mbs == MouseButtonState.DOWN && mea.Button == System.Windows.Forms.MouseButtons.Left && !amClipped)
             {
-                lloc = System.Windows.Forms.Cursor.Position;
+                lloc = mea.Location;
                 maybeDrag = true;
                 sdx = sdy = 0;
             }

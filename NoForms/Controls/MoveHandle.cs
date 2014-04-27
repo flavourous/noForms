@@ -71,9 +71,10 @@ namespace NoForms.Controls
         {
             if (movin)
             {
-                int dx = location.X - deltaLoc.X;
-                int dy = location.Y - deltaLoc.Y;
-                deltaLoc = location;
+                var usepos = System.Windows.Forms.Cursor.Position;
+                int dx = usepos.X - deltaLoc.X;
+                int dy = usepos.Y - deltaLoc.Y;
+                deltaLoc = usepos;
                 controlled.Location = new Point(controlled.Location.X + dx, controlled.Location.Y + dy);
             }
         }

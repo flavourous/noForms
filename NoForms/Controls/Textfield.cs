@@ -556,8 +556,7 @@ namespace NoForms.Controls
             {
                 if (mouseSelect && inComponent && !amClipped)
                 {
-                    Point tl = Util.GetTopLevelLocation(this); // FIXME is this noform.location? :/
-                    Point tfPoint = new Point(location.X - Location.X - tl.X + roX, location.Y - Location.Y - tl.Y + roY);
+                    Point tfPoint = new Point(location.X - Location.X + roX, location.Y - Location.Y + roY);
                     UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
                     int extra = 0;
                     if (htInfo.charPos == data.text.Length - 1 && htInfo.leading) extra++;

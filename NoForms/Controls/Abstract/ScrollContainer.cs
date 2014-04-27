@@ -436,14 +436,11 @@ namespace NoForms.Controls.Abstract
 
             foreach (IComponent c in components)
             {
-                if (c.visible && c.Scrollable)
-                    c.MouseMove(location + scrollOffset, 
-                        Util.CursorInRect(c.DisplayRectangle,tll - scrollOffset),
-                        amClipped ? true : !Util.CursorInRect(clipDr, tll));
-                else if(!c.Scrollable) 
-                    c.MouseMove(location,
-                        Util.CursorInRect(c.DisplayRectangle, tll),
-                        amClipped ? true : !Util.CursorInRect(DisplayRectangle, tll));
+                if (!c.visible) continue;
+                Point useloc = c.Scrollable ? (Point)location + scrollOffset : (Point)location;
+                bool child_inComponent = Util.PointInRect(useloc, c.DisplayRectangle);
+                bool child_amClipped = amClipped ? true : !Util.PointInRect(useloc, clipDr);
+                c.MouseMove(useloc, child_inComponent, child_amClipped);
             }
         }
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)

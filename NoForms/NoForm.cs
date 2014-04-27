@@ -50,7 +50,7 @@ namespace NoForms
             get { return _DisplayRectangle; }
             set
             {
-                _DisplayRectangle = value;
+                _DisplayRectangle.Size = value.Size;
                 _Size = DisplayRectangle.Size;
             }
         }
@@ -162,7 +162,7 @@ namespace NoForms
         public event MouseMoveEventHandler MouseMoved;
         void MouseMove(object sender, MouseEventArgs e)
         {
-            MouseMove(Cursor.Position);
+            MouseMove(e.Location);
         }
         public void MouseMove(System.Drawing.Point location)
         {
@@ -173,14 +173,17 @@ namespace NoForms
                 mevent(location);
             foreach (IComponent inc in components)
             {
-                bool clip = !Util.CursorInRect(DisplayRectangle, Location);
-                bool inComponent = Util.CursorInRect(inc.DisplayRectangle, Location);
+                bool clip = !Util.PointInRect(location, DisplayRectangle);
+                bool inComponent = Util.PointInRect(location, inc.DisplayRectangle);
                 if (inc.visible) inc.MouseMove(location, inComponent, clip);
             }
+
+            // FIXME isnt this section of code, to find top level component, a bit heavy handed? :/
             foreach(IComponent inc in RecurseAllComponents(this))
             {
-                bool clip = !Util.CursorInRect(DisplayRectangle, Location);
-                bool inComponent = Util.CursorInRect(inc.DisplayRectangle, Location);
+                // FIXME not sure about these two following lines.
+                bool clip = !Util.PointInRect(location, DisplayRectangle);
+                bool inComponent = Util.PointInRect(location, inc.DisplayRectangle);
                 if (inc.visible && !clip && inComponent)
                     if (Util.AmITopZOrder(inc, location))
                     {
