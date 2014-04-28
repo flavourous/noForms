@@ -8,6 +8,7 @@ namespace NoForms.Controls
     public class SizeHandle : Abstract.BasicContainer
     {
         NoForm controlled;
+        public Direction ResizeMode = Direction.NONE;
         public SizeHandle(NoForm MoveControl)
         {
             controlled = MoveControl;
@@ -20,6 +21,7 @@ namespace NoForms.Controls
         public UStroke lineStroke = new UStroke() { strokeWidth = 2f };
         public override void Draw(IRenderType renderArg)
         {
+            //if (invisible) return;
             renderArg.uDraw.FillRectangle(DisplayRectangle, background);
             float epad = 3;
             renderArg.uDraw.DrawLine(aof(new Point(1 * DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new Point(DisplayRectangle.width - epad, 1 * DisplayRectangle.height / 5)), foreground, lineStroke);
@@ -51,6 +53,36 @@ namespace NoForms.Controls
                 int dy = location.Y - deltaLoc.Y;
                 deltaLoc = location;
 
+                switch (ResizeMode)
+                {
+                    case Direction.NORTH:
+                        dy = -dy; dx=0;
+                        break;
+                    case Direction.SOUTH:
+                        dx = 0;
+                        break;
+                    case Direction.EAST:
+                        dy = 0;
+                        break;
+                    case Direction.WEST:
+                        dx = -dx; dy=0;
+                        break;
+                    case Direction.NORTH | Direction.EAST:
+                        dy = -dy;
+                        break;
+                    case Direction.NORTH | Direction.WEST:
+                        dy = -dy; dx=-dx;
+                        break;
+                    case Direction.SOUTH | Direction.EAST:
+                        break;
+                    case Direction.SOUTH | Direction.WEST:
+                        dx = -dx;
+                        break;
+                    default:
+                        dx = dy = 0;
+                        break;
+                }
+
                 if ((dx < 0 && defosit.X > 0) || (dx > 0 && defosit.X < 0))
                 {
                     // Process X defosit
@@ -76,20 +108,35 @@ namespace NoForms.Controls
                     }
                 }
 
-                float newx = controlled.Size.width + (float)dx;
-                float newy = controlled.Size.height + (float)dy;
-                controlled.Size = new Size(newx,newy);
+                float neww = controlled.Size.width + (float)dx;
+                float newh = controlled.Size.height + (float)dy;
 
-                if (newx != controlled.Size.width)
+                if (neww > controlled.MaxSize.width)
                 {
-                    // Oh, we need to add to the x defosit
-                    defosit.X += newx - controlled.Size.width;
+                    defosit.X += neww - controlled.MaxSize.width;
+                    neww = controlled.MaxSize.width;
                 }
-                if (newy != controlled.Size.height)
+                if (neww < controlled.MinSize.width)
                 {
-                    // Oh, we need to add to the y defosit
-                    defosit.Y += newy - controlled.Size.height;
+                    defosit.X += neww - controlled.MinSize.width;
+                    neww = controlled.MinSize.width;
                 }
+                if (newh > controlled.MaxSize.height)
+                {
+                    defosit.Y += newh - controlled.MaxSize.height;
+                    newh = controlled.MaxSize.height;
+                }
+                if (newh < controlled.MinSize.height)
+                {
+                    defosit.Y += newh - controlled.MinSize.height;
+                    newh = controlled.MinSize.height;
+                }
+
+                float newx = (ResizeMode & Direction.WEST) == Direction.WEST ? controlled.Location.X - (neww - controlled.Size.width) : controlled.Location.X;
+                float newy = (ResizeMode & Direction.NORTH) == Direction.NORTH ? controlled.Location.Y - (newh - controlled.Size.height) : controlled.Location.Y;
+
+                controlled.Location = new Point(newx, newy);
+                controlled.Size = new Size(neww,newh);
             }
         }
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
@@ -104,9 +151,52 @@ namespace NoForms.Controls
             if (mbs == MouseButtonState.UP && sizin)
                 sizin = false;
         }
-        public void MouseUpDownGlob(MouseButtonState mbs)
+
+        bool invisible = false;
+        public static void AddEdgeResize(NoForm target, int zIndex, float thickness, float cornerSize)
         {
-            
+            SizeHandle n, s, e, w, ne, nw, se, sw;
+            n = new SizeHandle(target) { ZIndex = zIndex, ResizeMode = Direction.NORTH, invisible=true};
+            s = new SizeHandle(target) { ZIndex = zIndex, ResizeMode = Direction.SOUTH, invisible = true };
+            e = new SizeHandle(target) { ZIndex = zIndex, ResizeMode = Direction.EAST, invisible = true };
+            w = new SizeHandle(target) { ZIndex = zIndex, ResizeMode = Direction.WEST, invisible = true };
+            ne = new SizeHandle(target) { ZIndex = zIndex + 1, ResizeMode = Direction.NORTH | Direction.EAST, invisible = true };
+            nw = new SizeHandle(target) { ZIndex = zIndex + 1, ResizeMode = Direction.NORTH | Direction.WEST, invisible = true };
+            se = new SizeHandle(target) { ZIndex = zIndex + 1, ResizeMode = Direction.SOUTH | Direction.EAST, invisible = true };
+            sw = new SizeHandle(target) { ZIndex = zIndex + 1, ResizeMode = Direction.SOUTH | Direction.WEST, invisible = true };
+
+            // cursors
+            s.Cursor = n.Cursor = System.Windows.Forms.Cursors.SizeNS;
+            e.Cursor = w.Cursor = System.Windows.Forms.Cursors.SizeWE;
+            ne.Cursor = sw.Cursor = System.Windows.Forms.Cursors.SizeNESW;
+            se.Cursor = nw.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
+
+            Action<Size> sc = null;
+            sc = new Action<Size>(size =>
+            {
+                float wd = size.width;
+                float hi = size.height;
+                float th = thickness;
+                float cs = cornerSize;
+                n.DisplayRectangle = new Rectangle(0, 0, wd, th);
+                s.DisplayRectangle = new Rectangle(0, hi - th, wd, th);
+                e.DisplayRectangle = new Rectangle(wd - th, 0, th, hi);
+                w.DisplayRectangle = new Rectangle(0, 0, th, hi);
+                ne.DisplayRectangle = new Rectangle(wd - cs, 0, cs, cs);
+                nw.DisplayRectangle = new Rectangle(0, 0, cs, cs);
+                se.DisplayRectangle = new Rectangle(wd - cs, hi - cs, cs, cs);
+                sw.DisplayRectangle = new Rectangle(0, hi - cs, cs, cs);
+            });
+            target.SizeChanged += sc;
+            sc(target.Size);
+            target.components.Add(n);
+            target.components.Add(s);
+            target.components.Add(e);
+            target.components.Add(w);
+            target.components.Add(ne);
+            target.components.Add(nw);
+            target.components.Add(se);
+            target.components.Add(sw);
         }
     }
 }

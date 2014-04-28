@@ -41,6 +41,7 @@ namespace Easy
             sh = new NoForms.Controls.SizeHandle(this);
             sh.Size = new Size(20, 20);
             sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
+            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
             components.Add(sh);
 
             cont = new con();

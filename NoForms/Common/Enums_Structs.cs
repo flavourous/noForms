@@ -2,6 +2,9 @@
 
 namespace NoForms
 {
+    [Flags]
+    public enum Direction { NONE =0, NORTH = 1, SOUTH=2, EAST=4, WEST=8 }; // bitmask
+
     // mouse stuff
     public enum MouseButton { LEFT, RIGHT };
     public enum MouseButtonState { DOWN, UP };

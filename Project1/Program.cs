@@ -102,7 +102,6 @@ namespace testapp
     class MyNoForm : NoForm 
     {
         MoveHandle mh;
-        SizeHandle sh;
         MainContainer mc;
         ComboBox cbProject;
         Scribble editProject, delProject, newProject;
@@ -114,8 +113,7 @@ namespace testapp
 
             // move and resize
             mh = new MoveHandle(this);
-            sh = new SizeHandle(this);
-            components.Add(mh); components.Add(sh);
+            components.Add(mh); 
 
             mc = new MainContainer();
             components.Add(mc);
@@ -153,6 +151,8 @@ namespace testapp
             scb1 = new USolidBrush() { color = mainColor };
             var barColor = bordercolor.Scale(0.2f);
             brushBars = new USolidBrush() { color = barColor };
+
+            SizeHandle.AddEdgeResize(this, 2, 5, 10);
 
             MyNoForm_OnSizeChanged(Size);
         }
@@ -295,7 +295,6 @@ namespace testapp
         void MyNoForm_OnSizeChanged(Size sz)
         {
             mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
-            sh.DisplayRectangle = new Rectangle(Size.width - 30, Size.height - 30, 20, 20);
             mc.DisplayRectangle = new Rectangle(gap, gap + barwid, Size.width - gap * 2, Size.height - gap * 2 - barwid * 2);
 
             int cbwid = 150;
@@ -751,6 +750,7 @@ namespace testapp
             // move and resize
             mh = new MoveHandle(this);
             sh = new SizeHandle(this);
+            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
             components.Add(mh); components.Add(sh);
 
             tft = new Textfield();
@@ -902,7 +902,9 @@ namespace testapp
             // move and resize
             mh = new MoveHandle(this);
             sh = new SizeHandle(this);
+            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
             components.Add(mh); components.Add(sh);
+
 
             tft = new Textfield();
             tft.text = refProject.name;
