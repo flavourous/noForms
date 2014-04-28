@@ -21,7 +21,7 @@ namespace NoForms.Controls
         public UStroke lineStroke = new UStroke() { strokeWidth = 2f };
         public override void Draw(IRenderType renderArg)
         {
-            //if (invisible) return;
+            if (invisible) return;
             renderArg.uDraw.FillRectangle(DisplayRectangle, background);
             float epad = 3;
             renderArg.uDraw.DrawLine(aof(new Point(1 * DisplayRectangle.width / 5, DisplayRectangle.height - epad)), aof(new Point(DisplayRectangle.width - epad, 1 * DisplayRectangle.height / 5)), foreground, lineStroke);
@@ -39,19 +39,15 @@ namespace NoForms.Controls
         // Mousey
         bool sizin = false;
         System.Drawing.Point deltaLoc;
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
-        {
-            
-        }
         Point defosit;
-
         public void ResizeMove(System.Drawing.Point location)
         {
+            var loc = System.Windows.Forms.Cursor.Position;
             if (sizin)
             {
-                int dx = location.X - deltaLoc.X;
-                int dy = location.Y - deltaLoc.Y;
-                deltaLoc = location;
+                int dx = loc.X - deltaLoc.X;
+                int dy = loc.Y - deltaLoc.Y;
+                deltaLoc = loc;
 
                 switch (ResizeMode)
                 {
@@ -141,10 +137,10 @@ namespace NoForms.Controls
         }
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN && inComponent)
+            if (mbs == MouseButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location))
             {
                 defosit = new System.Drawing.Point(0, 0);
-                deltaLoc = mea.Location;
+                deltaLoc = System.Windows.Forms.Cursor.Position;
                 sizin = true;
                 controlled.theForm.Capture = true;
             }

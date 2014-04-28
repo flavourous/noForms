@@ -10,6 +10,7 @@ namespace NoForms.Controls
         public MoveHandle(NoForm MoveControl)
         {
             controlled = MoveControl;
+            Cursor = System.Windows.Forms.Cursors.SizeAll;
             MoveControl.MouseMoved += new NoForm.MouseMoveEventHandler(MoveMove);
         }
 
@@ -70,7 +71,7 @@ namespace NoForms.Controls
         }
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN && inComponent)
+            if (mbs == MouseButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this,mea.Location))
             {
                 deltaLoc = System.Windows.Forms.Cursor.Position;
                 movin = true;

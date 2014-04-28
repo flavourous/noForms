@@ -242,7 +242,7 @@ namespace NoForms.Controls.Abstract
                 if (inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location) && mbs == MouseButtonState.DOWN)
                 {
                     downed = true;
-                    var sloc = mea.Location + Util.GetTopLevelLocation(this);
+                    var sloc = mea.Location;
                     downedOrigin = orientation == Orientation.v ? sloc.Y : sloc.X;
                     topOriginal = orientation == Orientation.v ? Location.Y : Location.X;
                     (trackBrush as USolidBrush).color = new Color(0.8f);

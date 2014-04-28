@@ -107,12 +107,22 @@ namespace testapp
         Scribble editProject, delProject, newProject;
         Button collectGC;
 
+        class mmh : MoveHandle
+        {
+            public mmh(NoForm c) : base(c) { }
+            public override void Draw(IRenderType ra)
+            {
+                //ra.uDraw.FillRectangle(DisplayRectangle, new USolidBrush() { color = new Color(.5f, .7f, .1f, .1f) });
+            }
+        }
+
         public MyNoForm(IRender ir) : base(ir) 
         {
             background = new USolidBrush() { color = new Color(0.5f, 0, 0, 0) };
 
             // move and resize
-            mh = new MoveHandle(this);
+            mh = new mmh(this);
+            mh.ZIndex = 1;
             components.Add(mh); 
 
             mc = new MainContainer();
@@ -294,7 +304,7 @@ namespace testapp
 
         void MyNoForm_OnSizeChanged(Size sz)
         {
-            mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
+            mh.DisplayRectangle = new Rectangle(5, 5, sz.width-10,30);
             mc.DisplayRectangle = new Rectangle(gap, gap + barwid, Size.width - gap * 2, Size.height - gap * 2 - barwid * 2);
 
             int cbwid = 150;

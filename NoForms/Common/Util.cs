@@ -23,12 +23,6 @@ namespace NoForms
             return true;
         }
 
-        /// <summary>
-        /// This is now the point relative to the screen!!
-        /// </summary>
-        /// <param name="me"></param>
-        /// <param name="loc"></param>
-        /// <returns></returns>
         public static bool AmITopZOrder(IComponent me, System.Drawing.Point loc)
         {
             if (me.Parent == null && !(me is NoForm))
