@@ -20,30 +20,6 @@ namespace NoForms.Renderers
                 FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             }
 
-            //protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData)
-            //{
-            //    //return base.ProcessCmdKey(ref msg, keyData);
-            //    return false;
-            //}
-            //protected override bool ProcessDialogKey(System.Windows.Forms.Keys keyData)
-            //{
-            //    //return base.ProcessDialogKey(keyData);
-            //    return false;
-            //}
-            protected override void OnLoad(EventArgs e)
-            {
-                base.OnLoad(e);
-                SetRegion(Size);
-            }
-            public void SetRegion(System.Drawing.Size RealClientSize)
-            {
-                if (FormBorderStyle != System.Windows.Forms.FormBorderStyle.None) return;
-                // default region can be funny
-                System.Drawing.Rectangle nr = new System.Drawing.Rectangle(ClientRectangle.Location, RealClientSize);
-                var myReg = new System.Drawing.Region(nr);
-                Region = myReg;
-            }
-
             protected override void OnPaint(System.Windows.Forms.PaintEventArgs e)
             {
                 //base.OnPaint(e);
@@ -70,21 +46,12 @@ namespace NoForms.Renderers
         {
 
         }
-        public void Init(ref System.Windows.Forms.Form winForm)
+        public void Init(ref System.Windows.Forms.Form winForm, System.Windows.Forms.MethodInvoker withConstructor)
         {
             // do the form
             winForm = new D2SForm();
-            System.Windows.Forms.Form wfCopy = winForm;
+            withConstructor();
             winHandle = winForm.Handle;
-
-            winForm.LocationChanged += new EventHandler((object o, EventArgs e) =>
-            {
-                noForm.Location = wfCopy.Location;
-            });
-            winForm.SizeChanged += new EventHandler((object o, EventArgs e) =>
-            {
-                noForm.Size = wfCopy.ClientSize;
-            });
 
             SwapChainDescription swapchainDescription = new SwapChainDescription()
             {
@@ -117,8 +84,18 @@ namespace NoForms.Renderers
             {
                 while (running)
                     RenderPass();
+
+                // free unmanaged
+                d2dRenderTarget.Dispose();
+                surface.Dispose();
+                renderView.Dispose();
+                backBuffer.Dispose();
+                swapchain.Dispose();
+                device.Dispose();
+
                 ended();
             }));
+            running = true;
             renderThread.Start();
         }
         System.Windows.Forms.MethodInvoker ended;
@@ -129,7 +106,6 @@ namespace NoForms.Renderers
             running = false;
         }
 
-        // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
         void RenderPass()
         {
@@ -160,7 +136,6 @@ namespace NoForms.Renderers
             {
                 noForm.theForm.ClientSize = noForm.Size;
                 noForm.theForm.Location = noForm.Location;
-                (noForm.theForm as D2SForm).SetRegion(noForm.theForm.Size);
             }));
 
             swapchain.ResizeBuffers(0, (int)noForm.Size.width, (int)noForm.Size.height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
@@ -168,7 +143,6 @@ namespace NoForms.Renderers
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
-            // Init uDraw and assign IRenderElement parts
             _backRenderer.renderTarget = d2dRenderTarget;
         }
 
@@ -186,6 +160,12 @@ namespace NoForms.Renderers
         public UnifiedEffects uAdvanced
         {
             get { throw new NotImplementedException(); }
+        }
+
+        public void Dispose()
+        {
+            d2dFactory.Dispose();
+            dxgiFactory.Dispose();
         }
     }
 }

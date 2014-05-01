@@ -43,7 +43,10 @@ namespace NoForms
                 foreach (var ic in (me as IComponent).components)
                     if (PointInRect(loc, ic.DisplayRectangle) && VisibilityChain(ic))
                         return false;
-        
+
+
+            if (me.Parent == null) return true;
+
             int myIdx;
             myIdx = me.Parent.components.IndexOf(me);
 

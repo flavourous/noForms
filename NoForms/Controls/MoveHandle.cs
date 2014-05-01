@@ -54,10 +54,6 @@ namespace NoForms.Controls
         // Mousey
         bool movin = false;
         System.Drawing.Point deltaLoc;
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
-        {
-            // move event added in constructor
-        }
         public void MoveMove(System.Drawing.Point location)
         {
             if (movin)

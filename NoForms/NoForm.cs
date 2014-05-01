@@ -9,11 +9,16 @@ using NoForms.Renderers;
 
 namespace NoForms
 {
+    public class CreateOptions
+    {
+        public bool showInTaskbar = true;
+    }
     /// <summary>
     /// You would create a noform, and to it add INoComponent, and it would handle stuff.
     /// </summary>
     public class NoForm : IComponent
     {
+        // FIXME does this need IDisposable? :/  dont wana dispose renderMethod really might use elsewhere? certainly for combobox..
         public IComponent Parent { get { return null; } set { } }
         ComponentCollection _components;
         public ComponentCollection components
@@ -79,14 +84,16 @@ namespace NoForms
         public System.Drawing.Icon icon = null;
         public String title = "";
 
-        public NoForm(IRender renderMethod)
+        public NoForm(IRender renderMethod, CreateOptions createOptions = null)
         {
+            this.createOptions = createOptions ?? new CreateOptions();
             this.renderMethod = renderMethod;
             renderMethod.noForm = this;
             _components = new ComponentCollection(this);
             background = new USolidBrush() { color = new Color(1) };
         }
         public UBrush background;
+
 
         // Register controller events
         internal void RegisterControllers()
@@ -99,7 +106,6 @@ namespace NoForms
             theForm.KeyPress += new KeyPressEventHandler((Object o, KeyPressEventArgs e) => { KeyPress(e.KeyChar); });
         }
 
-
         // Key Events
         public void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
         {
@@ -111,7 +117,6 @@ namespace NoForms
             foreach (IComponent inc in components)
                 inc.KeyPress(c);
         }
-
 
         // Click Controller
         void MouseDown(Object o, MouseEventArgs mea)
@@ -161,11 +166,6 @@ namespace NoForms
         }
         public void MouseMove(System.Drawing.Point location)
         {
-            if (MouseMoved == null) return;
-            bool foundCompHere = false;
-
-            foreach (MouseMoveEventHandler mevent in MouseMoved.GetInvocationList())
-                mevent(location);
             foreach (IComponent inc in components)
             {
                 bool clip = !Util.PointInRect(location, DisplayRectangle);
@@ -173,33 +173,18 @@ namespace NoForms
                 if (inc.visible) inc.MouseMove(location, inComponent, clip);
             }
 
-            // FIXME isnt this section of code, to find top level component, a bit heavy handed? :/
-            foreach(IComponent inc in RecurseAllComponents(this))
-            {
-                // FIXME not sure about these two following lines.
-                bool clip = !Util.PointInRect(location, DisplayRectangle);
-                bool inComponent = Util.PointInRect(location, inc.DisplayRectangle);
-                if (inc.visible && !clip && inComponent)
-                    if (Util.AmITopZOrder(inc, location))
-                    {
-                        if (theForm.Cursor != (inc.Cursor ?? Cursors.Default))
-                            theForm.Cursor = inc.Cursor ?? Cursors.Default;
-                        foundCompHere = true;
-                        break;
-                    }
-            }
-            if(!foundCompHere && theForm.Cursor != (Cursor ?? Cursors.Default))
-                    theForm.Cursor = Cursor ?? Cursors.Default;
+            if (Util.AmITopZOrder(this, location))
+                currentCursor = Cursor;
+
+            if (MouseMoved != null) 
+                foreach (MouseMoveEventHandler mevent in MouseMoved.GetInvocationList())
+                    mevent(location);
         }
 
-        IEnumerable<IComponent> RecurseAllComponents(IComponent root)
+        public Cursor currentCursor
         {
-            foreach (IComponent inc in root.components)
-            {
-                yield return inc;
-                foreach (IComponent inc2 in RecurseAllComponents(inc))
-                    yield return inc2;
-            }
+            get { return theForm.Cursor; }
+            set { theForm.Cursor = value; }
         }
 
         public void DrawBase(IRenderType rt)
@@ -219,6 +204,7 @@ namespace NoForms
         {
         }
 
+        // FIXME some of these cant be changed after!!
         void SetWFormProps()
         {
             theForm.Text = title;
@@ -226,11 +212,16 @@ namespace NoForms
             if (icon != null) theForm.Icon = icon;
         }
 
+        CreateOptions createOptions;
+        void OnceOnlyProperties()
+        {
+            theForm.ShowInTaskbar = createOptions.showInTaskbar;
+        }
+
         bool okClose = false;
         public void Create(bool rootForm, bool dialog)
         {
-
-            renderMethod.Init(ref theForm);
+            renderMethod.Init(ref theForm, OnceOnlyProperties);
             SetWFormProps();
             RegisterControllers();
 
@@ -255,6 +246,7 @@ namespace NoForms
                 else theForm.Show();
             }
         }
+        
         public void Close(bool done = false)
         {
             if (theForm.InvokeRequired)
@@ -264,6 +256,34 @@ namespace NoForms
             }
             okClose = done;
             theForm.Close();
+        }
+
+        public void BringToFront()
+        {
+            theForm.BringToFront();
+        }
+
+        WindowState _windowState = WindowState.Normal;
+        public WindowState windowState
+        {
+            get { return _windowState; }
+            set { ChangeWindowState(value); }
+        }
+        void ChangeWindowState(WindowState ws)
+        {
+            if (ws == _windowState) return;
+            switch (ws)
+            {
+                case WindowState.Minimized:
+                    theForm.WindowState = FormWindowState.Minimized;
+                    break;
+                case WindowState.Maximised:
+                    theForm.WindowState = FormWindowState.Maximized;
+                    break;
+                case WindowState.Normal:
+                    theForm.WindowState = FormWindowState.Normal;
+                    break;
+            }
         }
 
         // FIXME some isp could avoid this and keep the hierachy intact..
@@ -276,9 +296,6 @@ namespace NoForms
         public void RecalculateLocation() { throw new NotImplementedException(); }
         public void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
         public void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
-        public void ReClipAll(IRenderType renderArgument) { throw new NotImplementedException(); }
-        public void UnClipAll(IRenderType renderArgument) { throw new NotImplementedException(); }
-
         
     }
 }

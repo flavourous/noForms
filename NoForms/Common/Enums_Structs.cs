@@ -4,6 +4,7 @@ namespace NoForms
 {
     [Flags]
     public enum Direction { NONE =0, NORTH = 1, SOUTH=2, EAST=4, WEST=8 }; // bitmask
+    public enum WindowState { Minimized, Maximised, Normal };
 
     // mouse stuff
     public enum MouseButton { LEFT, RIGHT };

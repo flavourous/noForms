@@ -114,11 +114,28 @@ namespace NoForms.Controls.Abstract
             set { _visible = value; }
         }
 
-        public Cursor Cursor { get; set; }
+        Cursor _Cursor = Cursors.Default;
+        public Cursor Cursor { get { return _Cursor; } set { _Cursor = value; } }
         public bool _Scrollable = true;
         public bool Scrollable { get { return _Scrollable; } set { _Scrollable = value; } }
 
-        public virtual void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { }
+        public virtual void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) {
+            if (inComponent && !amClipped)
+            {
+                var tzo = Util.AmITopZOrder(this, location);
+                if (tzo)
+                {
+                    var tlc = Util.GetTopLevelComponent(this);
+                    if (tlc is NoForm)
+                    {
+                        var nf = (tlc as NoForm);
+                        if (nf.currentCursor != Cursor)
+                            nf.currentCursor = Cursor;
+                    }
+                }
+            }
+            
+        }
         public virtual void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { }
         public virtual void KeyUpDown(Keys key, bool keyDown) { }
         public virtual void KeyPress(char c) { }

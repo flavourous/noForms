@@ -136,6 +136,7 @@ namespace NoForms.Controls
         // Mousey
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
+            base.MouseMove(location, inComponent, amClipped);
             if (inComponent && !md) state = ButtonState.Hover;
             if (!inComponent && !md) state = ButtonState.Normal;
         }
@@ -144,6 +145,7 @@ namespace NoForms.Controls
         bool md = false;
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
+            base.MouseUpDown(mea, mbs, inComponent, amClipped);
             if (mbs == MouseButtonState.DOWN && inComponent)
             {
                 md = true;

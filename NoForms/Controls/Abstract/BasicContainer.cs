@@ -31,6 +31,7 @@ namespace NoForms.Controls.Abstract
 
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
+            base.MouseMove(location, inComponent, amClipped);
             foreach (IComponent c in components)
             {
                 if (c.visible)
@@ -43,6 +44,7 @@ namespace NoForms.Controls.Abstract
         }
         public override void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
+            base.MouseUpDown(mea,mbs,inComponent,amClipped);
             foreach (IComponent c in components)
             {
                 if (c.visible)

@@ -98,6 +98,14 @@ namespace testapp
         }
     }
 
+    class mmh : MoveHandle
+    {
+        public mmh(NoForm c) : base(c) { }
+        public override void Draw(IRenderType ra)
+        {
+            //ra.uDraw.FillRectangle(DisplayRectangle, new USolidBrush() { color = new Color(.5f, .7f, .1f, .1f) });
+        }
+    }
     
     class MyNoForm : NoForm 
     {
@@ -106,15 +114,7 @@ namespace testapp
         ComboBox cbProject;
         Scribble editProject, delProject, newProject;
         Button collectGC;
-
-        class mmh : MoveHandle
-        {
-            public mmh(NoForm c) : base(c) { }
-            public override void Draw(IRenderType ra)
-            {
-                //ra.uDraw.FillRectangle(DisplayRectangle, new USolidBrush() { color = new Color(.5f, .7f, .1f, .1f) });
-            }
-        }
+        Scribble maximise, minimise, restore;
 
         public MyNoForm(IRender ir) : base(ir) 
         {
@@ -123,14 +123,70 @@ namespace testapp
             // move and resize
             mh = new mmh(this);
             mh.ZIndex = 1;
-            components.Add(mh); 
+            components.Add(mh);
+            SizeHandle.AddEdgeResize(this, 2, 5, 10);
+
+            UPath upTri, downTri;
+            UFigure fig;
+            upTri = new UPath();
+            fig = new UFigure(new Point(0, 10), true, false);
+            fig.geoElements.Add(new ULine(new Point(10, 10)));
+            fig.geoElements.Add(new ULine(new Point(5, 0)));
+            fig.geoElements.Add(new ULine(new Point(0, 10)));
+            upTri.figures.Add(fig);
+
+            downTri = new UPath();
+            fig = new UFigure(new Point(0, 0), true, false);
+            fig.geoElements.Add(new ULine(new Point(10, 0)));
+            fig.geoElements.Add(new ULine(new Point(5, 10)));
+            fig.geoElements.Add(new ULine(new Point(0, 0)));
+            downTri.figures.Add(fig); 
+
+            maximise = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
+            maximise.draw += (u,b,s) => {
+                u.SetRenderOffset(maximise.DisplayRectangle.Location);
+                b.color = new Color(.5f,0,.2f,.6f);
+                u.FillPath(upTri, b);
+                u.SetRenderOffset(new Point(0, 0));
+            };
+            maximise.Clicked += p => windowState = WindowState.Maximised;
+            maximise.Size = new NoForms.Size(10, 10);
+            components.Add(maximise);
+
+            minimise = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
+            minimise.draw += (u, b, s) =>
+            {
+                u.SetRenderOffset(minimise.DisplayRectangle.Location);
+                b.color = new Color(.5f, 0, .2f, .6f);
+                u.FillPath(downTri, b);
+                u.SetRenderOffset(new Point(0, 0));
+            };
+            minimise.Clicked += p => windowState = WindowState.Minimized;
+            minimise.Size = new NoForms.Size(10, 10);
+            components.Add(minimise);
+
+            restore = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
+            minimise.draw += (u, b, s) =>
+            {
+                u.SetRenderOffset(restore.DisplayRectangle.Location);
+                b.color = new Color(.5f, 0, .2f, .6f);
+                u.FillRectangle(new Rectangle(0,2.5f,10,5), b);
+                u.SetRenderOffset(new Point(0, 0));
+            };
+            restore.Clicked += p => windowState = WindowState.Normal;
+            restore.Size = new NoForms.Size(10, 10);
+            components.Add(restore);
+
 
             mc = new MainContainer();
             components.Add(mc);
 
             SizeChanged += new Action<Size>(MyNoForm_OnSizeChanged);
 
-            cbProject = new ComboBox();
+            D2DLayered dl = new D2DLayered();
+            D2DSwapChain ds = new D2DSwapChain();
+            cbProject = new ComboBox(ds);
+            cbProject.dropDirection = ComboBoxDirection.LeastSpace;
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
             components.Add(cbProject);
 
@@ -161,8 +217,6 @@ namespace testapp
             scb1 = new USolidBrush() { color = mainColor };
             var barColor = bordercolor.Scale(0.2f);
             brushBars = new USolidBrush() { color = barColor };
-
-            SizeHandle.AddEdgeResize(this, 2, 5, 10);
 
             MyNoForm_OnSizeChanged(Size);
         }
@@ -318,6 +372,9 @@ namespace testapp
 
             collectGC.DisplayRectangle = new Rectangle(Size.width - 400, Size.height - 30, 100, 20);
 
+            minimise.Location = new Point(Size.width - 65, 15);
+            maximise.Location = new Point(Size.width - 45, 15);
+            restore.Location = new Point(Size.width - 25, 15);
         }
 
         float gap = 5;
@@ -593,7 +650,7 @@ namespace testapp
 
         void cx_Clicked(Point loc)
         {
-            if (dragtime || !Util.AmITopZOrder(cx,loc) ) return;
+            if (dragtime || !Util.AmITopZOrder(cx,loc)) return;
             state = StoryState.undefined;
             Parent.components.Remove(this);
             Program.Stories.Remove(this);
@@ -758,10 +815,10 @@ namespace testapp
             refStory = sedthis;
 
             // move and resize
-            mh = new MoveHandle(this);
-            sh = new SizeHandle(this);
-            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
-            components.Add(mh); components.Add(sh);
+            mh = new mmh(this);
+            mh.ZIndex = 1;
+            components.Add(mh);
+            SizeHandle.AddEdgeResize(this, 2, 5, 10);
 
             tft = new Textfield();
             tft.text = refStory.storyTitle;
@@ -806,8 +863,7 @@ namespace testapp
 
         void SED_OnSizeChanged(Size sz)
         {
-            mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
-            sh.DisplayRectangle = new Rectangle(Size.width - 30, Size.height - barwid, 20, 20);
+            mh.DisplayRectangle = new Rectangle(5, 5, sz.width - 10, 30);
             bt.DisplayRectangle = new Rectangle(Size.width - 135, Size.height - (barwid+gap - 5/2), 100, 25);
             var ir = new Rectangle(gap, gap + barwid, Size.width - gap*2, Size.height - gap*2 - barwid*2);
             int tbh = 25;
@@ -910,10 +966,10 @@ namespace testapp
             refProject = pedthis;
 
             // move and resize
-            mh = new MoveHandle(this);
-            sh = new SizeHandle(this);
-            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
-            components.Add(mh); components.Add(sh);
+            mh = new mmh(this);
+            mh.ZIndex = 1;
+            components.Add(mh);
+            SizeHandle.AddEdgeResize(this, 2, 5, 10);
 
 
             tft = new Textfield();
@@ -965,8 +1021,7 @@ namespace testapp
 
         void SED_OnSizeChanged(Size sz)
         {
-            mh.DisplayRectangle = new Rectangle(10, 10, 20, 20);
-            sh.DisplayRectangle = new Rectangle(Size.width - 30, Size.height - barwid, 20, 20);
+            mh.DisplayRectangle = new Rectangle(5, 5, sz.width - 10, 30);
             bt.DisplayRectangle = new Rectangle(Size.width - 135, Size.height - (barwid+gap - 5/2), 100, 25);
             var ir = new Rectangle(gap, gap + barwid, Size.width - gap*2, Size.height - gap*2 - barwid*2);
             int tbh = 25;

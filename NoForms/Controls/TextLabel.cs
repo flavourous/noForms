@@ -49,6 +49,7 @@ namespace NoForms.Controls
         bool overed = false;
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
+            base.MouseMove(location, inComponent, amClipped);
             if (inComponent && overed == false)
             {
                 overed = true;

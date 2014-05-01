@@ -559,6 +559,7 @@ namespace NoForms.Controls
         }
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
+            base.MouseMove(location, inComponent, amClipped);
             runNextRender.Enqueue(new Action<IRenderType>(rt =>
             {
                 if (mouseSelect && inComponent && !amClipped)

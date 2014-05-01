@@ -5,54 +5,117 @@ using NoForms.Renderers;
 
 namespace NoForms.Controls
 {
+    public enum ComboBoxDirection { None, Above, Below, MostSpace, LeastSpace };
     public class ComboBox : Abstract.BasicContainer
     {
         ListBox lb;
         Scribble dropArrowThing = new Scribble();
 
-        public float dropLength { get { return lb.Size.height; } set { lb.Size = new Size(Size.width,value); } }
+        public ComboBoxDirection dropDirection = ComboBoxDirection.MostSpace;
+        public float dropLength { get { return lb.Size.height; } set { lb.Size = new Size(Size.width, value); OnLocationChanged(); } }
 
-        public ComboBox()
+        IRender dropRenderer = null;
+        NoForm ddf;
+        void recreateddf()
         {
+            ddf = new NoForm(dropRenderer, new CreateOptions() { showInTaskbar=false }) { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
+            ddf.components.Add(lb);
+        }
+        public ComboBox(IRender dropRenderer = null)
+        {
+            if (dropRenderer != null) this.dropRenderer = dropRenderer;
             lb = new ListBox();
             dropLength = 50;
-            lb.selectionChanged += new Action<int>(lb_selectionChanged);
-            lb.visible = false;
+            lb.SizeChanged += s => { if (ddf != null) ddf.Size = s; };
 
             // add a scribble
             dropArrowThing.draw += new Scribble.scribble(dropArrowThing_draw);
             dropArrowThing.Clicked += new Scribble.ClickDelegate(dropArrowThing_Clicked);
             components.Add(dropArrowThing);
 
+            lb.selectionChanged += new Action<int>(lb_selectionChanged);
             LocationChanged += new Action<Point>(pt => ComboBox_SizeChanged(Size));
             SizeChanged += new Action<Size>(ComboBox_SizeChanged);
             ComboBox_SizeChanged(Size);
         }
 
+        // Hide the dropbox
+        void hideLb()
+        {
+            if (shown)
+            {
+                shown = false;
+                if (ddf == null)
+                    lb.Parent.components.Remove(lb);
+                else ddf.Close();
+            }
+        }
+
         public event Action<int> selectionChanged;
         void lb_selectionChanged(int obj)
         {
-            lb.visible = false;
-            lb.Parent.components.Remove(lb);
+            hideLb();
             _selectedOption = obj;
             if (selectionChanged != null)
                 selectionChanged(obj);
         }
-
+        
+        // Show the dropbox
+        bool shown = false;
         IComponent tlc;
         void dropArrowThing_Clicked(Point loc)
         {
-            ComboBox_SizeChanged(Size);
             tlc = Util.GetTopLevelComponent(this);
-            lb.visible = true;
-            lb.Location = new Point(Location.X, Location.Y - lb.Size.height + 1);
-            tlc.components.Add(lb);
+            if (dropRenderer != null) recreateddf();
+
+            ComboBox_SizeChanged(Size);
+            if (ddf == null)
+                tlc.components.Add(lb);
+            else
+            {
+                ddf.Create(false, false);
+                //ddf.showInTaskbar = false;
+            }
+            shown = true;
+            OnLocationChanged();
         }
 
         protected override void OnLocationChanged()
         {
             base.OnLocationChanged();
-            lb.Location = new Point(Location.X, Location.Y - lb.Size.height +1);
+
+            tlc = Util.GetTopLevelComponent(this);
+            float abo = DisplayRectangle.top - lb.Size.height + 1f;
+            float bel = DisplayRectangle.bottom - 1f;
+            float abo_spc = DisplayRectangle.top;
+            float bel_spc = tlc.Size.height - DisplayRectangle.bottom;
+
+            float toppy = 0;
+            switch (dropDirection)
+            {
+                case ComboBoxDirection.Above:
+                    toppy = abo;
+                    break;
+                case ComboBoxDirection.Below:
+                    toppy = bel;
+                    break;
+                case ComboBoxDirection.MostSpace:
+                    toppy = abo_spc > bel_spc ? abo : bel;
+                    break;
+                case ComboBoxDirection.LeastSpace:
+                    toppy = abo_spc < bel_spc ? abo : bel;
+                    break;
+            }
+
+            if (dropRenderer == null) 
+            {
+                lb.Location = new Point(DisplayRectangle.left, toppy);
+            }
+            if( ddf != null)
+            {
+                var ofp = tlc.Location + Location;
+                ddf.Location = new Point(ofp.X, tlc.Location.Y + toppy);
+            }
         }
 
         void dropArrowThing_draw(IUnifiedDraw ud, USolidBrush brsh, UStroke strk)
@@ -86,16 +149,17 @@ namespace NoForms.Controls
         {
             dropArrowThing.Size = new Size(Size.height - 2, Size.height - 2);
             dropArrowThing.Location = new Point(Size.width -1 - Size.height +2, 1);
-            lb.Location = new Point(0, 1 - lb.Size.height);
             lb.Size = new Size(Size.width, lb.Size.height);
             selectyTexty.height = DisplayRectangle.height - textPad*2;
             selectyTexty.width = DisplayRectangle.width - Size.height - textPad * 2;
         }
 
+
+
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
             if (!Util.CursorInRect(lb.DisplayRectangle, Util.GetTopLevelLocation(lb)))
-                lb.visible = false;
+                hideLb();
             base.MouseUpDown(mea, mbs, inComponent, amClipped);
         }
 
@@ -106,21 +170,18 @@ namespace NoForms.Controls
         {
             font = new UFont("Arial", 12f, false, false)
         };
-        public override void Draw(IRenderType ra) 
+        public override void Draw(IRenderType ra)
         {
             // Draw bg
             ra.uDraw.FillRectangle(DisplayRectangle, back);
             ra.uDraw.DrawRectangle(DisplayRectangle.Inflated(new Thickness(-.5f)), edge, edgeStroke);
-            if (SelectionOptions.Count > 0) 
+            if (SelectionOptions.Count > 0)
             {
                 Point tp = new Point(DisplayRectangle.left + textPad, DisplayRectangle.top + textPad);
                 selectyTexty.text = SelectionOptions.Count > _selectedOption ? SelectionOptions[_selectedOption] : "";
-                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions.Clip,false);
+                ra.uDraw.DrawText(selectyTexty, tp, edge, UTextDrawOptions.Clip, false);
             }
-            
-            foreach (IComponent c in components)
-                if (c.visible) c.DrawBase(ra);
-        }
+        }    
         
         // Model
         List<String> SelectionOptions = new List<string>();

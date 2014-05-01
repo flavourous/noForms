@@ -12,7 +12,7 @@ namespace NoForms
     // Interfaces
     public interface IRender
     {
-        void Init(ref Form winForm);
+        void Init(ref Form winForm, MethodInvoker withConstructor);
         void BeginRender();
         void EndRender(MethodInvoker endedCallback);
         NoForm noForm { get; set; }

@@ -21,9 +21,9 @@ namespace NoForms.Controls
         bool downed = false;
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN && inComponent && mea.Button == System.Windows.Forms.MouseButtons.Left)
+            if (mbs == MouseButtonState.DOWN && inComponent && !amClipped && mea.Button == System.Windows.Forms.MouseButtons.Left)
                 downed = true;
-            if (mbs == MouseButtonState.UP && inComponent && mea.Button == System.Windows.Forms.MouseButtons.Left)
+            if (mbs == MouseButtonState.UP && inComponent && !amClipped && mea.Button == System.Windows.Forms.MouseButtons.Left)
             {
                 if (downed)
                 { // clicked

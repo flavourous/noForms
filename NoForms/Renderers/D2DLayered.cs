@@ -9,7 +9,7 @@ using SharpDX;
 namespace NoForms.Renderers
 {
     // Base Renderers, exposing some drawing mechanism and options
-    public class D2DLayered : IRender, IRenderType
+    public class D2DLayered : IRender, IRenderType, IDisposable
     {
         class D2LForm : System.Windows.Forms.Form
         {
@@ -20,18 +20,6 @@ namespace NoForms.Renderers
                 FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             }
       
-            protected override void OnLoad(EventArgs e)
-            {
-                base.OnLoad(e);
-                SetRegion(Size);
-            }
-            public void SetRegion(System.Drawing.Size RealClientSize) 
-            {
-                // default region can be funny
-                System.Drawing.Rectangle nr = new System.Drawing.Rectangle(ClientRectangle.Location, RealClientSize);
-                var myReg = new System.Drawing.Region(nr);
-                Region = myReg;
-            }
             protected override System.Windows.Forms.CreateParams CreateParams
             {
                 get
@@ -67,33 +55,37 @@ namespace NoForms.Renderers
             device = new SharpDX.Direct3D10.Device1(DriverType.Hardware, DeviceCreationFlags.BgraSupport, SharpDX.Direct3D10.FeatureLevel.Level_10_1);
             someDC = Win32.GetDC(IntPtr.Zero); // not sure what this exactly does... root dc perhaps...
         }
-        public void Init(ref System.Windows.Forms.Form winForm)
+        public void Init(ref System.Windows.Forms.Form winForm, System.Windows.Forms.MethodInvoker withConstructor)
         {
-            // do the form
-            winForm = new D2LForm();
-            winHandle = winForm.Handle;
-
-            // Initialise d2d things
-            backBuffer = new Texture2D(device, new Texture2DDescription()
+            lock (noForm)
             {
-                ArraySize = 1,
-                MipLevels = 1,
-                SampleDescription = new SampleDescription(1, 0),
-                OptionFlags = ResourceOptionFlags.GdiCompatible,
-                Width = winForm.Size.Width,
-                Height = winForm.Size.Height,
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.RenderTarget,
-                Format = Format.B8G8R8A8_UNorm
-            });
-            renderView = new RenderTargetView(device, backBuffer);
-            surface = backBuffer.QueryInterface<Surface1>();
-            d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
-            scbTrans = new SolidColorBrush(d2dRenderTarget, new Color4(1f, 0f, 1f, 0f)); // set buffer area to transparent
+                // do the form
+                winForm = new D2LForm();
+                withConstructor();
+                winHandle = winForm.Handle;
 
-            // Init uDraw and assign IRenderElement parts
-            _backRenderer = new D2D_RenderElements(d2dRenderTarget);
-            _uDraw = new D2DDraw(_backRenderer);
+                // Initialise d2d things
+                backBuffer = new Texture2D(device, new Texture2DDescription()
+                {
+                    ArraySize = 1,
+                    MipLevels = 1,
+                    SampleDescription = new SampleDescription(1, 0),
+                    OptionFlags = ResourceOptionFlags.GdiCompatible,
+                    Width = winForm.Size.Width,
+                    Height = winForm.Size.Height,
+                    Usage = ResourceUsage.Default,
+                    BindFlags = BindFlags.RenderTarget,
+                    Format = Format.B8G8R8A8_UNorm
+                });
+                renderView = new RenderTargetView(device, backBuffer);
+                surface = backBuffer.QueryInterface<Surface1>();
+                d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
+                scbTrans = new SolidColorBrush(d2dRenderTarget, new Color4(1f, 0f, 1f, 0f)); // set buffer area to transparent
+
+                // Init uDraw and assign IRenderElement parts
+                _backRenderer = new D2D_RenderElements(d2dRenderTarget);
+                _uDraw = new D2DDraw(_backRenderer);
+            }
         }
         SolidColorBrush scbTrans;
         public Thread renderThread = null;
@@ -110,9 +102,6 @@ namespace NoForms.Renderers
                 surface.Dispose();
                 renderView.Dispose();
                 backBuffer.Dispose();
-                d2dFactory.Dispose();
-                dxgiFactory.Dispose();
-                device.Dispose();
                 ended();
             }));
             running = true;
@@ -170,7 +159,7 @@ namespace NoForms.Renderers
             noForm.theForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
                 noForm.theForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width + edgeBufferSize, (int)noForm.Size.height + edgeBufferSize);
-                (noForm.theForm as D2LForm).SetRegion(noForm.theForm.Size);
+                noForm.theForm.Location = noForm.Location;
             }));
 
             // Initialise d2d things
@@ -206,6 +195,13 @@ namespace NoForms.Renderers
         public UnifiedEffects uAdvanced
         {
             get { throw new NotImplementedException(); }
+        }
+
+        public void Dispose()
+        {
+            d2dFactory.Dispose();
+            dxgiFactory.Dispose();
+            device.Dispose();
         }
     }    
 }
