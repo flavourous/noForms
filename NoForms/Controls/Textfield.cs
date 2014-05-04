@@ -107,9 +107,9 @@ namespace NoForms.Controls
         public UBrush selectFG = new USolidBrush() { color = new Color(1f) };
 
         UBrush defBrush = new USolidBrush() { color = new Color(0) };
-        System.Collections.Generic.Queue<Action<IRenderType>> runNextRender = new System.Collections.Generic.Queue<Action<IRenderType>>();
+        System.Collections.Generic.Queue<Action<IDraw>> runNextRender = new System.Collections.Generic.Queue<Action<IDraw>>();
         UTextInfo lastTextInfo = new UTextInfo();
-        public override void Draw(IRenderType rt)
+        public override void Draw(IDraw rt)
         {
             if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
             while (runNextRender.Count > 0)
@@ -127,7 +127,7 @@ namespace NoForms.Controls
 
         float roX = 0, roY = 0;
         bool textLayoutNeedsUpdate = false;
-        private void UpdateTextLayout(IRenderType sendMe = null)
+        private void UpdateTextLayout(IDraw sendMe = null)
         {
             Object passageLocker = new Object();
             lock (passageLocker)
@@ -560,7 +560,7 @@ namespace NoForms.Controls
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {
             base.MouseMove(location, inComponent, amClipped);
-            runNextRender.Enqueue(new Action<IRenderType>(rt =>
+            runNextRender.Enqueue(new Action<IDraw>(rt =>
             {
                 if (mouseSelect && inComponent && !amClipped)
                 {
@@ -575,7 +575,7 @@ namespace NoForms.Controls
         bool mouseSelect = false;
         public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
         {
-            runNextRender.Enqueue(new Action<IRenderType>(rt =>
+            runNextRender.Enqueue(new Action<IDraw>(rt =>
             {
                 if (mbs == MouseButtonState.DOWN)
                 {

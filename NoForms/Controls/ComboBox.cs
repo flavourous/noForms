@@ -18,7 +18,7 @@ namespace NoForms.Controls
         NoForm ddf;
         void recreateddf()
         {
-            ddf = new NoForm(dropRenderer, new CreateOptions() { showInTaskbar=false }) { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
+            ddf = new NoForm() { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
             ddf.components.Add(lb);
         }
         public ComboBox(IRender dropRenderer = null)
@@ -73,8 +73,7 @@ namespace NoForms.Controls
                 tlc.components.Add(lb);
             else
             {
-                ddf.Create(false, false);
-                //ddf.showInTaskbar = false;
+                ddf.Create(dropRenderer, new CreateOptions() { showInTaskbar = false, dialog=false, rootForm=false });
             }
             shown = true;
             OnLocationChanged();
@@ -170,7 +169,7 @@ namespace NoForms.Controls
         {
             font = new UFont("Arial", 12f, false, false)
         };
-        public override void Draw(IRenderType ra)
+        public override void Draw(IDraw ra)
         {
             // Draw bg
             ra.uDraw.FillRectangle(DisplayRectangle, back);

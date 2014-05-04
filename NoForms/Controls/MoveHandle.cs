@@ -19,7 +19,7 @@ namespace NoForms.Controls
         USolidBrush back = new USolidBrush() { color = new Color(1.0f, 0f, 0f, 0f) };
         UStroke stroke = new UStroke() { strokeWidth = 2f };
         // Render methody
-        public override void Draw(IRenderType ra)
+        public override void Draw(IDraw ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle,back);
             

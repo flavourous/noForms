@@ -230,7 +230,7 @@ namespace NoForms.Controls.Abstract
                 this.orientation = orientation;
             }
             UBrush trackBrush = new USolidBrush() { color = new Color(.6f) };
-            public override void DrawBase(IRenderType renderArgument)
+            public override void DrawBase(IDraw renderArgument)
             {
                 renderArgument.uDraw.FillRoundedRectangle(DisplayRectangle.Deflated(new Thickness(2f)), 5, 3, trackBrush);
             }
@@ -325,7 +325,7 @@ namespace NoForms.Controls.Abstract
                 }
                 controlled.OnSizeChanged();
             }
-            public override void DrawBase(IRenderType renderArgument)
+            public override void DrawBase(IDraw renderArgument)
             {
                 Rectangle dr = DisplayRectangle;
                 float gx = dr.width/4;
@@ -379,13 +379,13 @@ namespace NoForms.Controls.Abstract
                     (background as USolidBrush).color = new Color(.8f);
                 else (background as USolidBrush).color = new Color(.7f);
             }
-            public override void Draw(IRenderType renderArgument)
+            public override void Draw(IDraw renderArgument)
             {
                 renderArgument.uDraw.FillRectangle(DisplayRectangle, background);
             }
         }
 
-        public sealed override void DrawBase(IRenderType renderArgument)
+        public sealed override void DrawBase(IDraw renderArgument)
         {
             bool offset = false;
 

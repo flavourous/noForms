@@ -24,12 +24,12 @@ namespace testapp
 
             NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
             NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
-            NoForm nf = rootForm = new MyNoForm(d2dlayered);
+            NoForm nf = rootForm = new MyNoForm();
             nf.title = "Test App";
             nf.Size = new System.Drawing.Size(700, 500);
             nf.MinSize = new System.Drawing.Size(700, 300);
 
-            nf.Create(true,false);
+            nf.Create(d2dlayered,new CreateOptions());
             Save();
         }
         static void Save()
@@ -101,7 +101,7 @@ namespace testapp
     class mmh : MoveHandle
     {
         public mmh(NoForm c) : base(c) { }
-        public override void Draw(IRenderType ra)
+        public override void Draw(IDraw ra)
         {
             //ra.uDraw.FillRectangle(DisplayRectangle, new USolidBrush() { color = new Color(.5f, .7f, .1f, .1f) });
         }
@@ -116,7 +116,7 @@ namespace testapp
         Button collectGC;
         Scribble maximise, minimise, restore;
 
-        public MyNoForm(IRender ir) : base(ir) 
+        public MyNoForm() 
         {
             background = new USolidBrush() { color = new Color(0.5f, 0, 0, 0) };
 
@@ -254,13 +254,13 @@ namespace testapp
             var renderer = new NoForms.Renderers.D2DLayered();
 
             Project pref = new Project();
-            var editDlg = new ProjectEditDialog(renderer, pref);
+            var editDlg = new ProjectEditDialog(pref);
             
             editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
-            editDlg.Create(false, true);
+            editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
             Program.Projects.Add(pref);
         }
 
@@ -348,12 +348,12 @@ namespace testapp
                 if(pr.name == cbProject.selectedText)
                     pref = pr;
 
-            var editDlg = new ProjectEditDialog(renderer, pref);
+            var editDlg = new ProjectEditDialog(pref);
             editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
-            editDlg.Create(false, true);
+            editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
         }
 
         void MyNoForm_OnSizeChanged(Size sz)
@@ -380,7 +380,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 95f/255f,150f/255f,190f/255f);
-        public override void Draw(IRenderType rt) 
+        public override void Draw(IDraw rt) 
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, Size.height), scb);
@@ -488,7 +488,7 @@ namespace testapp
             }
         }
 
-        public override void Draw(IRenderType renderArgument)
+        public override void Draw(IDraw renderArgument)
         {
         }
     }
@@ -527,12 +527,12 @@ namespace testapp
             Program.Stories.Add(ns);
 
             var renderer = new NoForms.Renderers.D2DLayered();
-            var editDlg = new StoryEditDialog(renderer, ns);
+            var editDlg = new StoryEditDialog(ns);
             editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
-            editDlg.Create(false, true);
+            editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
         }
 
         void add_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
@@ -573,7 +573,7 @@ namespace testapp
         }
 
         Scribble add;
-        public override void Draw(IRenderType ra)
+        public override void Draw(IDraw ra)
         {
             lock (this)
             {
@@ -689,7 +689,7 @@ namespace testapp
         //}
 
         // Drawybit
-        public override void Draw(IRenderType ra)
+        public override void Draw(IDraw ra)
         {
             DetermineTextAndSize(ra.uDraw);
             ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions.None,false);
@@ -770,12 +770,12 @@ namespace testapp
                     if(state == StoryState.none)
                         state = os;
                     var renderer = new NoForms.Renderers.D2DLayered();
-                    var editDlg = new StoryEditDialog(renderer, this);
+                    var editDlg = new StoryEditDialog(this);
                     editDlg.MinSize=editDlg.Size = new System.Drawing.Size(400, 300);
                     var pl = Program.rootForm.Location;
                     var ps = Program.rootForm.Size;
                     editDlg.Location = new Point(pl.X - 200 + ps.width/2, pl.Y - 150 + ps.height/2);
-                    editDlg.Create(false, true);
+                    editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
                 }
                 dtLastClick = DateTime.Now;
             }
@@ -808,8 +808,7 @@ namespace testapp
 
         Story refStory;
 
-        public StoryEditDialog(IRender ir, Story sedthis)
-            : base(ir) 
+        public StoryEditDialog(Story sedthis)
         {
             // hold ref to stroy
             refStory = sedthis;
@@ -875,7 +874,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
-        public override void Draw(IRenderType rt)
+        public override void Draw(IDraw rt)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
@@ -959,8 +958,7 @@ namespace testapp
 
         Project refProject;
 
-        public ProjectEditDialog(IRender ir, Project pedthis)
-            : base(ir) 
+        public ProjectEditDialog(Project pedthis)
         {
             // hold ref to stroy
             refProject = pedthis;
@@ -1032,7 +1030,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
-        public override void Draw(IRenderType rt)
+        public override void Draw(IDraw rt)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);

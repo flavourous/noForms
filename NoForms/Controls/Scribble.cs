@@ -7,7 +7,7 @@ namespace NoForms.Controls
 {
     public class Scribble : Abstract.BasicContainer
     {
-        public override void Draw(IRenderType renderArgument)
+        public override void Draw(IDraw renderArgument)
         {
             draw(renderArgument.uDraw, tehBrush, tehStroke);
         }

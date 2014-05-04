@@ -28,7 +28,7 @@ namespace NoForms.Controls
         }
 
         public event System.Windows.Forms.MethodInvoker clicked;
-        public override void Draw(IRenderType ra)
+        public override void Draw(IDraw ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle, background);
             ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions.None,false);

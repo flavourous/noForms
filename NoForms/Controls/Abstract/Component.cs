@@ -105,7 +105,7 @@ namespace NoForms.Controls.Abstract
                 c.RecalculateLocation();
         }
 
-        public abstract void DrawBase(IRenderType renderArgument);
+        public abstract void DrawBase(IDraw renderArgument);
 
         bool _visible = true;
         public bool visible

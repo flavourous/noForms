@@ -53,7 +53,7 @@ namespace NoForms.Controls
         }
 
         // Render methody
-        public override void Draw(IRenderType rt)
+        public override void Draw(IDraw rt)
         {
             float lt = edge.strokeWidth;
             float bv = lt / 2;

@@ -12,13 +12,14 @@ namespace NoForms
     public class CreateOptions
     {
         public bool showInTaskbar = true;
+        public bool rootForm = true;
+        public bool dialog = false;
     }
     /// <summary>
     /// You would create a noform, and to it add INoComponent, and it would handle stuff.
     /// </summary>
     public class NoForm : IComponent
     {
-        // FIXME does this need IDisposable? :/  dont wana dispose renderMethod really might use elsewhere? certainly for combobox..
         public IComponent Parent { get { return null; } set { } }
         ComponentCollection _components;
         public ComponentCollection components
@@ -29,9 +30,8 @@ namespace NoForms
         public event Action<IComponent> ZIndexChanged = delegate { };
 
         protected IRender renderMethod;
-        internal Form theForm;
 
-        public Cursor Cursor { get; set; }
+        public Cursor Cursor { get; set; } // FIXME does nothing.
         public bool Scrollable { get; set; } // Begins to be irellivant FIXME?
 
         // Some Model Elements...
@@ -81,30 +81,34 @@ namespace NoForms
         public Size MinSize = new Size(50, 50);
         public Size MaxSize = new Size(9000, 9000);
 
-        public System.Drawing.Icon icon = null;
-        public String title = "";
-
-        public NoForm(IRender renderMethod, CreateOptions createOptions = null)
+        /// <summary>
+        /// 
+        /// 
+        /// </summary>
+        /// <param name="renderMethod">
+        /// rednerMethod encapsulates the windowing and rendering system.
+        /// variants use the same drawing implimnentations (although you will only see the udraw interface)
+        /// so D2DLayered does the same drawing commands as D2DSwapChain, except it pushes the output of
+        /// NoForm.DrawBase(and ofc children) to different places, uses different buffers and so on.
+        /// </param>
+        /// <param name="createOptions">
+        /// encapsulates options that for whatever reason can only be set
+        /// once.
+        /// </param>
+        public NoForm()
         {
-            this.createOptions = createOptions ?? new CreateOptions();
-            this.renderMethod = renderMethod;
-            renderMethod.noForm = this;
             _components = new ComponentCollection(this);
             background = new USolidBrush() { color = new Color(1) };
         }
         public UBrush background;
 
 
-        // Register controller events
-        internal void RegisterControllers()
-        {
             theForm.MouseDown += new MouseEventHandler(MouseDown);
             theForm.MouseUp += new MouseEventHandler(MouseUp);
             theForm.MouseMove += new MouseEventHandler(MouseMove);
             theForm.KeyDown += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUpDown(e.KeyCode, true); });
             theForm.KeyUp += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUpDown(e.KeyCode, false); });
             theForm.KeyPress += new KeyPressEventHandler((Object o, KeyPressEventArgs e) => { KeyPress(e.KeyChar); });
-        }
 
         // Key Events
         public void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
@@ -174,20 +178,14 @@ namespace NoForms
             }
 
             if (Util.AmITopZOrder(this, location))
-                currentCursor = Cursor;
+                window.Cursor = Cursor;
 
             if (MouseMoved != null) 
                 foreach (MouseMoveEventHandler mevent in MouseMoved.GetInvocationList())
                     mevent(location);
         }
 
-        public Cursor currentCursor
-        {
-            get { return theForm.Cursor; }
-            set { theForm.Cursor = value; }
-        }
-
-        public void DrawBase(IRenderType rt)
+        public void DrawBase(IDraw rt)
         {
             rt.uDraw.Clear(new Color(0, 0, 0, 0)); // this lets alphas to desktop happen.
             rt.uDraw.FillRectangle(DisplayRectangle, background);
@@ -200,90 +198,16 @@ namespace NoForms
                 if (c.visible) c.DrawBase(rt);
             rt.uDraw.PopAxisAlignedClip();
         }
-        public virtual void Draw(IRenderType rt)
+        public virtual void Draw(IDraw rt)
         {
         }
 
-        // FIXME some of these cant be changed after!!
-        void SetWFormProps()
-        {
-            theForm.Text = title;
-            theForm.ShowIcon = icon != null;
-            if (icon != null) theForm.Icon = icon;
-        }
+        public IWindow window;
 
-        CreateOptions createOptions;
-        void OnceOnlyProperties()
+        public void Create(IRender renderMethod, CreateOptions createOptions)
         {
-            theForm.ShowInTaskbar = createOptions.showInTaskbar;
-        }
-
-        bool okClose = false;
-        public void Create(bool rootForm, bool dialog)
-        {
-            renderMethod.Init(ref theForm, OnceOnlyProperties);
-            SetWFormProps();
-            RegisterControllers();
-
-            theForm.Load += new EventHandler((object o, EventArgs e) =>
-            {
-                renderMethod.BeginRender();
-            });
-            theForm.FormClosing += new FormClosingEventHandler((object o, FormClosingEventArgs e) =>
-            {
-                if (!okClose) e.Cancel = true;
-                renderMethod.EndRender(new MethodInvoker(() => Close(true)));
-            });
-
-            if (rootForm)
-            {
-                Application.EnableVisualStyles();
-                Application.Run(theForm);
-            }
-            else
-            {
-                if (dialog) theForm.ShowDialog();
-                else theForm.Show();
-            }
-        }
-        
-        public void Close(bool done = false)
-        {
-            if (theForm.InvokeRequired)
-            {
-                theForm.Invoke(new MethodInvoker(() => Close(done)));
-                return;
-            }
-            okClose = done;
-            theForm.Close();
-        }
-
-        public void BringToFront()
-        {
-            theForm.BringToFront();
-        }
-
-        WindowState _windowState = WindowState.Normal;
-        public WindowState windowState
-        {
-            get { return _windowState; }
-            set { ChangeWindowState(value); }
-        }
-        void ChangeWindowState(WindowState ws)
-        {
-            if (ws == _windowState) return;
-            switch (ws)
-            {
-                case WindowState.Minimized:
-                    theForm.WindowState = FormWindowState.Minimized;
-                    break;
-                case WindowState.Maximised:
-                    theForm.WindowState = FormWindowState.Maximized;
-                    break;
-                case WindowState.Normal:
-                    theForm.WindowState = FormWindowState.Normal;
-                    break;
-            }
+            this.renderMethod = renderMethod;
+            window = renderMethod.Init(this, createOptions);
         }
 
         // FIXME some isp could avoid this and keep the hierachy intact..

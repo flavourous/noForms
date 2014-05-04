@@ -7,7 +7,7 @@
     <Story state="7" text="Change from Generic DrawBase, to Interfaced one." title="Render interface" project="NoForms" />
     <Story state="7" text="Like noforms.Color, create one for point,size and rectangle." title="Noforms.Rect/Size/Point" project="NoForms" />
     <Story state="7" text="With a general size/position etc supporting floats, render story boxes in fractional pixes for better (?) horizontal distribution" title="support float positioning" project="NoForms" />
-    <Story state="7" text="Memory climbing, presuably due to missing disposes in the renderloop somewhere" title="Memory Leaks" project="NoForms" />
+    <Story state="4" text="Memory climbing, presuably due to missing disposes in the renderloop somewhere" title="Memory Leaks" project="NoForms" />
     <Story state="7" text="Impliment projects, and seperation&#xD;&#xD;Just need to put in project editing, creating and deleting now." title="Projects on Kanban" project="KanBani" />
     <Story state="7" text="Algoruthm determining layout of the story list containers could be smoother... investigate.  Maybe the subpixel geometry might help, maybe there are other ways...&#xD;&#xD;Found other way, bit blinky, distribute alll space..." title="kanban main layout" project="KanBani" />
     <Story state="1" text="not just on close. After new story and after category change.&#xD;&#xD;Looking like SQL file over XML file ;)" title="Save more often" project="KanBani" />
@@ -57,6 +57,7 @@
     <Story state="1" text="when it first comes up, the laying out of the listbox is visible" title="combobox lisbox layout vivible" project="NoForms" />
     <Story state="7" text="after d2d gets the window, things like show in taskbar can't be changed it seems" title="Some window properties can only be set first" project="NoForms" />
     <Story state="1" text="add more.  check existing can be set after d2d init unlike showintaskbar, if not put in createoptions too." title="investigate other wndow props" project="NoForms" />
+    <Story state="3" text="move out windowing stuff from NoForm into eg D2DSwapChain.&#xA;&#xA;Make one interface that combines IRender, IDraw and IWindow for the renderers?" title="create IWindowing" project="NoForms" />
   </Stories>
   <Projects>
     <Project name="NoForms" />

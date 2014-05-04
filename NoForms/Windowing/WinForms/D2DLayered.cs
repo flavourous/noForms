@@ -5,11 +5,12 @@ using SharpDX.Direct3D10;
 using SharpDX.DXGI;
 using SharpDX.Direct2D1;
 using SharpDX;
+using System.Windows.Forms;
 
 namespace NoForms.Renderers
 {
     // Base Renderers, exposing some drawing mechanism and options
-    public class D2DLayered : IRender, IRenderType, IDisposable
+    public class D2DLayered : IRender, IDraw, IWindow
     {
         class D2LForm : System.Windows.Forms.Form
         {
@@ -48,6 +49,7 @@ namespace NoForms.Renderers
         Surface1 surface;
         RenderTarget d2dRenderTarget;
         IntPtr winHandle;
+        Form winForm;
         IntPtr someDC;
 
         public D2DLayered()
@@ -55,13 +57,18 @@ namespace NoForms.Renderers
             device = new SharpDX.Direct3D10.Device1(DriverType.Hardware, DeviceCreationFlags.BgraSupport, SharpDX.Direct3D10.FeatureLevel.Level_10_1);
             someDC = Win32.GetDC(IntPtr.Zero); // not sure what this exactly does... root dc perhaps...
         }
-        public void Init(ref System.Windows.Forms.Form winForm, System.Windows.Forms.MethodInvoker withConstructor)
+        void ProcessCreateOptions(CreateOptions co)
         {
+            winForm.ShowInTaskbar = co.showInTaskbar;
+        }
+        public IWindow Init(NoForm root, CreateOptions co)
+        {
+            noForm = root;
             lock (noForm)
             {
                 // do the form
                 winForm = new D2LForm();
-                withConstructor();
+                ProcessCreateOptions(co);
                 winHandle = winForm.Handle;
 
                 // Initialise d2d things
@@ -86,7 +93,51 @@ namespace NoForms.Renderers
                 _backRenderer = new D2D_RenderElements(d2dRenderTarget);
                 _uDraw = new D2DDraw(_backRenderer);
             }
+
+            winForm.Load += new EventHandler((object o, EventArgs e) =>
+            {
+                BeginRender();
+            });
+
+            winForm.FormClosing += new FormClosingEventHandler((object o, FormClosingEventArgs e) =>
+            {
+                if (!okClose) e.Cancel = true;
+                EndRender(new MethodInvoker(() => Close(true)));
+            });
+
+            return this;
         }
+
+        public void Run()
+        {
+            Application.EnableVisualStyles();
+            Application.Run(winForm);
+        }
+        public void Show()
+        {
+            winForm.Show();
+        }
+        public void ShowDialog()
+        {
+            winForm.ShowDialog();
+        }
+        public void Hide()
+        {
+            winForm.Hide();
+        }
+
+        bool okClose = false;
+        public void Close(bool done = false)
+        {
+            if (winForm.InvokeRequired)
+            {
+                winForm.Invoke(new MethodInvoker(() => Close(done)));
+                return;
+            }
+            okClose = done;
+            winForm.Close();
+        }
+
         SolidColorBrush scbTrans;
         public Thread renderThread = null;
         public void BeginRender()

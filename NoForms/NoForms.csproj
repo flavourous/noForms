@@ -38,11 +38,15 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Common\Interfaces\IController.cs" />
+    <Compile Include="Common\Interfaces\IDraw.cs" />
+    <Compile Include="Common\Interfaces\IWindow.cs" />
     <Compile Include="Common\ObsCollection.cs" />
     <Compile Include="Common\Enums_Structs.cs" />
     <Compile Include="Common\ComponentCollection.cs" />
-    <Compile Include="Common\Interfaces.cs" />
+    <Compile Include="Common\Interfaces\IRender.cs" />
     <Compile Include="Controls\Abstract\BasicContainer.cs" />
+    <Compile Include="Controls\Abstract\IComponent.cs" />
     <Compile Include="Controls\Button.cs" />
     <Compile Include="Controls\ComboBox.cs" />
     <Compile Include="Controls\ListBox.cs" />
@@ -53,15 +57,15 @@
     <Compile Include="Controls\Abstract\ScrollContainer.cs" />
     <Compile Include="Controls\TextLabel.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
-    <Compile Include="Renderers\D2DSwapChain.cs" />
-    <Compile Include="Renderers\D2DLayered.cs" />
+    <Compile Include="Windowing\WinForms\D2DSwapChain.cs" />
+    <Compile Include="Windowing\WinForms\D2DLayered.cs" />
     <Compile Include="Controls\SizeHandle.cs" />
     <Compile Include="NoForm.cs" />
     <Compile Include="Controls\Textfield.cs" />
     <Compile Include="Common\Util.cs" />
     <Compile Include="Common\Win32.cs" />
-    <Compile Include="Renderers\UnifiedDraw.cs" />
-    <Compile Include="Renderers\UnifiedEffects.cs" />
+    <Compile Include="Common\Interfaces\UnifiedDraw.cs" />
+    <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="SharpDX">

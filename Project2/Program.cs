@@ -14,8 +14,8 @@ namespace Easy
         {
             NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
             NoForms.Renderers.D2DLayered rlw = new D2DLayered();
-            var nf = new mnf(rlw);
-            nf.Create(true, false);
+            var nf = new mnf();
+            nf.Create(rlw, new CreateOptions());
         }
     }
 
@@ -25,8 +25,7 @@ namespace Easy
         NoForms.Controls.MoveHandle mh;
         con cont;
         s_con scont;
-        public mnf(IRender ir)
-            : base(ir)
+        public mnf()
         {
             title = "Test App";
             background = new USolidBrush() { color = new Color(.8f,.5f,.5f,.8f) };
@@ -139,7 +138,7 @@ namespace Easy
 
         UBrush black = new USolidBrush() { color = new Color(1, 0, 0, 0) };
         UBrush red = new USolidBrush() { color = new Color(1, 1, 0, 0) };
-        public override void Draw(IRenderType rt)
+        public override void Draw(IDraw rt)
         {
             var ut = new UText("hello", UHAlign.Center, UVAlign.Middle,false, 100,100);
             ut.font = new UFont("Arial",12,false,false);
@@ -150,7 +149,7 @@ namespace Easy
 
     class con : NoForms.Controls.Abstract.BasicContainer
     {
-        public override void Draw(IRenderType renderArgument)
+        public override void Draw(IDraw renderArgument)
         {
             lgb.point1 = DisplayRectangle.Location;
             lgb.point2 = new Point(DisplayRectangle.right, DisplayRectangle.bottom);
@@ -163,7 +162,7 @@ namespace Easy
     }
     class s_con : NoForms.Controls.Abstract.ScrollContainer
     {
-        public override void Draw(IRenderType renderArgument)
+        public override void Draw(IDraw renderArgument)
         {
             lgb.point1 = DisplayRectangle.Location;
             lgb.point2 = new Point(DisplayRectangle.right, DisplayRectangle.bottom);

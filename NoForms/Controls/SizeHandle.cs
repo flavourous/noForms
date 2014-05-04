@@ -19,7 +19,7 @@ namespace NoForms.Controls
         public UBrush background = new USolidBrush() { color = new Color(0) };
         public UBrush foreground = new USolidBrush() { color = new Color(1) };
         public UStroke lineStroke = new UStroke() { strokeWidth = 2f };
-        public override void Draw(IRenderType renderArg)
+        public override void Draw(IDraw renderArg)
         {
             if (invisible) return;
             renderArg.uDraw.FillRectangle(DisplayRectangle, background);

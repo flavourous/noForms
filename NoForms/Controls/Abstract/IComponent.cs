@@ -5,19 +5,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
 using SharpDX.Direct2D1;
-using SysRect = System.Drawing.Rectangle;
 
 namespace NoForms
 {
-    // Interfaces
-    public interface IRender
-    {
-        void Init(ref Form winForm, MethodInvoker withConstructor);
-        void BeginRender();
-        void EndRender(MethodInvoker endedCallback);
-        NoForm noForm { get; set; }
-    }
-
     // FIXME ISP?
     public interface IComponent
     {
@@ -43,7 +33,7 @@ namespace NoForms
         void RecalculateLocation();
 
         // Rendering Support, passing one object for requesting each rendering type
-        void DrawBase(IRenderType renderArgument);
+        void DrawBase(IDraw renderArgument);
 
         // Mouse events
         void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped);
@@ -57,13 +47,6 @@ namespace NoForms
         // cursor...
         Cursor Cursor { get; set; }
         bool Scrollable { get; set; }
-    }
-
-    public interface IRenderType
-    {
-        Renderers.IUnifiedDraw uDraw { get; }
-        Renderers.IRenderElements backRenderer { get; }
-        Renderers.UnifiedEffects uAdvanced { get; }
     }
 
 }

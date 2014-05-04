@@ -18,7 +18,7 @@ namespace NoForms.Controls.Abstract
         }
 
         // NOTE: No need to VisibilityChain in these events, because they terminate from the base.
-        public override void DrawBase(IRenderType renderArgument)
+        public override void DrawBase(IDraw renderArgument)
         {
             Draw(renderArgument);
             renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
@@ -27,7 +27,7 @@ namespace NoForms.Controls.Abstract
                     c.DrawBase(renderArgument);
             renderArgument.uDraw.PopAxisAlignedClip();
         }
-        public abstract void Draw(IRenderType renderArgument);
+        public abstract void Draw(IDraw renderArgument);
 
         public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
         {

@@ -6,7 +6,7 @@ namespace NoForms.Controls
 {
     public class ListBox : Abstract.BasicContainer
     {
-        public override void Draw(IRenderType renderArgument)
+        public override void Draw(IDraw renderArgument)
         {
             PoisitionItems();
             renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);
