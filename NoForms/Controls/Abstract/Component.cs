@@ -60,7 +60,7 @@ namespace NoForms.Controls.Abstract
                 foreach (Action<Point> pe in LocationChanged.GetInvocationList())
                     pe(_Location);
         }
-        protected Point _Location = Point.Empty;
+        protected Point _Location = Point.Zero;
         /// <summary>
         /// Location of control relative to parent control.
         /// This also modifies DisplayRectangle.
@@ -119,7 +119,7 @@ namespace NoForms.Controls.Abstract
         public bool _Scrollable = true;
         public bool Scrollable { get { return _Scrollable; } set { _Scrollable = value; } }
 
-        public virtual void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) {
+        public virtual void MouseMove(Point location, bool inComponent, bool amClipped) {
             if (inComponent && !amClipped)
             {
                 var tzo = Util.AmITopZOrder(this, location);
@@ -129,15 +129,15 @@ namespace NoForms.Controls.Abstract
                     if (tlc is NoForm)
                     {
                         var nf = (tlc as NoForm);
-                        if (nf.currentCursor != Cursor)
-                            nf.currentCursor = Cursor;
+                        if (nf.window.Cursor != Cursor)
+                            nf.window.Cursor = Cursor;
                     }
                 }
             }
             
         }
-        public virtual void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { }
-        public virtual void KeyUpDown(Keys key, bool keyDown) { }
+        public virtual void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped) { }
+        public virtual void KeyUpDown(Keys key, ButtonState bs) { }
         public virtual void KeyPress(char c) { }
     }
 }

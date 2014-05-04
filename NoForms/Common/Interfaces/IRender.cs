@@ -11,7 +11,7 @@ namespace NoForms
     // Interfaces
     public interface IRender : IDisposable
     {
-        void Init(CreateOptions co);
+        void Init(NoForm nf, CreateOptions co, out IWindow w, out IController c);
         void BeginRender();
         void EndRender(MethodInvoker endedCallback);
         NoForm noForm { get; set; }

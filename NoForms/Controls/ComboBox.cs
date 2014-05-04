@@ -18,7 +18,7 @@ namespace NoForms.Controls
         NoForm ddf;
         void recreateddf()
         {
-            ddf = new NoForm() { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
+            ddf = new NoForm(dropRenderer, new CreateOptions(false)) { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
             ddf.components.Add(lb);
         }
         public ComboBox(IRender dropRenderer = null)
@@ -47,7 +47,7 @@ namespace NoForms.Controls
                 shown = false;
                 if (ddf == null)
                     lb.Parent.components.Remove(lb);
-                else ddf.Close();
+                else ddf.window.Close();
             }
         }
 
@@ -73,7 +73,8 @@ namespace NoForms.Controls
                 tlc.components.Add(lb);
             else
             {
-                ddf.Create(dropRenderer, new CreateOptions() { showInTaskbar = false, dialog=false, rootForm=false });
+                recreateddf();
+                ddf.window.Show();
             }
             shown = true;
             OnLocationChanged();
@@ -155,11 +156,11 @@ namespace NoForms.Controls
 
 
 
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
-            if (!Util.CursorInRect(lb.DisplayRectangle, Util.GetTopLevelLocation(lb)))
+            if ((!Util.PointInRect(location, lb.DisplayRectangle) && ddf == null) || (ddf != null))
                 hideLb();
-            base.MouseUpDown(mea, mbs, inComponent, amClipped);
+            base.MouseUpDown(location,mb, bs, inComponent, amClipped);
         }
 
         USolidBrush back = new USolidBrush() { color = new Color(0.8f) };

@@ -11,9 +11,8 @@ namespace NoForms.Controls
         {
             controlled = MoveControl;
             Cursor = System.Windows.Forms.Cursors.SizeAll;
-            MoveControl.MouseMoved += new NoForm.MouseMoveEventHandler(MoveMove);
+            controlled.controller.MouseMove += MoveMove;
         }
-
 
         USolidBrush fore = new USolidBrush() { color = new Color(1.0f, 0.8f, 0.8f, 0.8f) };
         USolidBrush back = new USolidBrush() { color = new Color(1.0f, 0f, 0f, 0f) };
@@ -53,26 +52,27 @@ namespace NoForms.Controls
 
         // Mousey
         bool movin = false;
-        System.Drawing.Point deltaLoc;
-        public void MoveMove(System.Drawing.Point location)
+        Point deltaLoc;
+        public void MoveMove(Point location)
         {
             if (movin)
             {
-                var usepos = System.Windows.Forms.Cursor.Position;
-                int dx = usepos.X - deltaLoc.X;
-                int dy = usepos.Y - deltaLoc.Y;
+                var usepos = controlled.controller.MouseScreenLocation;
+                float dx = usepos.X - deltaLoc.X;
+                float dy = usepos.Y - deltaLoc.Y;
                 deltaLoc = usepos;
                 controlled.Location = new Point(controlled.Location.X + dx, controlled.Location.Y + dy);
             }
         }
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this,mea.Location))
+            if (mbs == ButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this,location))
             {
-                deltaLoc = System.Windows.Forms.Cursor.Position;
+                deltaLoc = controlled.controller.MouseScreenLocation;
+                controlled.window.CaptureMouse = true;
                 movin = true;
             }
-            if (mbs == MouseButtonState.UP && movin)
+            if (mbs == ButtonState.UP && movin)
                 movin = false;
         }
     }

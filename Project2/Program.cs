@@ -12,10 +12,10 @@ namespace Easy
     {
         static void Main()
         {
-            NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
+            //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
             NoForms.Renderers.D2DLayered rlw = new D2DLayered();
-            var nf = new mnf();
-            nf.Create(rlw, new CreateOptions());
+            var nf = new mnf(rlw, new CreateOptions(true));
+            nf.window.Run();
         }
     }
 
@@ -25,9 +25,9 @@ namespace Easy
         NoForms.Controls.MoveHandle mh;
         con cont;
         s_con scont;
-        public mnf()
+        public mnf(IRender rn, CreateOptions co) : base(rn,co)
         {
-            title = "Test App";
+            window.Title = "Test App";
             background = new USolidBrush() { color = new Color(.8f,.5f,.5f,.8f) };
             Size = new Size(1150, 600);
             Location = new Point(100, 40);

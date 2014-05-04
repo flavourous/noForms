@@ -23,13 +23,12 @@ namespace testapp
             Load();
 
             NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
-            NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
-            NoForm nf = rootForm = new MyNoForm();
-            nf.title = "Test App";
+            //NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
+            NoForm nf = rootForm = new MyNoForm(d2dlayered, new CreateOptions(true));
+            nf.window.Title = "Test App";
             nf.Size = new System.Drawing.Size(700, 500);
             nf.MinSize = new System.Drawing.Size(700, 300);
-
-            nf.Create(d2dlayered,new CreateOptions());
+            nf.window.Run();
             Save();
         }
         static void Save()
@@ -116,7 +115,7 @@ namespace testapp
         Button collectGC;
         Scribble maximise, minimise, restore;
 
-        public MyNoForm() 
+        public MyNoForm(IRender rm, CreateOptions co) : base(rm,co)
         {
             background = new USolidBrush() { color = new Color(0.5f, 0, 0, 0) };
 
@@ -149,7 +148,7 @@ namespace testapp
                 u.FillPath(upTri, b);
                 u.SetRenderOffset(new Point(0, 0));
             };
-            maximise.Clicked += p => windowState = WindowState.Maximised;
+            maximise.Clicked += p => window.Maximise();
             maximise.Size = new NoForms.Size(10, 10);
             components.Add(maximise);
 
@@ -161,22 +160,21 @@ namespace testapp
                 u.FillPath(downTri, b);
                 u.SetRenderOffset(new Point(0, 0));
             };
-            minimise.Clicked += p => windowState = WindowState.Minimized;
+            minimise.Clicked += p => window.Minimise();
             minimise.Size = new NoForms.Size(10, 10);
             components.Add(minimise);
 
             restore = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
-            minimise.draw += (u, b, s) =>
+            restore.draw += (u, b, s) =>
             {
                 u.SetRenderOffset(restore.DisplayRectangle.Location);
                 b.color = new Color(.5f, 0, .2f, .6f);
                 u.FillRectangle(new Rectangle(0,2.5f,10,5), b);
                 u.SetRenderOffset(new Point(0, 0));
             };
-            restore.Clicked += p => windowState = WindowState.Normal;
+            restore.Clicked += p => window.Restore();
             restore.Size = new NoForms.Size(10, 10);
             components.Add(restore);
-
 
             mc = new MainContainer();
             components.Add(mc);
@@ -184,23 +182,26 @@ namespace testapp
             SizeChanged += new Action<Size>(MyNoForm_OnSizeChanged);
 
             D2DLayered dl = new D2DLayered();
-            D2DSwapChain ds = new D2DSwapChain();
-            cbProject = new ComboBox(ds);
+            //D2DSwapChain ds = new D2DSwapChain();
+            cbProject = new ComboBox(dl);
             cbProject.dropDirection = ComboBoxDirection.LeastSpace;
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
             components.Add(cbProject);
 
             editProject = new Scribble();
+            editProject.Cursor = System.Windows.Forms.Cursors.Hand;
             editProject.Clicked += new Scribble.ClickDelegate(editProject_Clicked);
             editProject.draw += new Scribble.scribble(editProject_draw);
             components.Add(editProject);
 
             delProject = new Scribble();
+            delProject.Cursor = System.Windows.Forms.Cursors.Hand;
             delProject.Clicked += new Scribble.ClickDelegate(delProject_Clicked);
             delProject.draw += new Scribble.scribble(delProject_draw);
             components.Add(delProject);
 
             newProject = new Scribble();
+            newProject.Cursor = System.Windows.Forms.Cursors.Hand;
             newProject.Clicked += new Scribble.ClickDelegate(newProject_Clicked);
             newProject.draw += new Scribble.scribble(newProject_draw);
             components.Add(newProject);
@@ -254,13 +255,13 @@ namespace testapp
             var renderer = new NoForms.Renderers.D2DLayered();
 
             Project pref = new Project();
-            var editDlg = new ProjectEditDialog(pref);
+            var editDlg = new ProjectEditDialog(pref, renderer, new CreateOptions(false));
             
             editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
-            editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
+            editDlg.window.ShowDialog();
             Program.Projects.Add(pref);
         }
 
@@ -348,12 +349,12 @@ namespace testapp
                 if(pr.name == cbProject.selectedText)
                     pref = pr;
 
-            var editDlg = new ProjectEditDialog(pref);
+            var editDlg = new ProjectEditDialog(pref, renderer, new CreateOptions(false));
             editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
-            editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
+            editDlg.window.ShowDialog();
         }
 
         void MyNoForm_OnSizeChanged(Size sz)
@@ -527,12 +528,12 @@ namespace testapp
             Program.Stories.Add(ns);
 
             var renderer = new NoForms.Renderers.D2DLayered();
-            var editDlg = new StoryEditDialog(ns);
+            var editDlg = new StoryEditDialog(ns, renderer, new CreateOptions(false));
             editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
-            editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
+            editDlg.window.ShowDialog();
         }
 
         void add_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
@@ -609,12 +610,12 @@ namespace testapp
         UBrush fillBrush = new USolidBrush() { color = new NoForms.Color(0.3f, .7f, .7f, .7f) };
         UStroke edge = new UStroke();
 
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
-                if (inComponent && mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP)
+                if (inComponent && mb == MouseButton.LEFT && bs == ButtonState.UP)
                     if (MyNoForm.iAmDropped != null && MyNoForm.iAmDropped is Story)
                         (MyNoForm.iAmDropped as Story).state = state;
-            base.MouseUpDown(mea, mbs, inComponent,amClipped);
+            base.MouseUpDown(location,mb, bs, inComponent,amClipped);
         }
         
     }
@@ -728,7 +729,7 @@ namespace testapp
         UStroke edge = new UStroke();
 
         int sdx, sdy;
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+        public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {
             if (maybeDrag || dragtime)
             {
@@ -758,10 +759,10 @@ namespace testapp
         System.Drawing.Point lloc;
         DateTime dtLastClick = DateTime.Now.AddDays(-1);
         public StoryState os;
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
-            bool tzo = Util.AmITopZOrder(this, mea.Location);
-            if (mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP && inComponent && !amClipped)
+            bool tzo = Util.AmITopZOrder(this, location);
+            if (mb == MouseButton.LEFT && bs == ButtonState.UP && inComponent && !amClipped)
             {
                 var dt = DateTime.Now.Subtract(dtLastClick);
                 if (dt.TotalMilliseconds < 300)
@@ -770,30 +771,30 @@ namespace testapp
                     if(state == StoryState.none)
                         state = os;
                     var renderer = new NoForms.Renderers.D2DLayered();
-                    var editDlg = new StoryEditDialog(this);
+                    var editDlg = new StoryEditDialog(this, renderer, new CreateOptions(false));
                     editDlg.MinSize=editDlg.Size = new System.Drawing.Size(400, 300);
                     var pl = Program.rootForm.Location;
                     var ps = Program.rootForm.Size;
                     editDlg.Location = new Point(pl.X - 200 + ps.width/2, pl.Y - 150 + ps.height/2);
-                    editDlg.Create(renderer, new CreateOptions() { dialog = true, showInTaskbar = false, rootForm = false });
+                    editDlg.window.ShowDialog();
                 }
                 dtLastClick = DateTime.Now;
             }
-            if (dragtime && mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP)
+            if (dragtime && mb == MouseButton.LEFT && bs == ButtonState.UP)
             {
                 dragtime = false;
             }
-            if (maybeDrag && mea.Button == System.Windows.Forms.MouseButtons.Left && mbs == MouseButtonState.UP)
+            if (maybeDrag && mb == MouseButton.LEFT && bs == ButtonState.UP)
             {
                 maybeDrag = false;
             }
-            if (tzo && inComponent && mbs == MouseButtonState.DOWN && mea.Button == System.Windows.Forms.MouseButtons.Left && !amClipped)
+            if (tzo && inComponent && bs == ButtonState.DOWN && mb == MouseButton.LEFT && !amClipped)
             {
-                lloc = mea.Location;
+                lloc = location;
                 maybeDrag = true;
                 sdx = sdy = 0;
             }
-            base.MouseUpDown(mea,mbs,inComponent,amClipped);
+            base.MouseUpDown(location, mb, bs, inComponent, amClipped);
         }
         bool maybeDrag = false;
     }
@@ -801,14 +802,13 @@ namespace testapp
     class StoryEditDialog : NoForm
     {
         MoveHandle mh;
-        SizeHandle sh;
         Textfield tf,tft;
         Button bt;
         ComboBox pcb;
 
         Story refStory;
 
-        public StoryEditDialog(Story sedthis)
+        public StoryEditDialog(Story sedthis, IRender rn, CreateOptions co) : base(rn,co)
         {
             // hold ref to stroy
             refStory = sedthis;
@@ -844,7 +844,7 @@ namespace testapp
                 refStory.storyTitle = tft.text; 
                 refStory.storyText = tf.text;
                 refStory.projectName = pcb.selectedText;
-                this.Close();
+                window.Close();
             });
             components.Add(bt);
 
@@ -952,13 +952,12 @@ namespace testapp
     public class ProjectEditDialog :NoForm
     {
         MoveHandle mh;
-        SizeHandle sh;
         Textfield tf,tft;
         Button bt;
 
         Project refProject;
 
-        public ProjectEditDialog(Project pedthis)
+        public ProjectEditDialog(Project pedthis, IRender rn, CreateOptions co) : base(rn,co)
         {
             // hold ref to stroy
             refProject = pedthis;
@@ -1001,7 +1000,7 @@ namespace testapp
                     }
                 }
                 refProject.details = tf.text;
-                this.Close();
+                window.Close();
             });
             components.Add(bt);
 

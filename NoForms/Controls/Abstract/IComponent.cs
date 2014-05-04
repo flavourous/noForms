@@ -36,12 +36,12 @@ namespace NoForms
         void DrawBase(IDraw renderArgument);
 
         // Mouse events
-        void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped);
-        void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped);
+        void MouseMove(Point location, bool inComponent, bool amClipped);
+        void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped);
 
         // A container is focusable...
         // Key Events
-        void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown);
+        void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs);
         void KeyPress(char c);
 
         // cursor...

@@ -23,7 +23,7 @@ namespace NoForms
             return true;
         }
 
-        public static bool AmITopZOrder(IComponent me, System.Drawing.Point loc)
+        public static bool AmITopZOrder(IComponent me, Point loc)
         {
             if (me.Parent == null && !(me is NoForm))
                 throw new Exception("How the fuck am I supposed to know?");
@@ -72,13 +72,6 @@ namespace NoForms
             } // (3)
 
             return true;
-        }
-        public static bool CursorInRect(Rectangle dr, Point topLevelLocation)
-        {
-            Point ccl = System.Windows.Forms.Cursor.Position;
-            ccl.X -= topLevelLocation.X;
-            ccl.Y -= topLevelLocation.Y;
-            return PointInRect(ccl, dr);
         }
         public static bool PointInRect(Point ccl, Rectangle dr)
         {

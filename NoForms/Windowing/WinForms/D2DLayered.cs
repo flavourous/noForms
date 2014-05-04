@@ -10,8 +10,9 @@ using System.Windows.Forms;
 namespace NoForms.Renderers
 {
     // Base Renderers, exposing some drawing mechanism and options
-    public class D2DLayered : IRender, IDraw, IWindow
+    public class D2DLayered : IRender, IDraw, IWindow, IController
     {
+        #region IWindow - Providing window definition and maintanance etc
         class D2LForm : System.Windows.Forms.Form
         {
             public D2LForm() : base()
@@ -40,6 +41,95 @@ namespace NoForms.Renderers
             }
         }
 
+        public void Run()
+        {
+            Application.EnableVisualStyles();
+            Application.Run(winForm);
+        }
+        public void Show()
+        {
+            winForm.Show();
+        }
+        public void ShowDialog()
+        {
+            winForm.ShowDialog();
+        }
+        public void Hide()
+        {
+            winForm.Hide();
+        }
+
+        bool okClose = false;
+        public void Close()
+        {
+            Close(false);
+        }
+        void Close(bool done)
+        {
+            if (winForm.InvokeRequired)
+            {
+                winForm.Invoke(new MethodInvoker(() => Close(done)));
+                return;
+            }
+            okClose = done;
+            winForm.Close();
+        }
+
+        public bool Minimise()
+        {
+            winForm.WindowState = FormWindowState.Minimized;
+            return true;
+        }
+        public bool Maximise()
+        {
+            winForm.WindowState = FormWindowState.Maximized;
+            return true;
+        }
+        public bool Restore()
+        {
+            winForm.WindowState = FormWindowState.Normal;
+            return true;
+        }
+
+        public string Title
+        {
+            get { return winForm.Text; }
+            set { winForm.Text = value; }
+        }
+
+        public bool showIcon
+        {
+            get { return winForm.ShowIcon; }
+            set { winForm.ShowIcon = value; }
+        }
+
+        public System.Drawing.Icon Icon
+        {
+            get { return winForm.Icon; }
+            set { winForm.Icon = value; }
+        }
+
+        public bool BringToFront()
+        {
+            winForm.BringToFront();
+            return true;
+        }
+
+        public Cursor Cursor
+        {
+            get { return winForm.Cursor; }
+            set { winForm.Cursor = value; }
+        }
+
+        public bool CaptureMouse
+        {
+            get { return winForm.Capture; }
+            set { winForm.Capture = value; }
+        }
+
+        #endregion
+
+        #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
         SharpDX.Direct3D10.Device1 device;
         SharpDX.Direct2D1.Factory d2dFactory = new SharpDX.Direct2D1.Factory();
         SharpDX.DXGI.Factory dxgiFactory = new SharpDX.DXGI.Factory();
@@ -61,7 +151,7 @@ namespace NoForms.Renderers
         {
             winForm.ShowInTaskbar = co.showInTaskbar;
         }
-        public IWindow Init(NoForm root, CreateOptions co)
+        public void Init(NoForm root, CreateOptions co, out IWindow window, out IController controller)
         {
             noForm = root;
             lock (noForm)
@@ -92,6 +182,10 @@ namespace NoForms.Renderers
                 // Init uDraw and assign IRenderElement parts
                 _backRenderer = new D2D_RenderElements(d2dRenderTarget);
                 _uDraw = new D2DDraw(_backRenderer);
+
+                // FIXME these should also be abstracted, preferably before I have more than a couple of renderers.
+                window = this;
+                controller = this;
             }
 
             winForm.Load += new EventHandler((object o, EventArgs e) =>
@@ -105,38 +199,10 @@ namespace NoForms.Renderers
                 EndRender(new MethodInvoker(() => Close(true)));
             });
 
-            return this;
+            ControllerRegistration();
         }
 
-        public void Run()
-        {
-            Application.EnableVisualStyles();
-            Application.Run(winForm);
-        }
-        public void Show()
-        {
-            winForm.Show();
-        }
-        public void ShowDialog()
-        {
-            winForm.ShowDialog();
-        }
-        public void Hide()
-        {
-            winForm.Hide();
-        }
-
-        bool okClose = false;
-        public void Close(bool done = false)
-        {
-            if (winForm.InvokeRequired)
-            {
-                winForm.Invoke(new MethodInvoker(() => Close(done)));
-                return;
-            }
-            okClose = done;
-            winForm.Close();
-        }
+        
 
         SolidColorBrush scbTrans;
         public Thread renderThread = null;
@@ -207,10 +273,10 @@ namespace NoForms.Renderers
             surface.Dispose();
             backBuffer.Dispose();
 
-            noForm.theForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
+            winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
-                noForm.theForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width + edgeBufferSize, (int)noForm.Size.height + edgeBufferSize);
-                noForm.theForm.Location = noForm.Location;
+                winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width + edgeBufferSize, (int)noForm.Size.height + edgeBufferSize);
+                winForm.Location = noForm.Location;
             }));
 
             // Initialise d2d things
@@ -232,7 +298,15 @@ namespace NoForms.Renderers
             _backRenderer.renderTarget = d2dRenderTarget;
         }
 
-        // IRenderType
+        public void Dispose()
+        {
+            d2dFactory.Dispose();
+            dxgiFactory.Dispose();
+            device.Dispose();
+        }
+        #endregion
+
+        #region IDraw - Client facing interface to drawing commands and so on
         IUnifiedDraw _uDraw;
         public IUnifiedDraw uDraw
         {
@@ -247,12 +321,48 @@ namespace NoForms.Renderers
         {
             get { throw new NotImplementedException(); }
         }
+        #endregion
 
-        public void Dispose()
+        #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
+        void ControllerRegistration()
         {
-            d2dFactory.Dispose();
-            dxgiFactory.Dispose();
-            device.Dispose();
+            winForm.MouseDown += (o,e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), ButtonState.DOWN);
+            winForm.MouseUp += (o,e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), ButtonState.UP);
+            winForm.MouseMove += (o,e) => MouseMove(e.Location);
+            winForm.KeyDown += (o,e) => KeyUpDown(e.KeyCode, ButtonState.DOWN);
+            winForm.KeyUp += (o,e) => KeyUpDown(e.KeyCode, ButtonState.UP);
+            winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
         }
-    }    
+        MouseButton ConvertFromWinForms(MouseButtons mb) 
+        {
+            switch (mb)
+	        {
+		        case MouseButtons.Left:
+                    return MouseButton.LEFT;
+                case MouseButtons.Middle:
+                    break;
+                case MouseButtons.None:
+                    break;
+                case MouseButtons.Right:
+                    return MouseButton.RIGHT;
+                case MouseButtons.XButton1:
+                    break;
+                case MouseButtons.XButton2:
+                    break;
+                default:
+                    return MouseButton.NONE;
+            }
+            return MouseButton.NONE;
+        }
+        public event MouseUpDownHandler MouseUpDown = delegate { };
+        public event MouseMoveHandler MouseMove = delegate { };
+        public event KeyUpDownHandler KeyUpDown = delegate { };
+        public event KeyPressHandler KeyPress = delegate { };
+        public Point MouseScreenLocation
+        {
+            get { return System.Windows.Forms.Cursor.Position; }
+        }
+        #endregion
+
+      }    
 }

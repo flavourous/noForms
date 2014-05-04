@@ -197,10 +197,10 @@ namespace NoForms.Controls
                 shift = down;
         }
 
-        public override void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
+        public override void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs)
         {
-            base.KeyUpDown(key, keyDown);
-            if (keyDown) KeyDown(key);
+            base.KeyUpDown(key, bs);
+            if (bs == ButtonState.DOWN) KeyDown(key);
             else KeyUp(key);
         }
 
@@ -557,7 +557,7 @@ namespace NoForms.Controls
             shiftOrigin = caretPos;
             UpdateTextLayout();
         }
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+        public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {
             base.MouseMove(location, inComponent, amClipped);
             runNextRender.Enqueue(new Action<IDraw>(rt =>
@@ -573,15 +573,15 @@ namespace NoForms.Controls
             }));
         }
         bool mouseSelect = false;
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
             runNextRender.Enqueue(new Action<IDraw>(rt =>
             {
-                if (mbs == MouseButtonState.DOWN)
+                if (mbs == ButtonState.DOWN)
                 {
                     if (inComponent && !amClipped)
                     {
-                        Point tfPoint = new Point(mea.Location.X - Location.X + roX, mea.Location.Y - Location.Y + roY);
+                        Point tfPoint = new Point(location.X - Location.X + roX, location.Y - Location.Y + roY);
                         var hti = rt.uDraw.HitPoint(tfPoint, data);
                         int extra = 0;
                         if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
@@ -590,7 +590,7 @@ namespace NoForms.Controls
                         mouseSelect = true;
                     }
                 }
-                else if (mbs == MouseButtonState.UP && mouseSelect)
+                else if (mbs == ButtonState.UP && mouseSelect)
                 {
                     mouseSelect = false;
                 }

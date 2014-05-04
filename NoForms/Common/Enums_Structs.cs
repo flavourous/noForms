@@ -2,12 +2,21 @@
 
 namespace NoForms
 {
+    public class CreateOptions
+    {
+        public CreateOptions(bool showInTaskbar)
+        {
+            this.showInTaskbar = showInTaskbar;
+        }
+        public bool showInTaskbar { get; private set; }
+    }
+
     [Flags]
     public enum Direction { NONE =0, NORTH = 1, SOUTH=2, EAST=4, WEST=8 }; // bitmask
 
-    // mouse stuff
-    public enum MouseButton { LEFT, RIGHT };
-    public enum MouseButtonState { DOWN, UP };
+    public enum MouseButton { NONE, LEFT, RIGHT };
+    public enum ButtonState { NONE, DOWN, UP };
+
     public struct Color
     {
         public float a, r, g, b;
@@ -104,7 +113,7 @@ namespace NoForms
     }
     public struct Point
     {
-        public static Point Empty { get { return new Point(0, 0); } }
+        public static Point Zero { get { return new Point(0, 0); } }
         public Point(float x, float y)
         {
             X = x;
@@ -140,7 +149,6 @@ namespace NoForms
             return new System.Drawing.Point((int)(me.X+.5f), (int)(me.Y+.5f));
         }
     }
-
     public struct Thickness
     {
         public Thickness(float amt)
@@ -159,7 +167,6 @@ namespace NoForms
         public float right;
         public float bottom;
     }
-
     public struct Rectangle
     {
 

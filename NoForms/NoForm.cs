@@ -9,12 +9,7 @@ using NoForms.Renderers;
 
 namespace NoForms
 {
-    public class CreateOptions
-    {
-        public bool showInTaskbar = true;
-        public bool rootForm = true;
-        public bool dialog = false;
-    }
+    
     /// <summary>
     /// You would create a noform, and to it add INoComponent, and it would handle stuff.
     /// </summary>
@@ -95,26 +90,22 @@ namespace NoForms
         /// encapsulates options that for whatever reason can only be set
         /// once.
         /// </param>
-        public NoForm()
+        public NoForm(IRender renderMethod, CreateOptions createOptions)
         {
             _components = new ComponentCollection(this);
             background = new USolidBrush() { color = new Color(1) };
+
+            this.renderMethod = renderMethod;
+            renderMethod.Init(this, createOptions, out window, out controller);
+            RegisterToController();
         }
         public UBrush background;
 
-
-            theForm.MouseDown += new MouseEventHandler(MouseDown);
-            theForm.MouseUp += new MouseEventHandler(MouseUp);
-            theForm.MouseMove += new MouseEventHandler(MouseMove);
-            theForm.KeyDown += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUpDown(e.KeyCode, true); });
-            theForm.KeyUp += new KeyEventHandler((Object o, KeyEventArgs e) => { KeyUpDown(e.KeyCode, false); });
-            theForm.KeyPress += new KeyPressEventHandler((Object o, KeyPressEventArgs e) => { KeyPress(e.KeyChar); });
-
-        // Key Events
-        public void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
+        // Keyboard Hooks
+        public void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs)
         {
             foreach (IComponent inc in components)
-                inc.KeyUpDown(key, keyDown);
+                inc.KeyUpDown(key, bs);
         }
         public void KeyPress(char c)
         {
@@ -122,67 +113,31 @@ namespace NoForms
                 inc.KeyPress(c);
         }
 
-        // Click Controller
-        void MouseDown(Object o, MouseEventArgs mea)
+        // Mouse Hooks
+        public void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
-            MouseUpDown(mea, MouseButtonState.DOWN);
-        }
-        void MouseUp(Object o, MouseEventArgs mea)
-        {
-            MouseUpDown(mea, MouseButtonState.UP);
-        }
-        public void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs)
-        {
-            MouseButton mb;
-            if (mea.Button == MouseButtons.Left) mb = MouseButton.LEFT;
-            else if (mea.Button == MouseButtons.Right) mb = MouseButton.RIGHT;
-            else return;
-
-            var ceventargs = new ClickedEventArgs()
+            foreach (IComponent c in components)
             {
-                button = mb,
-                state = mbs,
-                clickLocation = mea.Location
-            };
-
-            if (Clicked != null)
-                foreach (ClickedEventHandler cevent in Clicked.GetInvocationList())
-                    cevent(ceventargs);
-            foreach (IComponent inc in components)
-                if (inc.visible)
-                    inc.MouseUpDown(mea, mbs, Util.CursorInRect(inc.DisplayRectangle, Location), !Util.CursorInRect(DisplayRectangle, Location));
+                if (c.visible)
+                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location, c.DisplayRectangle),
+                        amClipped ? true : !Util.PointInRect(location, DisplayRectangle));
+            }
         }
-        public struct ClickedEventArgs
+        public void MouseMove(Point location, bool inComponent, bool amClipped)
         {
-            public MouseButtonState state;
-            public System.Drawing.Point clickLocation;
-            public MouseButton button;
-        }
-        public delegate void ClickedEventHandler(ClickedEventArgs cea);
-        public event ClickedEventHandler Clicked;
-
-        // move contoller
-        public delegate void MouseMoveEventHandler(System.Drawing.Point location);
-        public event MouseMoveEventHandler MouseMoved;
-        void MouseMove(object sender, MouseEventArgs e)
-        {
-            MouseMove(e.Location);
-        }
-        public void MouseMove(System.Drawing.Point location)
-        {
-            foreach (IComponent inc in components)
+            foreach (IComponent c in components)
             {
-                bool clip = !Util.PointInRect(location, DisplayRectangle);
-                bool inComponent = Util.PointInRect(location, inc.DisplayRectangle);
-                if (inc.visible) inc.MouseMove(location, inComponent, clip);
+                if (c.visible)
+                {
+                    bool child_inComponent = Util.PointInRect(location, c.DisplayRectangle);
+                    bool child_amClipped = amClipped ? true : !Util.PointInRect(location, DisplayRectangle);
+                    c.MouseMove(location, child_inComponent, child_amClipped);
+                }
             }
 
+            // FIXME should derrive from component?
             if (Util.AmITopZOrder(this, location))
                 window.Cursor = Cursor;
-
-            if (MouseMoved != null) 
-                foreach (MouseMoveEventHandler mevent in MouseMoved.GetInvocationList())
-                    mevent(location);
         }
 
         public void DrawBase(IDraw rt)
@@ -203,11 +158,15 @@ namespace NoForms
         }
 
         public IWindow window;
-
-        public void Create(IRender renderMethod, CreateOptions createOptions)
+        public IController controller;
+        
+        void RegisterToController()
         {
-            this.renderMethod = renderMethod;
-            window = renderMethod.Init(this, createOptions);
+            // FIXME deregistering, mouse capture?
+            controller.MouseUpDown += (loc, mb, bs) => MouseUpDown(loc, mb, bs, true, false);
+            controller.MouseMove += loc => MouseMove(loc, true, false);
+            controller.KeyUpDown += KeyUpDown;
+            controller.KeyPress += KeyPress;
         }
 
         // FIXME some isp could avoid this and keep the hierachy intact..
@@ -218,8 +177,6 @@ namespace NoForms
         }
         public void RecalculateDisplayRectangle() { throw new NotImplementedException(); }
         public void RecalculateLocation() { throw new NotImplementedException(); }
-        public void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
-        public void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped) { throw new NotImplementedException(); }
         
     }
 }

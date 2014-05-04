@@ -236,13 +236,13 @@ namespace NoForms.Controls.Abstract
             }
             bool downed = false;
             float downedOrigin, topOriginal;
-            public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+            public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
             {
-                base.MouseUpDown(mea, mbs, inComponent, amClipped);
-                if (inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location) && mbs == MouseButtonState.DOWN)
+                base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
+                if (inComponent && !amClipped && Util.AmITopZOrder(this, location) && mbs == ButtonState.DOWN)
                 {
                     downed = true;
-                    var sloc = mea.Location;
+                    var sloc = location;
                     downedOrigin = orientation == Orientation.v ? sloc.Y : sloc.X;
                     topOriginal = orientation == Orientation.v ? Location.Y : Location.X;
                     (trackBrush as USolidBrush).color = new Color(0.8f);
@@ -253,7 +253,7 @@ namespace NoForms.Controls.Abstract
                     (trackBrush as USolidBrush).color = new Color(0.6f);
                 }
             }
-            public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+            public override void MouseMove(Point location, bool inComponent, bool amClipped)
             {
                 base.MouseMove(location, inComponent, amClipped);
                 if (downed)
@@ -293,12 +293,12 @@ namespace NoForms.Controls.Abstract
             UBrush butBrsh = new USolidBrush() { color = new Color(.8f, .4f, .6f, .4f) };
             UBrush butArrF = new USolidBrush() { color = new Color(0) };
             bool downed = false;
-            public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+            public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
             {
-                base.MouseUpDown(mea, mbs, inComponent, amClipped);
-                bool tzo = Util.AmITopZOrder(this, mea.Location);
+                base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
+                bool tzo = Util.AmITopZOrder(this, location);
                 if (!downed && (!inComponent || amClipped || !tzo) ) return;
-                if (mbs == MouseButtonState.DOWN)
+                if (mbs == ButtonState.DOWN)
                 {
                     scrollTimer.Change(0, cycle);
                     (butBrsh as USolidBrush).color = new Color(.6f, .5f, .7f, .5f);
@@ -370,12 +370,12 @@ namespace NoForms.Controls.Abstract
         class ScrollBarContainer : Abstract.BasicContainer
         {
 
-            public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+            public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
             {
 
-                base.MouseUpDown(mea, mbs, inComponent, amClipped);
-                bool topz = Util.AmITopZOrder(this, mea.Location);
-                if (inComponent && !amClipped && topz && mbs == MouseButtonState.DOWN)
+                base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
+                bool topz = Util.AmITopZOrder(this, location);
+                if (inComponent && !amClipped && topz && mbs == ButtonState.DOWN)
                     (background as USolidBrush).color = new Color(.8f);
                 else (background as USolidBrush).color = new Color(.7f);
             }
@@ -424,7 +424,7 @@ namespace NoForms.Controls.Abstract
         }
         public Thickness InnerPadding = new Thickness(0, 0, 0, 0);
         
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+        public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {
             Rectangle clipDr = DisplayRectangle;
             clipDr.height -= HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;
@@ -443,7 +443,7 @@ namespace NoForms.Controls.Abstract
                 c.MouseMove(useloc, child_inComponent, child_amClipped);
             }
         }
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
             Rectangle clipDr = DisplayRectangle;
             clipDr.height -= HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;
@@ -451,17 +451,15 @@ namespace NoForms.Controls.Abstract
 
             // trickery
             var scrollOffset = new Point(xOffset, yOffset);
-            var tll = Util.GetTopLevelLocation(this);
-            var mea2 = new System.Windows.Forms.MouseEventArgs(mea.Button, mea.Clicks, mea.X + (int)xOffset, mea.Y + (int)yOffset, mea.Delta);
 
             foreach (IComponent c in components)
             {
                 if (c.visible && c.Scrollable)
-                    c.MouseUpDown(mea2, mbs, Util.CursorInRect(c.DisplayRectangle, tll - scrollOffset),
-                        amClipped ? true : !Util.CursorInRect(clipDr, tll));
+                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location - scrollOffset, c.DisplayRectangle),
+                        amClipped ? true : !Util.PointInRect(location, clipDr));
                 else if(!c.Scrollable)
-                    c.MouseUpDown(mea, mbs, Util.CursorInRect(c.DisplayRectangle, tll),
-                        amClipped ? true : !Util.CursorInRect(DisplayRectangle, tll));
+                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location, c.DisplayRectangle),
+                        amClipped ? true : !Util.PointInRect(location, DisplayRectangle));
             }
         }
     }

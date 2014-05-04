@@ -29,7 +29,7 @@ namespace NoForms.Controls.Abstract
         }
         public abstract void Draw(IDraw renderArgument);
 
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+        public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {
             base.MouseMove(location, inComponent, amClipped);
             foreach (IComponent c in components)
@@ -42,20 +42,20 @@ namespace NoForms.Controls.Abstract
                 }
             }
         }
-        public override void MouseUpDown(MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location,MouseButton mb,  ButtonState bs, bool inComponent, bool amClipped)
         {
-            base.MouseUpDown(mea,mbs,inComponent,amClipped);
+            base.MouseUpDown(location, mb, bs, inComponent, amClipped);
             foreach (IComponent c in components)
             {
                 if (c.visible)
-                    c.MouseUpDown(mea, mbs, Util.CursorInRect(c.DisplayRectangle, Util.GetTopLevelLocation(c)),
-                        amClipped ? true : !Util.CursorInRect(DisplayRectangle, Util.GetTopLevelLocation(this)));
+                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location, c.DisplayRectangle),
+                        amClipped ? true : !Util.PointInRect(location, DisplayRectangle));
             }
         }
-        public override void KeyUpDown(System.Windows.Forms.Keys key, bool keyDown)
+        public override void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs)
         {
             foreach (IComponent inc in components)
-                inc.KeyUpDown(key, keyDown);
+                inc.KeyUpDown(key, bs);
         }
         public override void KeyPress(char c)
         {

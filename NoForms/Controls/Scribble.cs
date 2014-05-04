@@ -19,17 +19,17 @@ namespace NoForms.Controls
         public delegate void ClickDelegate(Point loc);
         public event ClickDelegate Clicked;
         bool downed = false;
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN && inComponent && !amClipped && mea.Button == System.Windows.Forms.MouseButtons.Left)
+            if (mbs == ButtonState.DOWN && inComponent && !amClipped && mb == MouseButton.LEFT)
                 downed = true;
-            if (mbs == MouseButtonState.UP && inComponent && !amClipped && mea.Button == System.Windows.Forms.MouseButtons.Left)
+            if (mbs == ButtonState.UP && inComponent && !amClipped && mb == MouseButton.LEFT)
             {
                 if (downed)
                 { // clicked
                     if (Clicked != null)
                         foreach (ClickDelegate cd in Clicked.GetInvocationList())
-                            cd(mea.Location);
+                            cd(location);
                 }
                 downed = false;
             }

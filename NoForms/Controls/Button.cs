@@ -5,7 +5,7 @@ using NoForms;
 namespace NoForms.Controls
 {
     public enum ButtonType { Basic, Win8 };
-    enum ButtonState { Normal, Hover, Click };
+    public enum ButtonControlState { Normal, Hover, Click };
     public enum FontStyle { Normal, Bold, Italic };
     public class Button : Abstract.BasicContainer
     {
@@ -16,8 +16,8 @@ namespace NoForms.Controls
             get { return _type; }
             set { _type = value; Init(); }
         }
-        ButtonState _state = ButtonState.Normal;
-        ButtonState state
+        ButtonControlState _state = ButtonControlState.Normal;
+        ButtonControlState state
         {
             get { return _state; }
             set { _state = value; SetBrushColors(); }
@@ -90,15 +90,15 @@ namespace NoForms.Controls
             {
                 switch (state)
                 {
-                    case ButtonState.Normal:
+                    case ButtonControlState.Normal:
                         (brushLine as USolidBrush).color = buttonColor.Scale(focus ? -0.1f : -0.7f);
                         (brushFill as USolidBrush).color = buttonColor;
                         break;
-                    case ButtonState.Hover:
+                    case ButtonControlState.Hover:
                         (brushLine as USolidBrush).color = buttonColor.Scale(focus ? -0.1f : -0.7f);
                         (brushFill as USolidBrush).color = buttonColor.Scale(0.3f);
                         break;
-                    case ButtonState.Click:
+                    case ButtonControlState.Click:
                         (brushLine as USolidBrush).color = buttonColor.Scale(-0.1f);
                         (brushFill as USolidBrush).color = buttonColor.Scale(0.5f);
                         break;
@@ -108,17 +108,17 @@ namespace NoForms.Controls
             {
                 switch (state)
                 {
-                    case ButtonState.Normal: // Always this grey normally
+                    case ButtonControlState.Normal: // Always this grey normally
                         (brushLine as USolidBrush).color = focus ? buttonColor.Add(51f - 96f, 153f - 150f, 255f - 191f, 255) : new Color(172f / 255f);
                         (brushFill as ULinearGradientBrush).color1 = new Color(229f / 255f);
                         (brushFill as ULinearGradientBrush).color2 = new Color(240f / 255f);
                         break;
-                    case ButtonState.Hover: // hover related to theme color
+                    case ButtonControlState.Hover: // hover related to theme color
                         (brushLine as USolidBrush).color = buttonColor.Add(126f - 96f, 153f - 180f, 234f - 191f, 255);
                         (brushFill as ULinearGradientBrush).color1 = buttonColor.Add(220f - 96f, 236f - 150f, 252f - 191f, 255);
                         (brushFill as ULinearGradientBrush).color2 = buttonColor.Add(236f - 96f, 244f - 150f, 252f - 191f, 255);
                         break;
-                    case ButtonState.Click:
+                    case ButtonControlState.Click:
                         (brushLine as USolidBrush).color = buttonColor.Add(86f - 96f, 157f - 180f, 229f - 191f, 255);
                         (brushFill as ULinearGradientBrush).color1 = buttonColor.Add(129f - 96f, 224f - 150f, 252f - 191f, 255);
                         (brushFill as ULinearGradientBrush).color2 = buttonColor.Add(218f - 96f, 236f - 150f, 252f - 191f, 255);
@@ -134,28 +134,28 @@ namespace NoForms.Controls
         }
 
         // Mousey
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+        public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {
             base.MouseMove(location, inComponent, amClipped);
-            if (inComponent && !md) state = ButtonState.Hover;
-            if (!inComponent && !md) state = ButtonState.Normal;
+            if (inComponent && !md) state = ButtonControlState.Hover;
+            if (!inComponent && !md) state = ButtonControlState.Normal;
         }
         public delegate void NFAction();
         public event NFAction ButtonClicked;
         bool md = false;
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            base.MouseUpDown(mea, mbs, inComponent, amClipped);
-            if (mbs == MouseButtonState.DOWN && inComponent)
+            base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
+            if (mbs == ButtonState.DOWN && inComponent)
             {
                 md = true;
                 FocusManager.FocusSet(this, true);
-                state = ButtonState.Click;
+                state = ButtonControlState.Click;
             }
-            if (mbs == MouseButtonState.UP && md)
+            if (mbs == ButtonState.UP && md)
             {
                 md = false;
-                state = ButtonState.Normal;
+                state = ButtonControlState.Normal;
                 if (ButtonClicked != null && inComponent)
                     foreach (NFAction na in ButtonClicked.GetInvocationList())
                         na();

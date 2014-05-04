@@ -12,7 +12,7 @@ namespace NoForms.Controls
         public SizeHandle(NoForm MoveControl)
         {
             controlled = MoveControl;
-            MoveControl.MouseMoved += new NoForm.MouseMoveEventHandler(ResizeMove);
+            MoveControl.controller.MouseMove += ResizeMove;
         }
 
         // Render methody
@@ -38,15 +38,15 @@ namespace NoForms.Controls
         
         // Mousey
         bool sizin = false;
-        System.Drawing.Point deltaLoc;
+        Point deltaLoc;
         Point defosit;
-        public void ResizeMove(System.Drawing.Point location)
+        public void ResizeMove(Point location)
         {
-            var loc = System.Windows.Forms.Cursor.Position;
+            Point loc = controlled.controller.MouseScreenLocation;
             if (sizin)
             {
-                int dx = loc.X - deltaLoc.X;
-                int dy = loc.Y - deltaLoc.Y;
+                float dx = loc.X - deltaLoc.X;
+                float dy = loc.Y - deltaLoc.Y;
                 deltaLoc = loc;
 
                 switch (ResizeMode)
@@ -87,7 +87,7 @@ namespace NoForms.Controls
                     dx = 0;
                     if (defX != defosit.X > 0)
                     {
-                        dx = (int)defosit.X;
+                        dx = defosit.X;
                         defosit.X = 0;
                     }
                 }
@@ -99,13 +99,13 @@ namespace NoForms.Controls
                     dy = 0;
                     if (defY != defosit.Y > 0)
                     {
-                        dy = (int)defosit.Y;
+                        dy = defosit.Y;
                         defosit.Y = 0;
                     }
                 }
 
-                float neww = controlled.Size.width + (float)dx;
-                float newh = controlled.Size.height + (float)dy;
+                float neww = controlled.Size.width + dx;
+                float newh = controlled.Size.height + dy;
 
                 if (neww > controlled.MaxSize.width)
                 {
@@ -135,16 +135,16 @@ namespace NoForms.Controls
                 controlled.Size = new Size(neww,newh);
             }
         }
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == MouseButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this, mea.Location))
+            if (mbs == ButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this, location))
             {
                 defosit = new System.Drawing.Point(0, 0);
-                deltaLoc = System.Windows.Forms.Cursor.Position;
+                deltaLoc = controlled.controller.MouseScreenLocation;
                 sizin = true;
-                controlled.theForm.Capture = true;
+                controlled.window.CaptureMouse = true;
             }
-            if (mbs == MouseButtonState.UP && sizin)
+            if (mbs == ButtonState.UP && sizin)
                 sizin = false;
         }
 

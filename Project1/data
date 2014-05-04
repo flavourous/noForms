@@ -58,6 +58,7 @@
     <Story state="7" text="after d2d gets the window, things like show in taskbar can't be changed it seems" title="Some window properties can only be set first" project="NoForms" />
     <Story state="1" text="add more.  check existing can be set after d2d init unlike showintaskbar, if not put in createoptions too." title="investigate other wndow props" project="NoForms" />
     <Story state="3" text="move out windowing stuff from NoForm into eg D2DSwapChain.&#xA;&#xA;Make one interface that combines IRender, IDraw and IWindow for the renderers?" title="create IWindowing" project="NoForms" />
+    <Story state="2" text="when you dragdrop, can be seen...why?" title="scrollviewer layout is visible" project="NoForms" />
   </Stories>
   <Projects>
     <Project name="NoForms" />

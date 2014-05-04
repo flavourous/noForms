@@ -40,14 +40,14 @@ namespace NoForms.Controls
                 Size = new Size(autosizeX ? minSize.width : Size.width, autosizeY ? minSize.height : Size.height);
         }
 
-        public override void MouseUpDown(System.Windows.Forms.MouseEventArgs mea, MouseButtonState mbs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (inComponent && mbs == MouseButtonState.UP && mea.Button == System.Windows.Forms.MouseButtons.Left && clicked != null)
+            if (inComponent && mbs == ButtonState.UP && mb == MouseButton.LEFT && clicked != null)
                 clicked();
         }
 
         bool overed = false;
-        public override void MouseMove(System.Drawing.Point location, bool inComponent, bool amClipped)
+        public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {
             base.MouseMove(location, inComponent, amClipped);
             if (inComponent && overed == false)
