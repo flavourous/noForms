@@ -43,6 +43,21 @@ namespace Easy
             sh.ResizeMode = Direction.SOUTH | Direction.EAST;
             components.Add(sh);
 
+
+            var sc = new Scribble();
+            sc.draw += (r, b, s) =>
+            {
+                UFigure fig = new UFigure(sc.Location, false, true);
+                fig.geoElements.Add(new UArc(false, sc.Location+new Point(500,500), new Size(5,5)));
+                UPath pth = new UPath();
+                pth.figures.Add(fig);
+                r.DrawPath(pth,b,s);
+            };
+            components.Add(sc);
+            sc.Location = new Point(300, 300);
+            sc.Size = new Size(500, 500);
+          
+
             cont = new con();
             cont.Location = new Point(30, 90);
             cont.Size = new Size(Size.width - 60, Size.height - 60);
@@ -51,7 +66,7 @@ namespace Easy
             scont = new s_con();
             scont.Location = new Point(30, 90);
             scont.Size = new Size(Size.width - 60, Size.height - 60);
-            components.Add(scont);
+            //components.Add(scont);
             for (int i = 0; i < 2e2; i++)
             {
                 UText ut = new UText("Things " + i, UHAlign.Left, UVAlign.Middle, false, 200,20);

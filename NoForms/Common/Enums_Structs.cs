@@ -2,6 +2,7 @@
 
 namespace NoForms
 {
+    public delegate void NoFormsAction();
     public class CreateOptions
     {
         public CreateOptions(bool showInTaskbar)
@@ -192,6 +193,22 @@ namespace NoForms
         {
             Location = new Point(x, y);
             Size = new Size(width, height);
+        }
+
+        public Rectangle(Point p1, Point p2)
+        {
+            float x1 = p1.X;
+            float x2 = p2.X;
+            float y1 = p1.Y;
+            float y2 = p2.Y;
+
+            float x = x1 > x2 ? x2 : x1;
+            float y = y1 > y2 ? y2 : y1;
+            float w = Math.Abs(x1 - x2);
+            float h = Math.Abs(y1 - y2);
+
+            Location = new Point(x, y);
+            Size = new Size(w, h);
         }
 
         public float left

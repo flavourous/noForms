@@ -131,8 +131,8 @@ namespace NoForms.Controls
                 float newx = (ResizeMode & Direction.WEST) == Direction.WEST ? controlled.Location.X - (neww - controlled.Size.width) : controlled.Location.X;
                 float newy = (ResizeMode & Direction.NORTH) == Direction.NORTH ? controlled.Location.Y - (newh - controlled.Size.height) : controlled.Location.Y;
 
-                controlled.Location = new Point(newx, newy);
-                controlled.Size = new Size(neww,newh);
+                controlled.Location = new Point((int)newx, (int)newy);
+                controlled.Size = new Size((int)neww, (int)newh);
             }
         }
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)

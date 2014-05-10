@@ -41,10 +41,14 @@ namespace NoForms.Renderers
         bool storedValid = false;
         IDisposable storedObject = new DDis(); // nothing stored...
         Object validationLock = new Object(); // FIXME actually, it's up to framework not to destroy the Retrieved value until it's done with.
+        public event NoFormsAction invalidated = delegate { };
         public void Invalidate()
         {
             lock (validationLock)
+            {
                 storedValid = false;
+                invalidated();
+            }
         }
         public Object Retreive<RetreiverType>(NoCacheDelegate noCacheAction) where RetreiverType : class, IRenderElements
         {
@@ -211,7 +215,9 @@ namespace NoForms.Renderers
             this.reflex = reflex;
             this.endPoint = endPoint;
             this.arcSize = arcSize;
-            rotation = 0;
+
+            // FIXME advanced features not used
+            rotation = 0; 
             sweepClockwise = true;
         }
         public float rotation { get; private set; }

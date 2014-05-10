@@ -24,7 +24,7 @@ namespace testapp
 
             NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
             NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
-            NoForm nf = rootForm = new MyNoForm(d2dlayered, new CreateOptions(true));
+            NoForm nf = rootForm = new MyNoForm(d2dswapchain, new CreateOptions(true));
             nf.window.Title = "Test App";
             nf.Size = new System.Drawing.Size(700, 500);
             nf.MinSize = new System.Drawing.Size(700, 300);

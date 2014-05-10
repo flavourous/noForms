@@ -208,6 +208,7 @@ namespace NoForms.Renderers
             }
             else if (b is ULinearGradientBrush)
             {
+                // FIXME advanced features not used
                 var lb = b as ULinearGradientBrush;
                 LinearGradientBrush lgb = new LinearGradientBrush(realRenderer.renderTarget,
                 new LinearGradientBrushProperties()
