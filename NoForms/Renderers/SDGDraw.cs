@@ -163,10 +163,10 @@ namespace NoForms.Renderers
             }
         }
 
-        enum BreakType { none = 0, word = 1, line = 2 }
-        class TR { public BreakType type; public int location; public String content; }
-        const String[] wordBreak = new String[] { " " };
-        const String[] lineBreak = new String[] { "\r\n", "\n" }; //order is important
+        enum BreakType { none = 0, word = 1, line = 2, font = 4 }
+        class TR { public BreakType type; public int location; public String content; public UStyleRange[] styley = new UStyleRange[2]; }
+        static String[] wordBreak = new String[] { " " };
+        static String[] lineBreak = new String[] { "\r\n", "\n" }; //order is important
         IEnumerable<SDGGlyphRun> GetGlyphRuns(UText text)
         {
             // concecutive wordbreaks are one glyphrun, while concecutive linebreaks are individual glpyhruns
@@ -180,15 +180,42 @@ namespace NoForms.Renderers
                 {
                     if (idx == lastIdx + 1) // inflate last break
                         breaks[breaks.Count - 1].content += wb;
-                    else breaks.Add(new TR() { type = BreakType.line, content = wb, location = idx });
+                    else breaks.Add(new TR() { type = BreakType.word, content = wb, location = idx });
                 }
-            text.SafeGetStyleRanges
+
+            int cpos = 0;
+            UStyleRange cstyle = null;
+            bool flatch = true;
+
+            // splitting glyphs also by changes in UStyleRange
+            var srs = new List<UStyleRange>(text.SafeGetStyleRanges);
+            foreach (var sr in NormaliseStyleRanges(srs, text.text.Length))
+            {
+                var lsi = sr.leftStlyeIdx;
+                var rsi = sr.rightStyleIdx;
+                var tr = new TR()
+                {
+                    type = BreakType.font,
+                    content = "",
+                    location = sr.splitPoint,
+                    styley = new UStyleRange[]  
+                    {
+                        lsi > -1 ? srs[lsi] : null,
+                        rsi > -1 ? srs[rsi] : null
+                    }
+                };
+                breaks.Add(tr);
+                if (flatch)
+                {
+                    cstyle = tr.styley[0];
+                    flatch = false;
+                }
+            }
 
             // Sort those breaks... FIXME sorting is slow
             breaks.Sort((a, b) => a.location.CompareTo(b.location));
 
             // build glyphruns from the breaks...
-            int cpos = 0;
             foreach (var tr in breaks)
             {
                 // two glyphruns in this, first is before the break (could be zero length)
@@ -197,6 +224,7 @@ namespace NoForms.Renderers
                     startPosition = cpos,
                     runLength = tr.location - cpos,
                     breakingType = BreakType.none,
+                    drawStyle = cstyle,
                     charSizes = new List<Size>()
                 };
                 float h = 0, w = 0;
@@ -209,23 +237,31 @@ namespace NoForms.Renderers
                 gr.runSize = new Size(w, h);
                 yield return gr;
 
-                // next is the break itself
-                gr = new SDGGlyphRun()
+                // next is the break itself, dont add font breaks (geting dirty here)
+                if (tr.type == BreakType.font)
                 {
-                    startPosition = tr.location,
-                    runLength = tr.content.Length,
-                    breakingType = tr.type,
-                    charSizes = new List<Size>()
-                };
-                h = w = 0;
-                foreach (var cs in MeasureCharacters(text, gr.startPosition, gr.runLength))
-                { // might as well measure these glyphs...should have zero size though...
-                    gr.charSizes.Add(new Size(cs.Width, cs.Height));
-                    w += cs.Width;
-                    h = Math.Max(cs.Height, h);
+                    cstyle = tr.styley[1];
                 }
-                gr.runSize = new Size(w, h);
-                yield return gr;
+                else
+                {
+                    // but add other types
+                    gr = new SDGGlyphRun()
+                    {
+                        startPosition = tr.location,
+                        runLength = tr.content.Length,
+                        breakingType = tr.type,
+                        charSizes = new List<Size>()
+                    };
+                    h = w = 0;
+                    foreach (var cs in MeasureCharacters(text, gr.startPosition, gr.runLength))
+                    { // might as well measure these glyphs...should have zero size though...
+                        gr.charSizes.Add(new Size(cs.Width, cs.Height));
+                        w += cs.Width;
+                        h = Math.Max(cs.Height, h);
+                    }
+                    gr.runSize = new Size(w, h);
+                    yield return gr;
+                }
 
                 // cpos set to after the break
                 cpos = tr.location + tr.content.Length;
@@ -238,7 +274,8 @@ namespace NoForms.Renderers
                     startPosition = cpos,
                     runLength = text.text.Length - cpos,
                     breakingType = BreakType.none, // it's impossible for this to be a breaking glyphrun
-                    charSizes = new List<Size>()
+                    charSizes = new List<Size>(),
+                    drawStyle = cstyle
                 };
                 float h = 0, w = 0;
                 foreach (var cs in MeasureCharacters(text, gr.startPosition, gr.runLength))
@@ -262,34 +299,52 @@ namespace NoForms.Renderers
             } while (res > 0 && (res + 1) < s.Length);
         }
 
-        IEnumerable<UStyleRange> NormaliseStyleRanges(IList<UStyleRange> messy)
+        // FIXME bit object spammy? probabbly doesnt matter in grand scheme...
+        struct BV { public int leftStlyeIdx; public int rightStyleIdx; public int splitPoint;}
+        IEnumerable<BV> NormaliseStyleRanges(IList<UStyleRange> messy, int textLen)
         {
+            if (textLen == 0) yield break;
+
             // Create a mask to determine which indexes count...
-            int[] activeStyles = new int[messy.Count];
-            for (int i = 0; i < messy.Count; i++) activeStyles[i] = -1;
+            int[] styleMask = new int[textLen];
+            for (int i = 0; i < messy.Count; i++) styleMask[i] = -1;
             for (var sri = 0; sri < messy.Count; sri++)
             {
                 var sr = messy[sri];
                 for (int i = 0; i < sr.length; i++)
-                    activeStyles[i + sr.start] = sri;
+                    styleMask[i + sr.start] = sri;
             }
-            // now go through the mask and determine the normalised ranges
-            // can get split! ouch...
+            int cval = styleMask[0];
+            for (int i = 0; i < textLen; i++)
+                if (cval != styleMask[i])
+                    yield return new BV()
+                    {
+                        leftStlyeIdx = cval,
+                        rightStyleIdx = cval = styleMask[i],
+                        splitPoint = i
+                    };
+
         }
-
-
 
         class SDGTextInfo
         {
-            public List<Rectangle> characterRects;
+            public List<SDGGlyphRunLayoutInfo> glyphRuns;
             public List<int> lineLengths;
             public List<int> newLineLengths;
+        }
+
+        class SDGGlyphRunLayoutInfo
+        {
+            public SDGGlyphRun run;
+            public Point locationLowerRight;
+            public int lineNumber;
         }
 
         class SDGGlyphRun
         {
             public int startPosition;
             public int runLength;
+            public UStyleRange drawStyle; // from original, not necessarily same indices as the glyphrun and may be shared
             public Size runSize;
             public List<Size> charSizes;
             public BreakType breakingType;
@@ -299,24 +354,109 @@ namespace NoForms.Renderers
         {
             // gotta do a line or end before we can decide the char tops (baseline aligned, presumably...)
             float currX = 0, currY =0, maxGlyphHeight =0;
-            int lineC =0;
-            List<Rectangle> crect = new List<Rectangle>();
-            List<int> lls = new List<int>();
+            int lglst=0; // last glyphrun line start
+            int lastWordBreak = -1; // last wordbreaking glyph on the current line
+            int currLine = 0;
+            SDGTextInfo ret = new SDGTextInfo();
 
             // begin on assumption we're top left align..then correct after
             foreach(var gr in GetGlyphRuns(text))
             {
                 // tracking max height for the line baselineing
                 maxGlyphHeight = Math.Max(gr.runSize.height, maxGlyphHeight);
-
-                // Potential runs include words, spaces and linebreaks
-
-
                 // whichever way, this line is this many chars longer
-                lineC += gr.runLength;
+
+                // Potential runs include words, spaces and linebreaks, and font breaks
+                if (gr.breakingType == BreakType.line)
+                {//LineBreaking
+                    // add the glyphrun, resolve info for the line, and begin on new line!
+                    ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
+                    {
+                        lineNumber = currLine,
+                        locationLowerRight = new Point(currX, 0), // dunno about y position yet
+                        run = gr
+                    });
+
+                    currY += maxGlyphHeight;
+                    maxGlyphHeight = 0;
+                    lastWordBreak = -1;
+                    currX = 0;
+
+                    // resolving the glyphruns of this line
+                    while (lglst++ < ret.glyphRuns.Count)
+                    {
+                        var igr = ret.glyphRuns[lglst];
+                        igr.locationLowerRight = new Point(igr.locationLowerRight.X, currY);
+                    }
+
+                    // begin a new line
+                    currLine++;
+                }
+                else if (lastWordBreak > -1 && currX + gr.runSize.width > text.width && text.wrapped)
+                {// WordWrapping
+                    // Must define the concept of glyph groups here.  Those between line and/or word breaks.
+                    // The whole of such a group must be broken.  We need to define the breaking glyph.
+                    currY += maxGlyphHeight;
+                    maxGlyphHeight = 0;
+                    currX = 0;
+                    // #1 Is there a word break previous to this glyphrun on this line?  
+                    //    then put all glyphs following that on the next line.
+                    for (int i = lastWordBreak+1; i < ret.glyphRuns.Count; i++)
+                    {
+                        ret.glyphRuns[i].lineNumber++;
+                        ret.glyphRuns[i].locationLowerRight = new Point(currX,0);
+                    }
+                    lastWordBreak = -1;
+                    currLine++;
+
+                    // Is this glyphrun a wordbreak? who cares, next iteration will take care via #1. 
+                    // Not wordbreak? no prev worbreak? who cares, carry on.
+                    ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
+                    {
+                        lineNumber = currLine,
+                        locationLowerRight = new Point(currX, 0), // dunno about y position yet
+                        run = gr
+                    });
+
+                    // resolving the glyphruns of the last line
+                    while (lglst++ <= lastWordBreak)
+                    {
+                        var igr = ret.glyphRuns[lglst];
+                        igr.locationLowerRight = new Point(igr.locationLowerRight.X, currY);
+                    }
+                }
+                else
+                {// Buisness as Normal
+                    // add glyphrun, increment currX
+                    ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
+                    {
+                        lineNumber = currLine,
+                        locationLowerRight = new Point(currX, 0), // dunno about y position yet
+                        run = gr
+                    });
+                    if (gr.breakingType == BreakType.word)
+                        lastWordBreak = ret.glyphRuns.Count - 1;
+                    currX += gr.runSize.width;
+                }
             }
-            
             // apply h and v align offsets after main calc...
+            int cl = 0; int cc = 0;
+            float cx, cy;
+            cx = cy = 0;
+            for(int i=0;i<ret.glyphRuns.Count;i++)
+            {
+                var gri = ret.glyphRuns[i];
+                if (gri.lineNumber > cl)
+                {
+                    cl = gri.lineNumber;
+                    ret.lineLengths.Add(cc);
+                    ret.newLineLengths.Add(cl);
+                    cc = cl = 0;
+                }
+                cc += gri.run.runLength;
+                if (gri.run.breakingType == BreakType.line) 
+                    cl += gri.run.runLength;
+            }
         }
 
         public UTextInfo GetTextInfo(UText text)

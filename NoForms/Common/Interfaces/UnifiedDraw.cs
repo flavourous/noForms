@@ -148,6 +148,12 @@ namespace NoForms.Renderers
             _fgOverride = foreground;
             _bgOverride = background;
         }
+        public UStyleRange(int start, int length, UStyleRange cloneFrom)
+        {
+            _fontOverride = cloneFrom.fontOverride;
+            _bgOverride = cloneFrom.bgOverride;
+            _fgOverride = cloneFrom.fgOverride;
+        }
         public event System.Windows.Forms.MethodInvoker collectionChanged;
     }
     public class UTextInfo
