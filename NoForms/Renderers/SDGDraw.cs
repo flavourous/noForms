@@ -147,7 +147,6 @@ namespace NoForms.Renderers
                 yield return new Rectangle(htm.Left, htm.Top, htm.Width, htm.Height);
         }
 
-        // FIXME StyleRanges!!!
         IEnumerable<SizeF> MeasureCharacters(UText text, int start, int length)
         {
             // For MesaureString FIXME is substring or new String(char) faster?
@@ -328,9 +327,11 @@ namespace NoForms.Renderers
 
         class SDGTextInfo
         {
-            public List<SDGGlyphRunLayoutInfo> glyphRuns;
-            public List<int> lineLengths;
-            public List<int> newLineLengths;
+            public Size minSize;
+            public List<SDGGlyphRunLayoutInfo> glyphRuns = new List<SDGGlyphRunLayoutInfo>();
+            public List<int> lineLengths = new List<int>();
+            public List<int> newLineLengths = new List<int>();
+            public List<Size> lineSizes = new List<Size>();
         }
 
         class SDGGlyphRunLayoutInfo
@@ -344,12 +345,13 @@ namespace NoForms.Renderers
         {
             public int startPosition;
             public int runLength;
-            public UStyleRange drawStyle; // from original, not necessarily same indices as the glyphrun and may be shared
+            public UStyleRange drawStyle; // from original, not necessarily same indices (on the stylerange) as the glyphrun and may be shared with other glyphruns
             public Size runSize;
             public List<Size> charSizes;
             public BreakType breakingType;
         }
 
+        // FIXME Cache!! (most importantly)
         SDGTextInfo GetSDGTextInfo(UText text)
         {
             // gotta do a line or end before we can decide the char tops (baseline aligned, presumably...)
@@ -439,29 +441,49 @@ namespace NoForms.Renderers
                     currX += gr.runSize.width;
                 }
             }
-            // apply h and v align offsets after main calc...
-            int cl = 0; int cc = 0;
-            float cx, cy;
-            cx = cy = 0;
+            // assign the linelengths to textinfo
+            int cl = 0; int cc = 0; int cnl = 0;
+            float cx=0, cy = 0, maxy=0, maxx =0;
             for(int i=0;i<ret.glyphRuns.Count;i++)
             {
                 var gri = ret.glyphRuns[i];
                 if (gri.lineNumber > cl)
                 {
+                    // add lineinfo (and reset counters)
                     cl = gri.lineNumber;
                     ret.lineLengths.Add(cc);
                     ret.newLineLengths.Add(cl);
-                    cc = cl = 0;
+                    ret.lineSizes.Add(new Size(cx, maxy));
+                    cc = cnl = 0;
+                    cy += maxy;
+                    maxx = Math.Max(maxx, cx);
+                    maxy = cx = 0;
                 }
-                cc += gri.run.runLength;
-                if (gri.run.breakingType == BreakType.line) 
-                    cl += gri.run.runLength;
-            }
-        }
 
+                // Continue adding lineinfo data
+                cc += gri.run.runLength;
+                cx += gri.run.runSize.width;
+                if (gri.run.breakingType == BreakType.line) 
+                    cnl += gri.run.runLength;
+                maxy = Math.Max(gri.run.runSize.height,maxy);
+            }
+            ret.minSize = new Size(maxx, cy);
+            return ret;
+        
+        }
+        
+
+        // FIXME Cache!
         public UTextInfo GetTextInfo(UText text)
         {
-            
+            var sti = GetSDGTextInfo(text);
+            return new UTextInfo()
+            {
+                minSize = sti.minSize,
+                lineLengths = sti.lineLengths.ToArray(),
+                lineNewLineLength = sti.newLineLengths.ToArray(),
+                numLines = sti.lineLengths.Count
+            };
         }
 
         Font Translate(UFont font)
