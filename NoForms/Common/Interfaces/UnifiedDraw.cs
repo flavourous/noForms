@@ -181,6 +181,12 @@ namespace NoForms.Renderers
     }
     public struct UTextHitInfo
     {
+        public UTextHitInfo(int charPos, bool leading, bool isText)
+        {
+            this.charPos = charPos;
+            this.leading = leading;
+            this.isText = isText;
+        }
         public int charPos;
         public bool leading;
         public bool isText;

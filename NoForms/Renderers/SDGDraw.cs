@@ -87,64 +87,139 @@ namespace NoForms.Renderers
         }
         public void DrawText(UText textObject, Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
         {
-            var tl = CreateTextElements(textObject);
+            var tl = GetSDGTextInfo(textObject);
 
-            foreach (var ord in textObject.SafeGetStyleRanges)
+            foreach (var glyphrun in tl.glyphRuns)
             {
-                if (ord.bgOverride != null)
-                {
-                    foreach (var r in HitTextRange(ord.start, ord.length, location, textObject))
-                        FillRectangle(r, ord.bgOverride);
-                }
+                var style = glyphrun.run.drawStyle;
+                UFont font = style.fontOverride ?? textObject.font;
+                FontStyle fs = (font.bold ? FontStyle.Bold: 0) | (font.italic ? FontStyle.Italic: 0);
+                var sdgFont = new Font(font.name, font.size, fs);
+                UBrush brsh = style.fgOverride ?? defBrush;
+                if (style.bgOverride != null)
+                    FillRectangle(new Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
+                realRenderer.graphics.DrawString(glyphrun.run.content, sdgFont, CreateBrush(brsh), location);
             }
-
-            if (clientRendering)
-            {
-                // set default foreground brush
-                tl.textRenderer.defaultEffect.fgBrush = CreateBrush(defBrush);
-
-                // Draw the text (foreground & background in the client renderer)
-                tl.textLayout.Draw(new Object[] { location, textObject }, tl.textRenderer, location.X, location.Y);
-            }
-            else
-            {
-                // Use D2D implimentation of text layout rendering
-                realRenderer.renderTarget.DrawTextLayout(location, tl.textLayout, CreateBrush(defBrush));
-            }
-
-            
-
         }
 
-        
-
-        // Text Measuring
+        // WARNING this all assumes that char rects and lines are "tightly packed", except  differing font sizes
+        //         on same line, which get "baselined".  Is this what really happens?  What about line,word and char spacing adjustments?
+        //         dirty way would be to adjust char rects, but does SDG do that? (does it even support that?)
+        // Text Measuring - isText tells you if you actually hit a part of the string...
         public UTextHitInfo HitPoint(Point hitPoint, UText text)
         {
-            var textLayout = CreateTextElements(text).textLayout;
-            SharpDX.Bool trailing, inside;
-            var htm = textLayout.HitTestPoint(hitPoint.X, hitPoint.Y, out trailing, out inside);
-            return new UTextHitInfo()
+            // points
+            float hx = hitPoint.X, cx;
+            float hy = hitPoint.Y, cy;
+
+            // Grab a ref to the sdgtextinfo
+            var ti = GetSDGTextInfo(text);
+            int charPos = 0;
+
+            // Find the line we're hitting on
+            int hitLine = 0;
+            cy = 0;
+            for (hitLine = 0; hitLine < ti.lineSizes.Count; hitLine++)
             {
-                charPos = htm.TextPosition,
-                leading = hitPoint.X > htm.Left + htm.Width / 2,
-                isText = htm.IsText
-            };
+                if (hy >= cy && hy < (cy += ti.lineSizes[hitLine].height))
+                    break;
+                charPos += ti.lineLengths[hitLine];
+            }
+            
+            // Get glyphruns on this line
+            int sgr =-1, egr = -1;
+            for (int gr = 0; gr < ti.glyphRuns.Count; gr++)
+            {
+                if (ti.glyphRuns[gr].lineNumber == hitLine)
+                    if (sgr == -1) sgr = gr;
+                else if (sgr != -1) egr = gr; // WARNING this is first on next line (will be loopy on i<egr, so is ok)
+            }
+
+            // Find the glyphrun we're hitting on (in x direction)
+            int hitGlyph = sgr;
+            cx = 0;
+            for (hitGlyph = sgr; hitGlyph < egr; hitGlyph++)
+            {
+                if (hx >= cx && hx < (cx += ti.glyphRuns[hitGlyph].run.runSize.width))
+                    break;
+                charPos += ti.glyphRuns[hitGlyph].run.content.Length;
+            }
+            cx -= ti.glyphRuns[hitGlyph].run.runSize.width; // reset to start of glyphrun hit
+
+            // find the intersecting char rect (x direction)
+            int hitGlyphChar;
+            var hgr = ti.glyphRuns[hitGlyph].run;
+            for (hitGlyphChar = 0; hitGlyphChar < hgr.charSizes.Count; hitGlyphChar++)
+                if (hx >= cx && hx < (cx += hgr.charSizes[hitGlyphChar].width))
+                    break;
+            charPos += hitGlyphChar;
+            cx -= hgr.charSizes[hitGlyphChar].width; // reset to start of char.
+
+            // determine if we've hit text, done simply by checking if we are inside the hit glyph
+            Point charlocation = ti.glyphRuns[hitGlyph].location + new Point(cx, hgr.runSize.height - hgr.charSizes[hitGlyphChar].height);
+            Rectangle charRect = new Rectangle(charlocation, hgr.charSizes[hitGlyphChar]);
+            bool isText = Util.PointInRect(hitPoint, charRect);
+
+            // Determine trailing or leading hit
+            bool leading = hitPoint.X > cx + charRect.width / 2;
+
+            return new UTextHitInfo(charPos, leading, isText);
         }
 
         public Point HitText(int pos, bool trailing, UText text)
         {
-            var textLayout = CreateTextElements(text).textLayout;
-            float hx, hy;
-            var htm = textLayout.HitTestTextPosition(pos, trailing, out hx, out hy);
-            return new Point(hx, hy);
+            // Grab a ref to the sdgtextinfo
+            var ti = GetSDGTextInfo(text);
+
+            // Find the hit glyphrun
+            int g, cc =0;
+            for (g = 0; g < ti.glyphRuns.Count; g++)
+                if ((cc += ti.glyphRuns[g].run.runLength) > pos)
+                    break;
+            cc -= ti.glyphRuns[g].run.runLength;
+
+            // Get x-location of hit char in glyph
+            float cx = 0;
+            int i;
+            for (i = 0; i < pos - cc; i++)
+                cx += ti.glyphRuns[g].run.charSizes[i].width;
+            if(trailing)
+                cx -= ti.glyphRuns[g].run.charSizes[i].width;
+
+            // Get any y-offset of hit char in the glyph and return
+            return ti.glyphRuns[g].location + new Point(cx, ti.glyphRuns[g].run.runSize.height - ti.glyphRuns[g].run.charSizes[i].height);
         }
 
         public IEnumerable<Rectangle> HitTextRange(int start, int length, Point offset, UText text)
         {
-            var textLayout = CreateTextElements(text).textLayout;
-            foreach (var htm in textLayout.HitTestTextRange(start, length, offset.X, offset.Y))
-                yield return new Rectangle(htm.Left, htm.Top, htm.Width, htm.Height);
+            // Grab a ref to the sdgtextinfo
+            var ti = GetSDGTextInfo(text);
+
+            int cc = 0;
+            foreach (var glyph in ti.glyphRuns)
+            {
+                // stride through glyphruns that are not involved.
+                if (cc + glyph.run.runLength <= start)
+                {
+                    cc += glyph.run.runLength;
+                    continue;
+                }
+                float cx = 0;
+                foreach (var gchar in glyph.run.charSizes)
+                {
+                    // end iteration when we fall past this bound
+                    if (cc >= start + length) yield break;
+
+                    // calculate and yield the current char rect
+                    yield return new Rectangle(glyph.location.X + cx,
+                                               glyph.location.Y + (glyph.run.runSize.height - gchar.height),
+                                               gchar.width,
+                                               gchar.height);
+
+                    // inc counters for following glyphs
+                    cx += gchar.width;
+                }
+            }
         }
 
         IEnumerable<SizeF> MeasureCharacters(UText text, int start, int length)
@@ -160,6 +235,13 @@ namespace NoForms.Renderers
                         useFont = Translate((UFont)sr.fontOverride);
                 yield return realRenderer.graphics.MeasureString(text.text.Substring(i, 1), useFont);
             }
+        }
+        SizeF MeasureRun(SDGGlyphRun run, UFont defFont)
+        {
+            if (run.content == "") return new SizeF(0, 0);
+            // For MesaureString FIXME is substring or new String(char) faster?
+            Font useFont = Translate(run.drawStyle.fontOverride ?? defFont);
+            return realRenderer.graphics.MeasureString(run.content, useFont);
         }
 
         enum BreakType { none = 0, word = 1, line = 2, font = 4 }
@@ -234,6 +316,7 @@ namespace NoForms.Renderers
                     h = Math.Max(cs.Height, h);
                 }
                 gr.runSize = new Size(w, h);
+                gr.content = gr.runLength > 0 ? text.text.Substring(gr.startPosition, gr.runLength) : "";
                 yield return gr;
 
                 // next is the break itself, dont add font breaks (geting dirty here)
@@ -259,6 +342,7 @@ namespace NoForms.Renderers
                         h = Math.Max(cs.Height, h);
                     }
                     gr.runSize = new Size(w, h);
+                    gr.content = gr.runLength > 0 ? text.text.Substring(gr.startPosition, gr.runLength) : "";
                     yield return gr;
                 }
 
@@ -276,14 +360,11 @@ namespace NoForms.Renderers
                     charSizes = new List<Size>(),
                     drawStyle = cstyle
                 };
-                float h = 0, w = 0;
                 foreach (var cs in MeasureCharacters(text, gr.startPosition, gr.runLength))
-                { // might as well measure these glyphs...should have zero size though...
                     gr.charSizes.Add(new Size(cs.Width, cs.Height));
-                    w += cs.Width;
-                    h = Math.Max(cs.Height, h);
-                }
-                gr.runSize = new Size(w, h);
+                gr.content = text.text.Substring(gr.startPosition, gr.runLength);
+                gr.runSize = MeasureRun(gr, text.font);
+                
                 yield return gr;
             }
         }
@@ -337,7 +418,7 @@ namespace NoForms.Renderers
         class SDGGlyphRunLayoutInfo
         {
             public SDGGlyphRun run;
-            public Point locationLowerRight;
+            public Point location;
             public int lineNumber;
         }
 
@@ -348,6 +429,7 @@ namespace NoForms.Renderers
             public UStyleRange drawStyle; // from original, not necessarily same indices (on the stylerange) as the glyphrun and may be shared with other glyphruns
             public Size runSize;
             public List<Size> charSizes;
+            public String content;
             public BreakType breakingType;
         }
 
@@ -375,7 +457,7 @@ namespace NoForms.Renderers
                     ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
                     {
                         lineNumber = currLine,
-                        locationLowerRight = new Point(currX, 0), // dunno about y position yet
+                        location = new Point(currX, 0), // dunno about y position yet
                         run = gr
                     });
 
@@ -388,7 +470,7 @@ namespace NoForms.Renderers
                     while (lglst++ < ret.glyphRuns.Count)
                     {
                         var igr = ret.glyphRuns[lglst];
-                        igr.locationLowerRight = new Point(igr.locationLowerRight.X, currY);
+                        igr.location = new Point(igr.location.X, currY - igr.run.runSize.height);
                     }
 
                     // begin a new line
@@ -406,7 +488,7 @@ namespace NoForms.Renderers
                     for (int i = lastWordBreak+1; i < ret.glyphRuns.Count; i++)
                     {
                         ret.glyphRuns[i].lineNumber++;
-                        ret.glyphRuns[i].locationLowerRight = new Point(currX,0);
+                        ret.glyphRuns[i].location = new Point(currX,0);
                     }
                     lastWordBreak = -1;
                     currLine++;
@@ -416,7 +498,7 @@ namespace NoForms.Renderers
                     ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
                     {
                         lineNumber = currLine,
-                        locationLowerRight = new Point(currX, 0), // dunno about y position yet
+                        location = new Point(currX, 0), // dunno about y position yet
                         run = gr
                     });
 
@@ -424,7 +506,7 @@ namespace NoForms.Renderers
                     while (lglst++ <= lastWordBreak)
                     {
                         var igr = ret.glyphRuns[lglst];
-                        igr.locationLowerRight = new Point(igr.locationLowerRight.X, currY);
+                        igr.location = new Point(igr.location.X, currY - igr.run.runSize.height);
                     }
                 }
                 else
@@ -433,7 +515,7 @@ namespace NoForms.Renderers
                     ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
                     {
                         lineNumber = currLine,
-                        locationLowerRight = new Point(currX, 0), // dunno about y position yet
+                        location = new Point(currX, 0), // dunno about y position yet
                         run = gr
                     });
                     if (gr.breakingType == BreakType.word)
@@ -441,6 +523,13 @@ namespace NoForms.Renderers
                     currX += gr.runSize.width;
                 }
             }
+            // resolving the glyphruns of the final line
+            while (lglst++ < ret.glyphRuns.Count)
+            {
+                var igr = ret.glyphRuns[lglst];
+                igr.location = new Point(igr.location.X, currY - igr.run.runSize.height);
+            }
+
             // assign the linelengths to textinfo
             int cl = 0; int cc = 0; int cnl = 0;
             float cx=0, cy = 0, maxy=0, maxx =0;

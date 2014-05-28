@@ -111,6 +111,14 @@ namespace NoForms
         {
             return new SharpDX.DrawingSizeF(me.width, me.height);
         }
+        public static implicit operator Size(System.Drawing.SizeF me)
+        {
+            return new Size(me.Width, me.Height);
+        }
+        public static implicit operator System.Drawing.SizeF(Size me)
+        {
+            return new System.Drawing.SizeF(me.width, me.height);
+        }
     }
     public struct Point
     {
@@ -135,6 +143,15 @@ namespace NoForms
         public static Point operator +(Point me, Point other)
         {
             return new Point(me.X + other.X, me.Y + other.Y);
+        }
+
+        public static implicit operator System.Drawing.PointF(Point me)
+        {
+            return new System.Drawing.PointF(me.X, me.Y);
+        }
+        public static implicit operator Point(System.Drawing.PointF you)
+        {
+            return new Point(you.X, you.Y);
         }
 
         public static implicit operator Point(System.Drawing.Point you)
@@ -187,6 +204,12 @@ namespace NoForms
             {
                 return new Rectangle(0, 0, 0, 0);
             }
+        }
+
+        public Rectangle(Point p, Size s)
+        {
+            Location = p;
+            Size = s;
         }
 
         public Rectangle(float x, float y, float width, float height)
