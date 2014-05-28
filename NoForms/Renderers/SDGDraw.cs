@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 
 namespace NoForms.Renderers
@@ -53,7 +54,8 @@ namespace NoForms.Renderers
         }
         public void DrawBitmap(UBitmap bitmap, float opacity, UInterp interp, Rectangle source, Rectangle destination)
         {
-            realRenderer.graphics.DrawImage(CreateBitmap(bitmap), destination, opacity, Translate(interp), source);
+            throw new NotImplementedException("not implimented opacity or interp modes - not sure if can");
+            realRenderer.graphics.DrawImage(CreateBitmap(bitmap), destination, source, GraphicsUnit.Pixel);
         }
         public void FillEllipse(Point center, float radiusX, float radiusY, UBrush brush)
         {
@@ -738,7 +740,7 @@ namespace NoForms.Renderers
                 Size useArcSize = new Size(Math.Max(arc.arcSize.width, boundingRectangle.width),
                                            Math.Max(arc.arcSize.height, boundingRectangle.height));
                 // FIXME solve this transform when you have pen and paper.
-                path.AddArc();
+                //path.AddArc();
             }
             else if (geo is ULine)
             {

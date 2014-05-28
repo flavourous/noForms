@@ -58,6 +58,7 @@
     <Compile Include="Controls\TextLabel.cs" />
     <Compile Include="Renderers\SDGDraw.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
+    <Compile Include="Windowing\WinForms\SDGNormal.cs" />
     <Compile Include="Windowing\WinForms\D2DSwapChain.cs" />
     <Compile Include="Windowing\WinForms\D2DLayered.cs" />
     <Compile Include="Controls\SizeHandle.cs" />
