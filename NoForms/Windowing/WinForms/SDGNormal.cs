@@ -21,19 +21,17 @@ namespace NoForms.Renderers
       
             protected override void OnPaint(System.Windows.Forms.PaintEventArgs e)
             {
-                e.Graphics.Clear(SystemColors.ActiveCaption);
                 //base.OnPaint(e);
             }
             protected override void OnPaintBackground(System.Windows.Forms.PaintEventArgs e)
             {
-                
                 //base.OnPaintBackground(e);
             }
         }
 
         public void Run()
         {
-            Application.EnableVisualStyles();
+            //Application.EnableVisualStyles();
             Application.Run(winForm);
         }
         public void Show()
@@ -202,15 +200,14 @@ namespace NoForms.Renderers
         {
             winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
+                graphics.Dispose();
                 winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width , (int)noForm.Size.height );
                 winForm.Location = noForm.Location;
+                graphics = winForm.CreateGraphics();
+                _backRenderer.graphics = graphics;
             }));
         }
 
-        public void Dispose()
-        {
-            graphics.Dispose();
-        }
         #endregion
 
         #region IDraw - Client facing interface to drawing commands and so on
@@ -271,5 +268,10 @@ namespace NoForms.Renderers
         }
         #endregion
 
-      }    
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }    
 }

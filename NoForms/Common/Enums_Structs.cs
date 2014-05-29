@@ -76,15 +76,15 @@ namespace NoForms
         }
         public static implicit operator System.Drawing.Color(Color input)
         {
-            int a = (int)Math.Round(input.a);
-            int r = (int)Math.Round(input.r);
-            int g = (int)Math.Round(input.g);
-            int b = (int)Math.Round(input.b);
+            int a = (int)Math.Round(input.a*255);
+            int r = (int)Math.Round(input.r*255);
+            int g = (int)Math.Round(input.g*255);
+            int b = (int)Math.Round(input.b*255);
             return System.Drawing.Color.FromArgb(a,r,g,b);
         }
         public static implicit operator Color(System.Drawing.Color input)
         {
-            return new Color(input.A, input.R, input.G, input.B);
+            return new Color(input.A/255f, input.R/255f, input.G/255f, input.B/255f);
         }
     }
 

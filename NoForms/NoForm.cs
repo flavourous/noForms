@@ -142,9 +142,8 @@ namespace NoForms
 
         public void DrawBase(IDraw rt)
         {
-            rt.uDraw.Clear(new Color(0, 0, 0, 0)); // this lets alphas to desktop happen.
+            rt.uDraw.Clear(new Color(.5f)); // this lets alphas to desktop happen.
             rt.uDraw.FillRectangle(DisplayRectangle, background);
-
             Draw(rt);
 
             // Now we need to draw our childrens....

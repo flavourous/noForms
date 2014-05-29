@@ -55,8 +55,11 @@ namespace Easy
             components.Add(sc);
             sc.Location = new Point(300, 300);
             sc.Size = new Size(500, 500);
-          
-
+        }
+        public override void Draw(IDraw rt)
+        {
+            rt.uDraw.Clear(new Color(.5f));
+            //base.Draw(rt);
         }
 
         void mnf_SizeChanged(Size sz)
