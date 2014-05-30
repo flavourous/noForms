@@ -120,6 +120,7 @@ namespace NoForms.Renderers
         #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
         Form winForm;
         Graphics graphics;
+        Bitmap buffer;
 
         public SDGNormal()
         {
@@ -136,7 +137,10 @@ namespace NoForms.Renderers
                 // do the form
                 winForm = new SDGForm();
                 ProcessCreateOptions(co);
-                graphics = winForm.CreateGraphics();
+
+                // Create buffer
+                buffer = new Bitmap(winForm.Width, winForm.Height);
+                graphics = Graphics.FromImage(buffer);
 
                 // Init uDraw and assign IRenderElement parts
                 _backRenderer = new SDG_RenderElements(graphics);
@@ -194,6 +198,11 @@ namespace NoForms.Renderers
             {
                 // Do Drawing stuff
                 noForm.DrawBase(this);
+
+                // flush buffer to window
+                var winGr = winForm.CreateGraphics();
+                winGr.DrawImageUnscaled(buffer, new Point(0, 0));
+                winGr.Dispose();
             }
         }
         void Resize()
@@ -201,9 +210,11 @@ namespace NoForms.Renderers
             winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
                 graphics.Dispose();
+                buffer.Dispose();
                 winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width , (int)noForm.Size.height );
                 winForm.Location = noForm.Location;
-                graphics = winForm.CreateGraphics();
+                buffer = new Bitmap(winForm.Width, winForm.Height);
+                graphics = Graphics.FromImage(buffer);
                 _backRenderer.graphics = graphics;
             }));
         }
