@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
 using SharpDX.Direct2D1;
+using Common;
 
 namespace NoForms
 {
@@ -37,11 +38,11 @@ namespace NoForms
 
         // Mouse events
         void MouseMove(Point location, bool inComponent, bool amClipped);
-        void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped);
+        void MouseUpDown(Point location, MouseButton mb, Common.ButtonState mbs, bool inComponent, bool amClipped);
 
         // A container is focusable...
         // Key Events
-        void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs);
+        void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs);
         void KeyPress(char c);
 
         // cursor...

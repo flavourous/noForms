@@ -1,6 +1,7 @@
 ﻿using System;
 using NoForms.Renderers;
 using NoForms;
+using Common;
 
 namespace NoForms.Controls
 {
@@ -42,7 +43,7 @@ namespace NoForms.Controls
         public Button()
         {
             Init();
-            SizeChanged += new Action<NoForms.Size>(Button_SizeChanged);
+            SizeChanged += new Action<Size>(Button_SizeChanged);
         }
 
         void Button_SizeChanged(Size obj)

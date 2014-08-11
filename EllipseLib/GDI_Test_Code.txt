@@ -1,0 +1,173 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ElTest
+{
+    public partial class Form1 : Form
+    {
+        Ellipse_Input eIn;
+        IEnumerable<Ellipse_Output> eOut;
+        public Form1()
+        {
+            InitializeComponent();
+            gen.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            doit();
+            Paint += Form1_Paint;
+            Shown += Form1_Shown;
+            DoubleBuffered = true;
+        }
+
+        void Form1_Shown(object sender, EventArgs e)
+        {
+            while (true)
+            {
+                doit();
+                Application.DoEvents();
+            }
+        }
+
+        Random rd = new Random();
+        int cty = 0;
+        int cerr = 0;
+        public void doit()
+        {
+            if (cty++ % 100 == 0)
+                Console.WriteLine(cty + " doits with " + cerr + " errors");
+            // Test Usage
+            double rx = rd.Next(0, 100);
+            double ry = rd.Next(0, 100);
+            double th = rd.Next(-1000, 1000);
+            double X0 = rd.Next(220, 420);
+            double Y0 = rd.Next(220, 420);
+
+            //rx = 0; ry = 65; th = -959; X0 = 347; Y0 = 392;
+            //ry = 2e-4; th = 0;
+
+            // pick a couple of y vals that cross the ellipse...hmmmm
+            double s = Math.Sin(Math.PI * th / 180);
+            double c = Math.Cos(Math.PI * th / 180);
+            double Cx = ry * ry * c * c + rx * rx * s * s;
+
+            double ySemiHeight = Math.Sqrt(Cx);
+            double ymin = Y0 - ySemiHeight;
+            double ymax = Y0 + ySemiHeight;
+
+            double y1 = ymin + rd.NextDouble() * (ymax - ymin);
+            double y2 = ymin + rd.NextDouble() * (ymax - ymin);
+
+            double x1 = Program.Get_x(y1, X0, Y0, rx, ry, th, rd.Next(0, 100) > 50);
+            double x2 = Program.Get_x(y2, X0, Y0, rx, ry, th, rd.Next(0, 100) > 50);
+
+            var dx = x1 - x2;
+            var dy = y1 - y2;
+
+            //Console.WriteLine("got point {0:f7},{1:f1}", x1, y1);
+            //Console.WriteLine("got point {0:f7},{1:f1}", x2, y2);
+
+            Ellipse_Input inp = new Ellipse_Input(x1, y1, x2, y2, rx, ry, th);
+            Ellipse_Output[] outs = null;
+
+                outs = Program.Get_X0Y0(inp).ToArray<Ellipse_Output>();
+                //Console.Write("Started with offset {0:f2},{1:f2} and points ({2:f2},{3:f2}), ({4:f2},{5:f2}) .\n\n", X0, Y0, x1, y1, x2, y2);
+                //foreach (Ellipse_Output sol in outs)
+                //Console.Write("Solution: Offset=({0:f2},{1:f2}) from {2:f1}° to {3:f1}°\n", sol.X, sol.Y, sol.T1, sol.T2);
+                bool clockwise = rd.Next(0, 100) > 50;
+                bool bigArc = rd.Next(0, 100) > 50;
+                int use = 0;
+                double tSt, tSp;
+                String rep;
+                Program.FindArc(inp, outs, bigArc, clockwise, out use, out tSt, out tSp, out rep);
+                if (outs[0].errored || outs[1].errored)
+                {
+                    cerr++;
+                    //ChangeIt(inp, outs);
+                    //Refresh();
+                }
+            
+        }
+
+        public void ChangeIt(Ellipse_Input eIn, IEnumerable<Ellipse_Output> eOut)
+        {
+            this.eIn = eIn;
+            this.eOut = eOut;
+        }
+        Pen pn = new Pen(Brushes.Green, 3f);
+        Pen dp = new Pen(Brushes.Black, 1f);
+        void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            return;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            float cWidth = ClientSize.Width;
+            float cHeight = ClientSize.Height;
+
+            bool clockwise = rd.Next(0, 100) > 50;
+            bool bigArc = rd.Next(0, 100) > 50;
+            e.Graphics.DrawString((clockwise ? "clockwise" : "anti-clockwise") + ", " + (bigArc ? "big arc" : "small arc"), Font, Brushes.Black, new PointF(5, 5));
+
+            var eoa = eOut.ToArray<Ellipse_Output>();
+            Ellipse_Output eo = eoa[0];
+
+            Action bt = () =>
+                {
+                    e.Graphics.TranslateTransform((float)eo.X, (float)eo.Y);
+                    if(Math.Abs(eIn.theta) > 0) e.Graphics.RotateTransform(-(float)eIn.theta);
+                };
+
+            // |t1-t2| gives the angle containing the origin zero degrees. it may be big or small...
+            // 360 - |t1-t2| gives the oth+er part of the angle.
+            // we can try adding or subtracting either of these from t1, and if we get t2, then we have a anticlockwise/clockwise (respectively)
+            // arc matching the points.  It will be big or small depending on the angle used.
+
+            e.Graphics.DrawString("Circle 0", Font, Brushes.Red, new PointF(300, 10));
+            e.Graphics.DrawString("Circle 1", Font, Brushes.Blue, new PointF(300, 25));
+
+            eo = eoa[0];
+            bt();
+            e.Graphics.DrawEllipse(Pens.Red, -(float)eo.rx, -(float)eo.ry, (float)eo.rx * 2f, (float)eo.ry * 2f);
+            
+            e.Graphics.ResetTransform();
+            eo = eoa[1];
+            bt();
+            e.Graphics.DrawEllipse(Pens.Blue, -(float)eo.rx, -(float)eo.ry, (float)eo.rx * 2f, (float)eo.ry * 2f);
+            e.Graphics.ResetTransform();
+
+            int use=0;
+            double tSt,tSp;
+            String rep;
+            Program.FindArc(eIn, eoa, bigArc, clockwise,out use, out tSt, out tSp, out rep);
+            
+            e.Graphics.DrawString(rep,Font,Brushes.Black, new PointF(0,50));
+
+                eo = eoa[use];
+                bt();
+                e.Graphics.DrawArc(pn, -(float)eo.rx, -(float)eo.ry, (float)eo.rx * 2f, (float)eo.ry * 2f, (float)tSt, (float)tSp);
+                e.Graphics.ResetTransform();
+
+            float rm = 4f;
+            RectangleF rc1 = new RectangleF((float)eIn.x1 - rm, (float)eIn.y1 - rm, 2 * rm, 2 * rm);
+            e.Graphics.DrawLine(dp, rc1.Location, rc1.Location + rc1.Size);
+            e.Graphics.DrawLine(dp, rc1.Location + new SizeF(rc1.Width, 0), rc1.Location + new SizeF(0, rc1.Height));
+            RectangleF rc2 = new RectangleF((float)eIn.x2 - rm, (float)eIn.y2 - rm, 2 * rm, 2 * rm);
+            e.Graphics.DrawLine(dp, rc2.Location, rc2.Location + rc2.Size);
+            e.Graphics.DrawLine(dp, rc2.Location + new SizeF(rc2.Width, 0), rc2.Location + new SizeF(0, rc2.Height));
+            
+            e.Graphics.DrawString("1", Font, Brushes.Black, rc1.Left + rc1.Width + 2, rc1.Top);
+            e.Graphics.DrawString("2", Font, Brushes.Black, rc2.Left + rc2.Width + 2, rc2.Top);
+        }
+
+        private void gen_Click(object sender, EventArgs e)
+        {
+            doit();
+        }
+
+        
+    }
+}

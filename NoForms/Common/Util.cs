@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using SysRect = System.Drawing.Rectangle;
+using Common;
 
 namespace NoForms
 {
@@ -73,13 +74,7 @@ namespace NoForms
 
             return true;
         }
-        public static bool PointInRect(Point ccl, Rectangle dr)
-        {
-            if (ccl.X >= dr.left && ccl.X <= dr.right)
-                if (ccl.Y >= dr.top && ccl.Y <= dr.bottom)
-                    return true;
-            return false;
-        }
+        
         public static IComponent GetTopLevelComponent(IComponent inc)
         {
             IComponent par = inc;

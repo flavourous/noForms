@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NoForms.Renderers;
+using Common;
 
 namespace NoForms.Controls
 {
@@ -18,7 +19,7 @@ namespace NoForms.Controls
 
         public TextLabel() : base() 
         {
-            SizeChanged += new Action<NoForms.Size>(TextLabel_SizeChanged);
+            SizeChanged += new Action<Size>(TextLabel_SizeChanged);
         }
 
         void TextLabel_SizeChanged(Size obj)

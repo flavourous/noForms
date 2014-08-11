@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NoForms.Renderers;
+using Common;
 
 namespace NoForms.Controls
 {
@@ -48,7 +49,7 @@ namespace NoForms.Controls
                 if (selectionChanged != null)
                     selectionChanged(selected);
             });
-            lb.MouseHover += new Action<bool>(hover => lb.background.color = hover ? new NoForms.Color(1, .5f, .5f, 1) : new NoForms.Color(1));
+            lb.MouseHover += new Action<bool>(hover => lb.background.color = hover ? new Color(1, .5f, .5f, 1) : new Color(1));
             components.Add(lb);
         }
 

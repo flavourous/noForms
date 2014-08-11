@@ -5,6 +5,7 @@ using System.Text;
 using NoForms;
 using NoForms.Renderers;
 using NoForms.Controls;
+using Common;
 
 namespace Easy
 {
@@ -42,19 +43,53 @@ namespace Easy
             sh.ResizeMode = Direction.SOUTH | Direction.EAST;
             components.Add(sh);
 
-
             var sc = new Scribble();
-            sc.draw += (r, b, s) =>
-            {
-                UFigure fig = new UFigure(sc.Location, false, true);
-                fig.geoElements.Add(new UArc(false, sc.Location+new Point(500,500), new Size(5,5)));
-                UPath pth = new UPath();
-                pth.figures.Add(fig);
-                r.DrawPath(pth,b,s);
-            };
-            components.Add(sc);
             sc.Location = new Point(300, 300);
             sc.Size = new Size(500, 500);
+
+            UPath pth = new UPath();
+            UFigure fig;
+
+            for (float i = 0; i < 100; i += 10)
+            {
+                fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
+                fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 50), true, true, i));
+                pth.figures.Add(fig);
+                //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
+                //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), true, true, i));
+                //pth.figures.Add(fig);
+                //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
+                //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), false, false, i));
+                //pth.figures.Add(fig);
+                //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
+                //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), true, false, i));
+                //pth.figures.Add(fig);
+            }   
+            UText tx = new UText("This is a noremal sentance in arial 12pt\nThis is a new line",
+                                 UHAlign.Left, UVAlign.Top, true, 500,500);
+            tx.font = new UFont("Arial", 12, false, false);
+
+            sc.draw += (r, b, s) =>
+            {
+                s.strokeWidth = 1;
+                b.color = new Color(1f, 1, 0f, 0);
+                r.DrawPath(pth,b,s);
+                
+
+                //var ti = (r as NoForms.Renderers.SDGDraw).GetSDGTextInfo(tx);
+                //float ws = 0;
+                //foreach (var gr in ti.glyphRuns)
+                //{
+                //    if (gr.run.breakingType == SDGDraw.BreakType.line) break;
+                //    r.DrawRectangle(new Rectangle(ws+sc.Location.X, sc.Location.Y, gr.run.runSize.width, gr.run.runSize.height), b, s);
+                //    ws += gr.run.runSize.width;
+                //}
+
+                b.color = new Color(1f, 0f, 0f, 0f);
+                r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
+            };
+            components.Add(sc);
+            
         }
         
 

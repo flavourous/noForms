@@ -6,6 +6,7 @@ using SharpDX.DXGI;
 using SharpDX.Direct2D1;
 using SharpDX;
 using System.Windows.Forms;
+using Common;
 
 namespace NoForms.Renderers
 {
@@ -278,11 +279,11 @@ namespace NoForms.Renderers
         #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
         void ControllerRegistration()
         {
-            winForm.MouseDown += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), ButtonState.DOWN);
-            winForm.MouseUp += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), ButtonState.UP);
+            winForm.MouseDown += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
+            winForm.MouseUp += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.UP);
             winForm.MouseMove += (o, e) => MouseMove(e.Location);
-            winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, ButtonState.DOWN);
-            winForm.KeyUp += (o, e) => KeyUpDown(e.KeyCode, ButtonState.UP);
+            winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
+            winForm.KeyUp += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o, e) => KeyPress(e.KeyChar);
         }
         MouseButton ConvertFromWinForms(MouseButtons mb)

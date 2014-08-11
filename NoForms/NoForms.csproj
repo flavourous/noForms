@@ -41,8 +41,6 @@
     <Compile Include="Common\Interfaces\IController.cs" />
     <Compile Include="Common\Interfaces\IDraw.cs" />
     <Compile Include="Common\Interfaces\IWindow.cs" />
-    <Compile Include="Common\ObsCollection.cs" />
-    <Compile Include="Common\Enums_Structs.cs" />
     <Compile Include="Common\ComponentCollection.cs" />
     <Compile Include="Common\Interfaces\IRender.cs" />
     <Compile Include="Controls\Abstract\BasicContainer.cs" />
@@ -58,13 +56,13 @@
     <Compile Include="Controls\TextLabel.cs" />
     <Compile Include="Renderers\SDGDraw.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
+    <Compile Include="Common\Util.cs" />
     <Compile Include="Windowing\WinForms\SDGNormal.cs" />
     <Compile Include="Windowing\WinForms\D2DSwapChain.cs" />
     <Compile Include="Windowing\WinForms\D2DLayered.cs" />
     <Compile Include="Controls\SizeHandle.cs" />
     <Compile Include="NoForm.cs" />
     <Compile Include="Controls\Textfield.cs" />
-    <Compile Include="Common\Util.cs" />
     <Compile Include="Common\Win32.cs" />
     <Compile Include="Common\Interfaces\UnifiedDraw.cs" />
     <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
@@ -95,7 +93,20 @@
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EllipseLib\EllipseLib.csproj">
+      <Project>{9e02051f-4921-4a08-a87b-7dd319c768ac}</Project>
+      <Name>EllipseLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GlyphRunLib\GlyphRunLib.csproj">
+      <Project>{7f09248f-afcb-4111-ae86-44c0291516b4}</Project>
+      <Name>GlyphRunLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

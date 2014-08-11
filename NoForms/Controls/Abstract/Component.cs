@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using SysRect = System.Drawing.Rectangle;
+using Common;
 
 namespace NoForms.Controls.Abstract
 {
@@ -136,8 +137,8 @@ namespace NoForms.Controls.Abstract
             }
             
         }
-        public virtual void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped) { }
-        public virtual void KeyUpDown(Keys key, ButtonState bs) { }
+        public virtual void MouseUpDown(Point location, MouseButton mb, Common.ButtonState mbs, bool inComponent, bool amClipped) { }
+        public virtual void KeyUpDown(Keys key, Common.ButtonState bs) { }
         public virtual void KeyPress(char c) { }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using NoForms.Renderers;
+using Common;
 
 namespace NoForms.Controls
 {
@@ -124,13 +125,13 @@ namespace NoForms.Controls
             Rectangle rr = ddr.Inflated(new Thickness(-1f));
             float rad = (float)ddr.Size.height / 4f;
 
-            brsh.color = new NoForms.Color(0.6f);
+            brsh.color = new Color(0.6f);
             ud.FillRoundedRectangle(rr, rad, rad, brsh);
-            brsh.color = new NoForms.Color(0.7f);
+            brsh.color = new Color(0.7f);
             rr = ddr.Inflated(new Thickness(-.5f));
             strk.strokeWidth = 1f;
             ud.DrawRoundedRectangle(rr, rad, rad, brsh, strk);
-            brsh.color = new NoForms.Color(0);
+            brsh.color = new Color(0);
             var drw = ddr.width;
             var drh = ddr.height;
             var drt = ddr.top;

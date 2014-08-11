@@ -1,4 +1,5 @@
 ﻿using System;
+using Common;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -201,7 +202,7 @@ namespace NoForms.Renderers
 
                 // flush buffer to window
                 var winGr = winForm.CreateGraphics();
-                winGr.DrawImageUnscaled(buffer, new Point(0, 0));
+                winGr.DrawImageUnscaled(buffer, new Common.Point(0, 0));
                 winGr.Dispose();
             }
         }
@@ -241,11 +242,11 @@ namespace NoForms.Renderers
         #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
         void ControllerRegistration()
         {
-            winForm.MouseDown += (o,e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), ButtonState.DOWN);
-            winForm.MouseUp += (o,e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), ButtonState.UP);
+            winForm.MouseDown += (o,e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
+            winForm.MouseUp += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.UP);
             winForm.MouseMove += (o,e) => MouseMove(e.Location);
-            winForm.KeyDown += (o,e) => KeyUpDown(e.KeyCode, ButtonState.DOWN);
-            winForm.KeyUp += (o,e) => KeyUpDown(e.KeyCode, ButtonState.UP);
+            winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
+            winForm.KeyUp += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
         }
         MouseButton ConvertFromWinForms(MouseButtons mb) 
@@ -273,7 +274,7 @@ namespace NoForms.Renderers
         public event MouseMoveHandler MouseMove = delegate { };
         public event KeyUpDownHandler KeyUpDown = delegate { };
         public event KeyPressHandler KeyPress = delegate { };
-        public Point MouseScreenLocation
+        public Common.Point MouseScreenLocation
         {
             get { return System.Windows.Forms.Cursor.Position; }
         }

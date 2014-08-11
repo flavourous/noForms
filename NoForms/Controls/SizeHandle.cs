@@ -1,7 +1,7 @@
 ﻿using System;
 using SharpDX.Direct2D1;
 using NoForms.Renderers;
-
+using Common;
 
 namespace NoForms.Controls
 {

@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NoForms
+namespace Common
 {
+    public delegate void VoidAction();
     public interface IObservable
     {
-        event System.Windows.Forms.MethodInvoker collectionChanged;
+        event VoidAction collectionChanged;
     }
     public class ObsCollection<T> : System.Collections.ObjectModel.Collection<T>, IObservable
     {
-        public event System.Windows.Forms.MethodInvoker collectionChanged;
+        public event VoidAction collectionChanged;
         void OnCollectionChanged() 
         {
             if(collectionChanged != null)

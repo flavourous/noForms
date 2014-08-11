@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
+using Common;
 
 namespace NoForms.Controls.Abstract
 {
@@ -42,7 +43,7 @@ namespace NoForms.Controls.Abstract
                 }
             }
         }
-        public override void MouseUpDown(Point location,MouseButton mb,  ButtonState bs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location,MouseButton mb,  Common.ButtonState bs, bool inComponent, bool amClipped)
         {
             base.MouseUpDown(location, mb, bs, inComponent, amClipped);
             foreach (IComponent c in components)
@@ -52,7 +53,7 @@ namespace NoForms.Controls.Abstract
                         amClipped ? true : !Util.PointInRect(location, DisplayRectangle));
             }
         }
-        public override void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs)
+        public override void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs)
         {
             foreach (IComponent inc in components)
                 inc.KeyUpDown(key, bs);

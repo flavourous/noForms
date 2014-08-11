@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using NoForms.Controls.Abstract;
 using NoForms.Renderers;
+using Common;
 
 namespace NoForms
 {
@@ -102,7 +103,7 @@ namespace NoForms
         public UBrush background;
 
         // Keyboard Hooks
-        public void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs)
+        public void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs)
         {
             foreach (IComponent inc in components)
                 inc.KeyUpDown(key, bs);
@@ -114,7 +115,7 @@ namespace NoForms
         }
 
         // Mouse Hooks
-        public void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
+        public void MouseUpDown(Point location, MouseButton mb, Common.ButtonState bs, bool inComponent, bool amClipped)
         {
             foreach (IComponent c in components)
             {

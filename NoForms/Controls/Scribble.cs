@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SharpDX.Direct2D1;
 using NoForms.Renderers;
+using Common;
 
 namespace NoForms.Controls
 {

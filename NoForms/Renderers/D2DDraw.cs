@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SharpDX.DirectWrite;
 using SharpDX.Direct2D1;
+using Common;
 
 namespace NoForms.Renderers
 {
@@ -351,7 +352,7 @@ namespace NoForms.Renderers
                 sink.AddArc(new ArcSegment()
                 {
                     SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
-                    RotationAngle = arc.rotation,
+                    RotationAngle = -arc.rotation,
                     ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
                     Point = arc.endPoint,
                     Size = arc.arcSize
@@ -386,7 +387,7 @@ namespace NoForms.Renderers
                 t.font.name,
                 t.font.bold ? FontWeight.Bold : FontWeight.Normal,
                 t.font.italic ? FontStyle.Italic : FontStyle.Normal,
-                t.font.size)
+                TranslateFontSize(t.font.size))
             {
                 ParagraphAlignment = Translate(t.valign),
                 TextAlignment = Translate(t.halign),
@@ -401,7 +402,7 @@ namespace NoForms.Renderers
                 {
                     UFont ft = (UFont)sr.fontOverride;
                     textLayout.SetFontFamilyName(ft.name, tr);
-                    textLayout.SetFontSize(ft.size, tr);
+                    textLayout.SetFontSize(TranslateFontSize(ft.size), tr);
                     textLayout.SetFontStyle(ft.italic ? FontStyle.Italic : FontStyle.Normal, tr);
                     textLayout.SetFontWeight(ft.bold ? FontWeight.Bold : FontWeight.Normal, tr);
                 }
@@ -423,6 +424,11 @@ namespace NoForms.Renderers
             var ret = new D2D_TextElements(textLayout, textRenderer);
             realRenderer.renderTarget.Disposed += new EventHandler<EventArgs>((o, e) => t.Invalidate());
             return ret;
+        }
+        float TranslateFontSize(float pt)
+        {
+            // a dip is 1/96 inches.  a pt is 1/72 inches.
+            return (96f / 72f) * pt;
         }
         ParagraphAlignment Translate(UVAlign v)
         {

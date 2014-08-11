@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
 using SharpDX.Direct2D1;
+using Common;
 
 namespace NoForms
 {

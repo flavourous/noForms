@@ -7,6 +7,7 @@ using System.Xml;
 using System.IO;
 using NoForms.Renderers;
 using NoForms.Controls;
+using Common;
 
 namespace testapp
 {
@@ -25,7 +26,7 @@ namespace testapp
             NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
             NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
             NoForms.Renderers.SDGNormal sdg = new SDGNormal();
-            NoForm nf = rootForm = new MyNoForm(sdg, new CreateOptions(true));
+            NoForm nf = rootForm = new MyNoForm(d2dlayered, new CreateOptions(true));
             nf.window.Title = "Test App";
             nf.Size = new System.Drawing.Size(700, 500);
             nf.MinSize = new System.Drawing.Size(700, 300);
@@ -151,7 +152,7 @@ namespace testapp
                 u.SetRenderOffset(new Point(0, 0));
             };
             maximise.Clicked += p => window.Maximise();
-            maximise.Size = new NoForms.Size(10, 10);
+            maximise.Size = new Size(10, 10);
             components.Add(maximise);
 
             minimise = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
@@ -163,7 +164,7 @@ namespace testapp
                 u.SetRenderOffset(new Point(0, 0));
             };
             minimise.Clicked += p => window.Minimise();
-            minimise.Size = new NoForms.Size(10, 10);
+            minimise.Size = new Size(10, 10);
             components.Add(minimise);
 
             restore = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
@@ -175,7 +176,7 @@ namespace testapp
                 u.SetRenderOffset(new Point(0, 0));
             };
             restore.Clicked += p => window.Restore();
-            restore.Size = new NoForms.Size(10, 10);
+            restore.Size = new Size(10, 10);
             components.Add(restore);
 
             mc = new MainContainer();
@@ -240,12 +241,12 @@ namespace testapp
         UText n = new UText("n", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
         void newProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            scb.color = new NoForms.Color(.5f, 1, 1, 1);
+            scb.color = new Color(.5f, 1, 1, 1);
             var dr = newProject.DisplayRectangle;
             var ir = dr.Inflated(new Thickness(-3.5f));
             var or = dr.Inflated(new Thickness(-.5f));
             ud.FillRectangle(or, scb);
-            scb.color = new NoForms.Color(1, 0, 0, 1);
+            scb.color = new Color(1, 0, 0, 1);
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
@@ -270,12 +271,12 @@ namespace testapp
         UText d = new UText("d", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
         void delProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            scb.color = new NoForms.Color(.5f, 1, 1, 1);
+            scb.color = new Color(.5f, 1, 1, 1);
             var dr = delProject.DisplayRectangle;
             var ir = dr.Inflated(new Thickness(-3.5f));
             var or = dr.Inflated(new Thickness(-.5f));
             ud.FillRectangle(or, scb);
-            scb.color = new NoForms.Color(1, 1, 0, 0);
+            scb.color = new Color(1, 1, 0, 0);
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
@@ -331,11 +332,11 @@ namespace testapp
         UText e = new UText("e", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
         void editProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
-            scb.color = new NoForms.Color(.5f, 1, 1, 1);
+            scb.color = new Color(.5f, 1, 1, 1);
             var ir = editProject.DisplayRectangle.Inflated(new Thickness(-3.5f));
             var or = editProject.DisplayRectangle.Inflated(new Thickness(-.5f));
             ud.FillRectangle(or, scb);
-            scb.color = new NoForms.Color(1, 0, 1, 0);
+            scb.color = new Color(1, 0, 1, 0);
             ud.DrawRectangle(or, scb, stroke);
             ud.DrawRectangle(ir, scb, stroke);
             ir.left += 3; ir.top -= 1;
@@ -382,7 +383,7 @@ namespace testapp
 
         float gap = 5;
         float barwid = 30;
-        NoForms.Color themeColor = new NoForms.Color(1, 95f/255f,150f/255f,190f/255f);
+        Color themeColor = new Color(1, 95f/255f,150f/255f,190f/255f);
         public override void Draw(IDraw rt) 
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
@@ -566,7 +567,7 @@ namespace testapp
                 if (s is Story && s.visible)
                 {
                     s.Location = new Point(padStories, startY);
-                    s.Size = new NoForms.Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0) - 2*padStories, s.Size.height);
+                    s.Size = new Size(Size.width - (VerticalScrollbarVisible ? VerticalScrollbarWidth : 0) - 2*padStories, s.Size.height);
                     startY += s.DisplayRectangle.height + padStories;
                 }
             }
@@ -608,8 +609,8 @@ namespace testapp
                 lastStories = nowStories;
             }
         }
-        UBrush borderBrush = new USolidBrush() { color = new NoForms.Color(0.7f, 0, 0, 0) };
-        UBrush fillBrush = new USolidBrush() { color = new NoForms.Color(0.3f, .7f, .7f, .7f) };
+        UBrush borderBrush = new USolidBrush() { color = new Color(0.7f, 0, 0, 0) };
+        UBrush fillBrush = new USolidBrush() { color = new Color(0.3f, .7f, .7f, .7f) };
         UStroke edge = new UStroke();
 
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
@@ -634,7 +635,7 @@ namespace testapp
             storyText = txt;
             this.state = state;
 
-            Size = new NoForms.Size(30, 50);
+            Size = new Size(30, 50);
 
             cx = new Scribble();
             components.Add(cx);
@@ -840,7 +841,7 @@ namespace testapp
             bt = new Button();
             bt.textData.text = "Save & Close";
             bt.buttonColor = themeColor;
-            bt.textColor = new NoForms.Color(0);
+            bt.textColor = new Color(0);
             bt.ButtonClicked += new Button.NFAction( () => 
             {
                 refStory.storyTitle = tft.text; 
@@ -875,7 +876,7 @@ namespace testapp
 
         float gap = 5;
         float barwid = 30;
-        NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
+        Color themeColor = new Color(1, 0.7f, 0.7f, 0.75f);
         public override void Draw(IDraw rt)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
@@ -984,7 +985,7 @@ namespace testapp
             bt = new Button();
             bt.textData.text = "Save & Close";
             bt.buttonColor = themeColor;
-            bt.textColor = new NoForms.Color(0);
+            bt.textColor = new Color(0);
             bt.ButtonClicked += new Button.NFAction( () => 
             {
                 if (refProject.name != tft.text)
@@ -1030,7 +1031,7 @@ namespace testapp
 
         float gap = 5;
         float barwid = 30;
-        NoForms.Color themeColor = new NoForms.Color(1, 0.7f, 0.7f, 0.75f);
+        Color themeColor = new Color(1, 0.7f, 0.7f, 0.75f);
         public override void Draw(IDraw rt)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);

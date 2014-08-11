@@ -50,6 +50,10 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NoForms\NoForms.csproj">
       <Project>{4CD83A41-3030-45B4-9D85-2017560D9568}</Project>
       <Name>NoForms</Name>

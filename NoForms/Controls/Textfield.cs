@@ -3,6 +3,7 @@ using SharpDX.Direct2D1;
 using NoForms.Renderers;
 using System.Text.RegularExpressions;
 using System.Text;
+using Common;
 
 namespace NoForms.Controls
 {
