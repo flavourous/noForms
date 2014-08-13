@@ -139,7 +139,7 @@ namespace NoForms.Controls
         {
             if (mbs == ButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this, location))
             {
-                defosit = new System.Drawing.Point(0, 0);
+                defosit = new Point(0, 0);
                 deltaLoc = controlled.controller.MouseScreenLocation;
                 sizin = true;
                 controlled.window.CaptureMouse = true;

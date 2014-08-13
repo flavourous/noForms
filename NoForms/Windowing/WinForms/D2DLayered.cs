@@ -277,7 +277,7 @@ namespace NoForms.Renderers
             winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
                 winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width + edgeBufferSize, (int)noForm.Size.height + edgeBufferSize);
-                winForm.Location = noForm.Location;
+                winForm.Location = SDGTr.trI(noForm.Location);
             }));
 
             // Initialise d2d things
@@ -327,9 +327,9 @@ namespace NoForms.Renderers
         #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
         void ControllerRegistration()
         {
-            winForm.MouseDown += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
-            winForm.MouseUp += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.UP);
-            winForm.MouseMove += (o,e) => MouseMove(e.Location);
+            winForm.MouseDown += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
+            winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.UP);
+            winForm.MouseMove += (o,e) => MouseMove(SDGTr.tr(e.Location));
             winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
             winForm.KeyUp += (o,e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
@@ -361,7 +361,7 @@ namespace NoForms.Renderers
         public event KeyPressHandler KeyPress = delegate { };
         public Point MouseScreenLocation
         {
-            get { return System.Windows.Forms.Cursor.Position; }
+            get { return SDGTr.tr(System.Windows.Forms.Cursor.Position); }
         }
         #endregion
 

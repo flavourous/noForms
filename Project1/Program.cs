@@ -28,8 +28,8 @@ namespace testapp
             NoForms.Renderers.SDGNormal sdg = new SDGNormal();
             NoForm nf = rootForm = new MyNoForm(d2dlayered, new CreateOptions(true));
             nf.window.Title = "Test App";
-            nf.Size = new System.Drawing.Size(700, 500);
-            nf.MinSize = new System.Drawing.Size(700, 300);
+            nf.Size = new Size(700, 500);
+            nf.MinSize = new Size(700, 300);
             nf.window.Run();
 
             Save();
@@ -144,7 +144,7 @@ namespace testapp
             fig.geoElements.Add(new ULine(new Point(0, 0)));
             downTri.figures.Add(fig); 
 
-            maximise = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
+            maximise = new Scribble() { ZIndex = 2  };
             maximise.draw += (u,b,s) => {
                 u.SetRenderOffset(maximise.DisplayRectangle.Location);
                 b.color = new Color(.5f,0,.2f,.6f);
@@ -155,7 +155,7 @@ namespace testapp
             maximise.Size = new Size(10, 10);
             components.Add(maximise);
 
-            minimise = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
+            minimise = new Scribble() { ZIndex = 2 };
             minimise.draw += (u, b, s) =>
             {
                 u.SetRenderOffset(minimise.DisplayRectangle.Location);
@@ -167,7 +167,7 @@ namespace testapp
             minimise.Size = new Size(10, 10);
             components.Add(minimise);
 
-            restore = new Scribble() { ZIndex = 2, Cursor = System.Windows.Forms.Cursors.Hand };
+            restore = new Scribble() { ZIndex = 2 };
             restore.draw += (u, b, s) =>
             {
                 u.SetRenderOffset(restore.DisplayRectangle.Location);
@@ -192,19 +192,16 @@ namespace testapp
             components.Add(cbProject);
 
             editProject = new Scribble();
-            editProject.Cursor = System.Windows.Forms.Cursors.Hand;
             editProject.Clicked += new Scribble.ClickDelegate(editProject_Clicked);
             editProject.draw += new Scribble.scribble(editProject_draw);
             components.Add(editProject);
 
             delProject = new Scribble();
-            delProject.Cursor = System.Windows.Forms.Cursors.Hand;
             delProject.Clicked += new Scribble.ClickDelegate(delProject_Clicked);
             delProject.draw += new Scribble.scribble(delProject_draw);
             components.Add(delProject);
 
             newProject = new Scribble();
-            newProject.Cursor = System.Windows.Forms.Cursors.Hand;
             newProject.Clicked += new Scribble.ClickDelegate(newProject_Clicked);
             newProject.draw += new Scribble.scribble(newProject_draw);
             components.Add(newProject);
@@ -260,7 +257,7 @@ namespace testapp
             Project pref = new Project();
             var editDlg = new ProjectEditDialog(pref, renderer, new CreateOptions(false));
             
-            editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
+            editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
@@ -353,7 +350,7 @@ namespace testapp
                     pref = pr;
 
             var editDlg = new ProjectEditDialog(pref, renderer, new CreateOptions(false));
-            editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
+            editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
@@ -482,11 +479,11 @@ namespace testapp
             {
                 int rem = (int)(remain-- > 0 ? 1 : 0);
 
-                slcs[i].Size = new System.Drawing.Size((int)slcWidth + rem, (int)slcHeight);
-                slcs[i].Location = new System.Drawing.Point((int)(pad + slcWidth) * i + (int)pad + rc, (int)titleHeight);
+                slcs[i].Size = new Size((int)slcWidth + rem, (int)slcHeight);
+                slcs[i].Location = new Point((int)(pad + slcWidth) * i + (int)pad + rc, (int)titleHeight);
 
-                slcts[i].Size = new System.Drawing.Size((int)slcWidth + rem, (int)titleHeight);
-                slcts[i].Location = new System.Drawing.Point((int)(pad + slcWidth) * i + (int)pad + rc, 0);
+                slcts[i].Size = new Size((int)slcWidth + rem, (int)titleHeight);
+                slcts[i].Location = new Point((int)(pad + slcWidth) * i + (int)pad + rc, 0);
 
                 rc += rem;
             }
@@ -508,7 +505,6 @@ namespace testapp
             this.name = name;
             this.state = state;
             add = new Scribble() { Scrollable = false };
-            add.Cursor = System.Windows.Forms.Cursors.Hand;
             add.ZIndex = 1;
             components.Add(add);
             components.Add(botPad);
@@ -532,7 +528,7 @@ namespace testapp
 
             var renderer = new NoForms.Renderers.D2DLayered();
             var editDlg = new StoryEditDialog(ns, renderer, new CreateOptions(false));
-            editDlg.MinSize = editDlg.Size = new System.Drawing.Size(400, 300);
+            editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
             editDlg.Location = new Point(pl.X - 200 + ps.width / 2, pl.Y - 150 + ps.height / 2);
@@ -641,7 +637,6 @@ namespace testapp
             components.Add(cx);
             SizeChanged += new Action<Size>(Story_SizeChanged);
 
-            cx.Cursor = System.Windows.Forms.Cursors.Hand;
 
             bsr = new UStyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false), red, null);
             textyTime = new UText("", UHAlign.Left, UVAlign.Top, true, inRect2.width, 0) { font = new UFont("Arial", 10f, false, false) };
@@ -672,7 +667,7 @@ namespace testapp
 
         void Story_SizeChanged(Size obj)
         {
-            cx.Size = new System.Drawing.Size(7, 7);
+            cx.Size = new Size(7, 7);
             cx.Location = new Point(Size.width - 10, Size.height - 10);
         }
         public String projectName;
@@ -736,9 +731,9 @@ namespace testapp
         {
             if (maybeDrag || dragtime)
             {
-                System.Drawing.Point nloc = location;
-                int dx = nloc.X - lloc.X;
-                int dy = nloc.Y - lloc.Y;
+                Point nloc = location;
+                int dx = (int)(nloc.X - lloc.X);
+                int dy = (int)(nloc.Y - lloc.Y);
                 sdx += dx; sdy += dy;
                 lloc = nloc;
                 if (!dragtime && Math.Sqrt(sdx * sdx + sdy * sdy) > 15)
@@ -759,7 +754,7 @@ namespace testapp
             base.MouseMove(location, inComponent,amClipped);
         }
         public bool dragtime = false;
-        System.Drawing.Point lloc;
+        Point lloc;
         DateTime dtLastClick = DateTime.Now.AddDays(-1);
         public StoryState os;
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
@@ -775,7 +770,7 @@ namespace testapp
                         state = os;
                     var renderer = new NoForms.Renderers.D2DLayered();
                     var editDlg = new StoryEditDialog(this, renderer, new CreateOptions(false));
-                    editDlg.MinSize=editDlg.Size = new System.Drawing.Size(400, 300);
+                    editDlg.MinSize=editDlg.Size = new Size(400, 300);
                     var pl = Program.rootForm.Location;
                     var ps = Program.rootForm.Size;
                     editDlg.Location = new Point(pl.X - 200 + ps.width/2, pl.Y - 150 + ps.height/2);
@@ -998,7 +993,6 @@ namespace testapp
                         refProject.ChangeNameWithStories(tft.text);
                     else
                     {
-                        System.Windows.Forms.MessageBox.Show("No, that project already Exists");
                         return;
                     }
                 }

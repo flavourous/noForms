@@ -379,14 +379,14 @@ namespace GlyphRunLib
             cx -= hgr.charSizes[hitGlyphChar].width; // reset to start of char.
 
             // determine if we've hit text, done simply by checking if we are inside the hit glyph
-            Common.Point charlocation = ti.glyphRuns[hitGlyph].location + new Common.Point(cx, hgr.runSize.height - hgr.charSizes[hitGlyphChar].height);
-            Common.Rectangle charRect = new Common.Rectangle(charlocation, hgr.charSizes[hitGlyphChar]);
+            Point charlocation = ti.glyphRuns[hitGlyph].location + new Point(cx, hgr.runSize.height - hgr.charSizes[hitGlyphChar].height);
+            Rectangle charRect = new Rectangle(charlocation.X, charlocation.Y, hgr.charSizes[hitGlyphChar].width, hgr.charSizes[hitGlyphChar].height);
             bool isText = charRect.Contains(hitPoint);
 
             // Determine trailing or leading hit
             bool leading = hitPoint.X > cx + charRect.width / 2;
 
-                return new UTextHitInfo(charPos, leading, isText);
+            return new UTextHitInfo(charPos, leading, isText);
         }
         public Common.Point HitText(SDGTextInfo ti, int pos, bool trailing)
         {

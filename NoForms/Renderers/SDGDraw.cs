@@ -9,6 +9,16 @@ using System.Drawing.Drawing2D;
 
 namespace NoForms.Renderers
 {
+    class SDGTr
+    {
+        static public System.Drawing.SizeF trF(Common.Size s) { return new System.Drawing.SizeF(s.width, s.height); }
+        static public System.Drawing.Size trI(Common.Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
+        static public System.Drawing.PointF trF(Common.Point p) { return new System.Drawing.PointF(p.X, p.Y); }
+        static public System.Drawing.Point trI(Common.Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
+        static public Common.Point tr(System.Drawing.Point p) { return new Common.Point(p.X, p.Y); }
+        static public Common.Size tr(System.Drawing.Size s) { return new Common.Size(s.Width,s.Height); }
+        static public Common.Size tr(System.Drawing.SizeF s) { return new Common.Size(s.Width, s.Height); }
+    }
     /// <summary>
     /// SDG stands for system.drawing.graphics
     /// </summary>
@@ -20,7 +30,7 @@ namespace NoForms.Renderers
         {
             realRenderer = els;
             glyphRunner = new GlyphRun<Font>(
-                (s, f) => realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic), // measurer
+                (s, f) => SDGTr.tr(realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic)), // measurer
                 uf => Translate(uf) // font translator (from ufont to the template)
             );
         }
@@ -82,7 +92,7 @@ namespace NoForms.Renderers
         }
         public void DrawLine(Common.Point start, Common.Point end, UBrush brush, UStroke stroke)
         {
-            realRenderer.graphics.DrawLine(CreatePen(brush,stroke),start, end);
+            realRenderer.graphics.DrawLine(CreatePen(brush,stroke),SDGTr.trF(start), SDGTr.trF(end));
         }
         public void DrawRectangle(Common.Rectangle rect, UBrush brush, UStroke stroke)
         {
@@ -115,7 +125,7 @@ namespace NoForms.Renderers
                 UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
                 if (style != null && style.bgOverride != null)
                     FillRectangle(new Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
-                realRenderer.graphics.DrawString(glyphrun.run.content, sdgFont, CreateBrush(brsh), location + glyphrun.location, StringFormat.GenericTypographic);
+                realRenderer.graphics.DrawString(glyphrun.run.content, sdgFont, CreateBrush(brsh), SDGTr.trF(location + glyphrun.location), StringFormat.GenericTypographic);
             }
         }
 
@@ -181,7 +191,7 @@ namespace NoForms.Renderers
             else if (b is ULinearGradientBrush)
             {
                 var lb = b as ULinearGradientBrush;
-                ret = new LinearGradientBrush(lb.point1, lb.point2, lb.color1, lb.color2);
+                ret = new LinearGradientBrush(SDGTr.trF(lb.point1), SDGTr.trF(lb.point2), lb.color1, lb.color2);
             }
             else throw new NotImplementedException();
             return ret;
@@ -334,7 +344,7 @@ namespace NoForms.Renderers
                 if (otyps.Count == 0 || otyps[otyps.Count - 1] != (byte)PathPointType.Start)
                 {
                     otyps.Add((byte)PathPointType.Start);
-                    opts.Add(start);
+                    opts.Add(SDGTr.trF(start));
                 }
                 for (int i = 0; i < pts.Length; i++)
                     otyps.Add((byte)PathPointType.Line); // try to interpolate a bit?
@@ -349,12 +359,12 @@ namespace NoForms.Renderers
             else if (geo is ULine)
             {
                 ULine line = geo as ULine;
-                path.AddLine(start, line.endPoint);
+                path.AddLine(SDGTr.trF(start), SDGTr.trF(line.endPoint));
             }
             else if (geo is UBeizer)
             {
                 UBeizer beizer = geo as UBeizer;
-                path.AddBezier(start, beizer.controlPoint1, beizer.controlPoint2, beizer.endPoint);
+                path.AddBezier(SDGTr.trF(start), SDGTr.trF(beizer.controlPoint1), SDGTr.trF(beizer.controlPoint2), SDGTr.trF(beizer.endPoint));
             }
             else throw new NotImplementedException();
         }

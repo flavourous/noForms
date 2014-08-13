@@ -42,7 +42,7 @@ namespace NoForms
             // (0)
             if (me is IComponent)
                 foreach (var ic in (me as IComponent).components)
-                    if (PointInRect(loc, ic.DisplayRectangle) && VisibilityChain(ic))
+                    if ( ic.DisplayRectangle.Contains(loc) && VisibilityChain(ic))
                         return false;
 
 
@@ -54,7 +54,7 @@ namespace NoForms
             //(2) for me which might not be a container...
             if (myIdx < me.Parent.components.Count - 1)
                 for (int i = myIdx + 1; i < me.Parent.components.Count; i++)
-                    if (PointInRect(loc, me.Parent.components[i].DisplayRectangle) && VisibilityChain(me.Parent.components[i]))
+                    if ( me.Parent.components[i].DisplayRectangle.Contains(loc) && VisibilityChain(me.Parent.components[i]))
                         return false;
 
             IComponent par = me.Parent;
@@ -66,7 +66,7 @@ namespace NoForms
                 //(2)
                 if (myIdx < par.Parent.components.Count - 1)
                     for (int i = myIdx + 1; i < par.Parent.components.Count; i++)
-                        if (PointInRect(loc, par.Parent.components[i].DisplayRectangle) && VisibilityChain(par.Parent.components[i]))
+                        if ( par.Parent.components[i].DisplayRectangle.Contains(loc) && VisibilityChain(par.Parent.components[i]))
                             return false;
 
                 par = par.Parent;

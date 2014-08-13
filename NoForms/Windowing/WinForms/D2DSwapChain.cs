@@ -75,7 +75,7 @@ namespace NoForms.Renderers
         {
             winForm.WindowState = FormWindowState.Maximized;
             oldSize = noForm.Size;
-            noForm.Size = winForm.Size;
+            noForm.Size = SDGTr.tr(winForm.Size);
             return true;
         }
         Size oldSize;
@@ -236,8 +236,8 @@ namespace NoForms.Renderers
 
                 winForm.BeginInvoke(new System.Windows.Forms.MethodInvoker(() =>
                 {
-                    winForm.Size = noForm.Size;
-                    winForm.Location = noForm.Location;
+                    winForm.Size = SDGTr.trI(noForm.Size);
+                    winForm.Location = SDGTr.trI(noForm.Location);
                 }));
 
                 swapchain.Present(0, PresentFlags.None);
@@ -279,9 +279,9 @@ namespace NoForms.Renderers
         #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
         void ControllerRegistration()
         {
-            winForm.MouseDown += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
-            winForm.MouseUp += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.UP);
-            winForm.MouseMove += (o, e) => MouseMove(e.Location);
+            winForm.MouseDown += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
+            winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.UP);
+            winForm.MouseMove += (o, e) => MouseMove(SDGTr.tr(e.Location));
             winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
             winForm.KeyUp += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o, e) => KeyPress(e.KeyChar);
@@ -313,7 +313,7 @@ namespace NoForms.Renderers
         public event KeyPressHandler KeyPress = delegate { };
         public Point MouseScreenLocation
         {
-            get { return System.Windows.Forms.Cursor.Position; }
+            get { return SDGTr.tr(System.Windows.Forms.Cursor.Position); }
         }
         #endregion
 

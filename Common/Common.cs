@@ -101,26 +101,26 @@ namespace Common
         public float height;
         public float width;
 
-        public static implicit operator System.Drawing.Size(Size me)
-        {
-            return new System.Drawing.Size((int)(me.width + .5f), (int)(me.height + .5f));
-        }
-        public static implicit operator Size(System.Drawing.Size you)
-        {
-            return new Size(you.Width, you.Height);
-        }
-        public static implicit operator SharpDX.DrawingSizeF(Size me)
-        {
-            return new SharpDX.DrawingSizeF(me.width, me.height);
-        }
-        public static implicit operator Size(System.Drawing.SizeF me)
-        {
-            return new Size(me.Width, me.Height);
-        }
-        public static implicit operator System.Drawing.SizeF(Size me)
-        {
-            return new System.Drawing.SizeF(me.width, me.height);
-        }
+        //public static implicit operator System.Drawing.Size(Size me)
+        //{
+        //    return new System.Drawing.Size((int)(me.width + .5f), (int)(me.height + .5f));
+        //}
+        //public static implicit operator Size(System.Drawing.Size you)
+        //{
+        //    return new Size(you.Width, you.Height);
+        //}
+        //public static implicit operator SharpDX.DrawingSizeF(Size me)
+        //{
+        //    return new SharpDX.DrawingSizeF(me.width, me.height);
+        //}
+        //public static implicit operator Size(System.Drawing.SizeF me)
+        //{
+        //    return new Size(me.Width, me.Height);
+        //}
+        //public static implicit operator System.Drawing.SizeF(Size me)
+        //{
+        //    return new System.Drawing.SizeF(me.width, me.height);
+        //}
     }
     public struct Point
     {
@@ -147,27 +147,27 @@ namespace Common
             return new Point(me.X + other.X, me.Y + other.Y);
         }
 
-        public static implicit operator System.Drawing.PointF(Point me)
-        {
-            return new System.Drawing.PointF(me.X, me.Y);
-        }
-        public static implicit operator Point(System.Drawing.PointF you)
-        {
-            return new Point(you.X, you.Y);
-        }
+        //public static implicit operator System.Drawing.PointF(Point me)
+        //{
+        //    return new System.Drawing.PointF(me.X, me.Y);
+        //}
+        //public static implicit operator Point(System.Drawing.PointF you)
+        //{
+        //    return new Point(you.X, you.Y);
+        //}
 
-        public static implicit operator Point(System.Drawing.Point you)
-        {
-            return new Point(you.X, you.Y);
-        }
-        public static implicit operator SharpDX.DrawingPointF(Point me)
-        {
-            return new SharpDX.DrawingPointF(me.X, me.Y);
-        }
-        public static implicit operator System.Drawing.Point(Point me)
-        {
-            return new System.Drawing.Point((int)(me.X + .5f), (int)(me.Y + .5f));
-        }
+        //public static implicit operator Point(System.Drawing.Point you)
+        //{
+        //    return new Point(you.X, you.Y);
+        //}
+        //public static implicit operator SharpDX.DrawingPointF(Point me)
+        //{
+        //    return new SharpDX.DrawingPointF(me.X, me.Y);
+        //}
+        //public static implicit operator System.Drawing.Point(Point me)
+        //{
+        //    return new System.Drawing.Point((int)(me.X + .5f), (int)(me.Y + .5f));
+        //}
     }
     public struct Thickness
     {

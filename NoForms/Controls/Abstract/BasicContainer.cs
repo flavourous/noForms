@@ -37,8 +37,8 @@ namespace NoForms.Controls.Abstract
             {
                 if (c.visible)
                 {
-                    bool child_inComponent = Util.PointInRect(location, c.DisplayRectangle);
-                    bool child_amClipped = amClipped ? true : !Util.PointInRect(location, DisplayRectangle);
+                    bool child_inComponent = c.DisplayRectangle.Contains(location);
+                    bool child_amClipped = amClipped ? true : !DisplayRectangle.Contains(location);
                     c.MouseMove(location, child_inComponent, child_amClipped);
                 }
             }
@@ -49,8 +49,8 @@ namespace NoForms.Controls.Abstract
             foreach (IComponent c in components)
             {
                 if (c.visible)
-                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location, c.DisplayRectangle),
-                        amClipped ? true : !Util.PointInRect(location, DisplayRectangle));
+                    c.MouseUpDown(location, mb, bs, c.DisplayRectangle.Contains(location),
+                        amClipped ? true : !DisplayRectangle.Contains(location));
             }
         }
         public override void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs)

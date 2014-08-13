@@ -159,7 +159,7 @@ namespace NoForms.Controls
 
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
-            if ((!Util.PointInRect(location, lb.DisplayRectangle) && ddf == null) || (ddf != null))
+            if ((!lb.DisplayRectangle.Contains(location) && ddf == null) || (ddf != null))
                 hideLb();
             base.MouseUpDown(location,mb, bs, inComponent, amClipped);
         }

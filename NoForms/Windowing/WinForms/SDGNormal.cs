@@ -202,7 +202,7 @@ namespace NoForms.Renderers
 
                 // flush buffer to window
                 var winGr = winForm.CreateGraphics();
-                winGr.DrawImageUnscaled(buffer, new Common.Point(0, 0));
+                winGr.DrawImageUnscaled(buffer, new System.Drawing.Point(0, 0));
                 winGr.Dispose();
             }
         }
@@ -213,7 +213,7 @@ namespace NoForms.Renderers
                 graphics.Dispose();
                 buffer.Dispose();
                 winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width , (int)noForm.Size.height );
-                winForm.Location = noForm.Location;
+                winForm.Location = SDGTr.trI(noForm.Location);
                 buffer = new Bitmap(winForm.Width, winForm.Height);
                 graphics = Graphics.FromImage(buffer);
                 _backRenderer.graphics = graphics;
@@ -242,9 +242,9 @@ namespace NoForms.Renderers
         #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
         void ControllerRegistration()
         {
-            winForm.MouseDown += (o,e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
-            winForm.MouseUp += (o, e) => MouseUpDown(e.Location, ConvertFromWinForms(e.Button), Common.ButtonState.UP);
-            winForm.MouseMove += (o,e) => MouseMove(e.Location);
+            winForm.MouseDown += (o,e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
+            winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.UP);
+            winForm.MouseMove += (o,e) => MouseMove(SDGTr.tr(e.Location));
             winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
             winForm.KeyUp += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
@@ -276,7 +276,7 @@ namespace NoForms.Renderers
         public event KeyPressHandler KeyPress = delegate { };
         public Common.Point MouseScreenLocation
         {
-            get { return System.Windows.Forms.Cursor.Position; }
+            get { return SDGTr.tr(System.Windows.Forms.Cursor.Position); }
         }
         #endregion
 

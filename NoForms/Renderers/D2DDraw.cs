@@ -7,6 +7,11 @@ using Common;
 
 namespace NoForms.Renderers
 {
+    class D2DTr
+    {
+        static public SharpDX.DrawingSizeF tr(Size s) { return new SharpDX.DrawingSizeF(s.width, s.height); }
+        static public SharpDX.DrawingPointF tr(Point p) { return new SharpDX.DrawingPointF(p.X, p.Y); }
+    }
     class D2DDraw : IUnifiedDraw
     {
         // FIXME this should go somewere in the d2d renderelements...
@@ -70,15 +75,15 @@ namespace NoForms.Renderers
         }
         public void FillEllipse(Point center, float radiusX, float radiusY, UBrush brush)
         {
-            realRenderer.renderTarget.FillEllipse(new Ellipse(center, radiusX, radiusY), CreateBrush(brush));
+            realRenderer.renderTarget.FillEllipse(new Ellipse(D2DTr.tr(center), radiusX, radiusY), CreateBrush(brush));
         }
         public void DrawEllipse(Point center, float radiusX, float radiusY, UBrush brush, UStroke stroke)
         {
-            realRenderer.renderTarget.DrawEllipse(new Ellipse(center, radiusX, radiusY), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
+            realRenderer.renderTarget.DrawEllipse(new Ellipse(D2DTr.tr(center), radiusX, radiusY), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
         }
         public void DrawLine(Point start, Point end, UBrush brush, UStroke stroke)
         {
-            realRenderer.renderTarget.DrawLine(start, end, CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
+            realRenderer.renderTarget.DrawLine(D2DTr.tr(start), D2DTr.tr(end), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
         }
         public void DrawRectangle(Rectangle rect, UBrush brush, UStroke stroke)
         {
@@ -132,7 +137,7 @@ namespace NoForms.Renderers
             else
             {
                 // Use D2D implimentation of text layout rendering
-                realRenderer.renderTarget.DrawTextLayout(location, tl.textLayout, CreateBrush(defBrush));
+                realRenderer.renderTarget.DrawTextLayout(D2DTr.tr(location), tl.textLayout, CreateBrush(defBrush));
             }
         }
 
@@ -214,8 +219,8 @@ namespace NoForms.Renderers
                 LinearGradientBrush lgb = new LinearGradientBrush(realRenderer.renderTarget,
                 new LinearGradientBrushProperties()
                 {
-                    StartPoint = lb.point1,
-                    EndPoint = lb.point2
+                    StartPoint = D2DTr.tr(lb.point1),
+                    EndPoint = D2DTr.tr(lb.point2)
                 },
                 new GradientStopCollection(realRenderer.renderTarget,
                 new GradientStop[] {
@@ -330,7 +335,7 @@ namespace NoForms.Renderers
             var gs = pg.Open();
             foreach (var f in p.figures)
             {
-                gs.BeginFigure(f.startPoint, f.filled ? FigureBegin.Filled : FigureBegin.Hollow);
+                gs.BeginFigure(D2DTr.tr(f.startPoint), f.filled ? FigureBegin.Filled : FigureBegin.Hollow);
                 foreach (var gb in f.geoElements) AppendGeometry(gs, gb);
                 gs.EndFigure(f.open ? FigureEnd.Open : FigureEnd.Closed);
             }
@@ -344,6 +349,7 @@ namespace NoForms.Renderers
         //       a portion of the Uxxx if it doesnt match D2D?  Factory could be configured for d2d/ogl etc.  This links in with cacheing
         //       code too? Not sure if this will static compile :/ thats kinda the point...  we'd need the Uxxx.ICreateStuff to be a specific
         //       D2D interface...could subclass... would check if(ICreateStuff is D2DCreator) as d2dcreator else Icreatestuff=new d2dcreator...
+
         void AppendGeometry(GeometrySink sink, UGeometryBase geo)
         {
             if (geo is UArc)
@@ -354,23 +360,23 @@ namespace NoForms.Renderers
                     SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
                     RotationAngle = -arc.rotation,
                     ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
-                    Point = arc.endPoint,
-                    Size = arc.arcSize
+                    Point = D2DTr.tr(arc.endPoint),
+                    Size = D2DTr.tr(arc.arcSize)
                 });
             }
             else if (geo is ULine)
             {
                 ULine line = geo as ULine;
-                sink.AddLine(line.endPoint);
+                sink.AddLine(D2DTr.tr(line.endPoint));
             }
             else if (geo is UBeizer)
             {
                 UBeizer beizer = geo as UBeizer;
                 sink.AddBezier(new BezierSegment()
                 {
-                    Point1 = beizer.controlPoint1,
-                    Point2 = beizer.controlPoint2,
-                    Point3 = beizer.endPoint
+                    Point1 = D2DTr.tr(beizer.controlPoint1),
+                    Point2 = D2DTr.tr(beizer.controlPoint2),
+                    Point3 = D2DTr.tr(beizer.endPoint)
                 });
             }
             else throw new NotImplementedException();
@@ -493,7 +499,7 @@ namespace NoForms.Renderers
             Point origin = new Point(baselineOriginX, baselineOriginY);
 
             var fgb = cce == null ? defaultEffect.fgBrush : cce.fgBrush;
-            rt.DrawGlyphRun(origin, glyphRun, fgb, MeasuringMode.Natural);
+            rt.DrawGlyphRun(D2DTr.tr(origin), glyphRun, fgb, MeasuringMode.Natural);
 
             return SharpDX.Result.Ok;
         }

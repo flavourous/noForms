@@ -70,7 +70,7 @@ namespace NoForms
         {
             // Very Simple:
             if (!inComponentCache.ContainsKey(c))
-                inComponentCache[c] = Util.PointInRect(hitPoint, c.DisplayRectangle);
+                inComponentCache[c] =  c.DisplayRectangle.Contains(hitPoint);
             return inComponentCache[c];
         }
         public bool amClipped(IComponent c)

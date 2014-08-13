@@ -439,8 +439,8 @@ namespace NoForms.Controls.Abstract
             {
                 if (!c.visible) continue;
                 Point useloc = c.Scrollable ? (Point)location + scrollOffset : (Point)location;
-                bool child_inComponent = Util.PointInRect(useloc, c.DisplayRectangle);
-                bool child_amClipped = amClipped ? true : !Util.PointInRect(useloc, clipDr);
+                bool child_inComponent =  c.DisplayRectangle.Contains(useloc);
+                bool child_amClipped = amClipped ? true : ! clipDr.Contains(useloc);
                 c.MouseMove(useloc, child_inComponent, child_amClipped);
             }
         }
@@ -456,11 +456,11 @@ namespace NoForms.Controls.Abstract
             foreach (IComponent c in components)
             {
                 if (c.visible && c.Scrollable)
-                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location - scrollOffset, c.DisplayRectangle),
-                        amClipped ? true : !Util.PointInRect(location, clipDr));
+                    c.MouseUpDown(location, mb, bs,  c.DisplayRectangle.Contains(location - scrollOffset),
+                        amClipped ? true : ! clipDr.Contains(location));
                 else if(!c.Scrollable)
-                    c.MouseUpDown(location, mb, bs, Util.PointInRect(location, c.DisplayRectangle),
-                        amClipped ? true : !Util.PointInRect(location, DisplayRectangle));
+                    c.MouseUpDown(location, mb, bs,  c.DisplayRectangle.Contains(location),
+                        amClipped ? true : ! DisplayRectangle.Contains(location));
             }
         }
     }
