@@ -17,8 +17,6 @@ namespace GlyphRunLib
             Translate = fontTranslator;
         }
 
-
-
         public enum BreakType { none = 0, word = 1, line = 2, font = 4 }
         class TR { public BreakType type; public int location; public String content; public UStyleRange[] styley = new UStyleRange[2]; }
         static String[] wordBreak = new String[] { " " };
@@ -229,13 +227,14 @@ namespace GlyphRunLib
                     currY += maxGlyphHeight;
                     maxGlyphHeight = 0;
                     lastWordBreak = -1;
+                    float xAlighnShifty = (text.width - (currX + gr.runSize.width))/2f;
                     currX = 0;
 
                     // resolving the glyphruns of this line
                     do
                     {
                         var igr = ret.glyphRuns[lglst];
-                        igr.location = new Point(igr.location.X, currY - igr.run.runSize.height);
+                        igr.location = new Point(igr.location.X + xAlighnShifty, currY - igr.run.runSize.height);
                     } while (++lglst < ret.glyphRuns.Count);
 
                     // begin a new line
@@ -296,16 +295,18 @@ namespace GlyphRunLib
             do
             {
                 var igr = ret.glyphRuns[lglst];
-                igr.location = new Point(igr.location.X, currY - igr.run.runSize.height);
+                igr.location.Y = currY - igr.run.runSize.height;
             } while (++lglst < ret.glyphRuns.Count);
 
+            float yAlignShifty = (text.height - currY) / 2f;
 
-            // assign the linelengths to textinfo
+            // assign the linelengths to textinfo and do y alignment
             int cl = 0; int cc = 0; int cnl = 0;
             float cx = 0, cy = 0, maxy = 0, maxx = 0;
             for (int i = 0; i < ret.glyphRuns.Count; i++)
             {
                 var gri = ret.glyphRuns[i];
+                gri.location.Y += yAlignShifty;
                 if (gri.lineNumber > cl)
                 {
                     // add lineinfo (and reset counters)
