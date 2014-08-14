@@ -1,13 +1,14 @@
 ﻿using System;
-using SharpDX.Direct2D1;
+using NoForms.ComponentBase;
+using NoForms;
 using NoForms.Renderers;
 using System.Text.RegularExpressions;
 using System.Text;
 using Common;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
-    public class Textfield : Abstract.BasicContainer
+    public class Textfield : BasicContainer
     {
         public enum LayoutStyle { OneLine, MultiLine, WrappedMultiLine };
         public LayoutStyle _layout = LayoutStyle.OneLine;
@@ -76,7 +77,7 @@ namespace NoForms.Controls
             selectRange = new UStyleRange(0,0, null, selectFG, selectBG);
             data.styleRanges.Add(selectRange);
 
-            Cursor = System.Windows.Forms.Cursors.IBeam;
+            Cursor = Common.Cursors.IBeam;
 
             UpdateTextLayout();
             System.Timers.Timer tm = new System.Timers.Timer(800) { AutoReset = true };
@@ -121,7 +122,7 @@ namespace NoForms.Controls
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
 
             rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), defBrush, UTextDrawOptions.None, true);
-            if (FocusManager.FocusGet(this)) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
+            if (focusManager.FocusGet(this)) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
 
             rt.uDraw.PopAxisAlignedClip();
         }
@@ -178,36 +179,40 @@ namespace NoForms.Controls
 
         void SetClip(String cs)
         {
-            System.Windows.Forms.Clipboard.SetText(cs);
+            var nf = Util.GetTopLevelComponent(this) as NoForm;
+            if(nf !=null) nf.window.SetClipboard(cs);
         }
         String GetClip()
         {
-            return System.Windows.Forms.Clipboard.GetText();
+            var nf = Util.GetTopLevelComponent(this) as NoForm;
+            String ot;
+            nf.window.GetClipboard(out ot);
+            return ot;
         }
 
-        void MKeys(System.Windows.Forms.Keys key, bool down)
+        void MKeys(Keys key, bool down)
         {
-            if (key == System.Windows.Forms.Keys.Control || key == System.Windows.Forms.Keys.ControlKey)
+            if (key == Keys.Control || key == Keys.ControlKey)
                 ctrl = down;
             // FIXME wtf?
-            if (key == System.Windows.Forms.Keys.Alt || key == (System.Windows.Forms.Keys.RButton | System.Windows.Forms.Keys.ShiftKey))
+            if (key == Keys.Alt || key == (Keys.RButton | Keys.ShiftKey))
                 alt = down;
-            if (key == System.Windows.Forms.Keys.LWin)
+            if (key == Keys.LWin)
                 win = down;
-            if (key == System.Windows.Forms.Keys.ShiftKey)
+            if (key == Keys.ShiftKey)
                 shift = down;
         }
 
-        public override void KeyUpDown(System.Windows.Forms.Keys key, ButtonState bs)
+        public override void KeyUpDown(Keys key, ButtonState bs)
         {
             base.KeyUpDown(key, bs);
             if (bs == ButtonState.DOWN) KeyDown(key);
             else KeyUp(key);
         }
 
-        public void KeyDown(System.Windows.Forms.Keys key)
+        public void KeyDown(Keys key)
         {
-                if (!FocusManager.FocusGet(this)) return;
+                if (!focusManager.FocusGet(this)) return;
                 MKeys(key, true);
                 if (alt) return;
 
@@ -215,14 +220,14 @@ namespace NoForms.Controls
                 data.text = text.Replace("\r\n", "\n").Replace("\r", "\n");
 
                 // Copy
-                if (ctrl && key == System.Windows.Forms.Keys.C)
+                if (ctrl && key == Keys.C)
                 {
                     String cs = BoundSubString(data.text, caretPos, shiftOrigin);
                     if (cs != "") SetClip(cs);
                 }
 
                 // Cut 
-                if (ctrl && key == System.Windows.Forms.Keys.X)
+                if (ctrl && key == Keys.X)
                 {
                     String cs = BoundSubString(data.text, caretPos, shiftOrigin);
                     if (cs != "") SetClip(cs);
@@ -230,11 +235,11 @@ namespace NoForms.Controls
                 }
 
                 // Paste
-                if (ctrl && key == System.Windows.Forms.Keys.V)
+                if (ctrl && key == Keys.V)
                     ReplaceSelectionWithText(GetClip());
 
                 // Selcet all
-                if (ctrl && key == System.Windows.Forms.Keys.A)
+                if (ctrl && key == Keys.A)
                 {
                     caretPos = data.text.Length;
                     shiftOrigin = 0;
@@ -242,7 +247,7 @@ namespace NoForms.Controls
 
 
                 // Backspace
-                if (key == System.Windows.Forms.Keys.Back && caretPos > 0)
+                if (key == Keys.Back && caretPos > 0)
                 {
                     if (caretPos != shiftOrigin)
                         ReplaceSelectionWithText("");
@@ -256,7 +261,7 @@ namespace NoForms.Controls
                 if (shift && caretPos == shiftOrigin)
                 {
                     // cut line
-                    if (key == System.Windows.Forms.Keys.Delete)
+                    if (key == Keys.Delete)
                     {
                         int start, end;
                         GetLineRange(out start, out end);
@@ -266,7 +271,7 @@ namespace NoForms.Controls
                         caretPos = shiftOrigin = start;
                     }
                     // paste line
-                    if (key == System.Windows.Forms.Keys.Insert)
+                    if (key == Keys.Insert)
                     {
                         int lineNum, linePos;
                         UTextInfo ti = lastTextInfo;
@@ -277,7 +282,7 @@ namespace NoForms.Controls
                 }
 
                 // Delete
-                else if (key == System.Windows.Forms.Keys.Delete && caretPos < data.text.Length && !ctrl)
+                else if (key == Keys.Delete && caretPos < data.text.Length && !ctrl)
                 {
                     if (caretPos != shiftOrigin)
                         ReplaceSelectionWithText("");
@@ -287,7 +292,7 @@ namespace NoForms.Controls
                     }
                 }
 
-                if (key == System.Windows.Forms.Keys.Left && caretPos > 0)
+                if (key == Keys.Left && caretPos > 0)
                 {
                     if (ctrl)
                     {
@@ -308,7 +313,7 @@ namespace NoForms.Controls
                     }
                     else caretPos--;
                 }
-                if (key == System.Windows.Forms.Keys.Right && caretPos < data.text.Length)
+                if (key == Keys.Right && caretPos < data.text.Length)
                 {
                     if (ctrl)
                     {
@@ -323,7 +328,7 @@ namespace NoForms.Controls
                     }
                     else caretPos++;
                 }
-                if (key == System.Windows.Forms.Keys.Up)
+                if (key == Keys.Up)
                 {
                     if (ctrl)
                     {
@@ -358,7 +363,7 @@ namespace NoForms.Controls
                         }
                     }
                 }
-                if (key == System.Windows.Forms.Keys.Down)
+                if (key == Keys.Down)
                 {
                     if (ctrl)
                     {
@@ -387,7 +392,7 @@ namespace NoForms.Controls
                         }
                     }
                 }
-                if (key == System.Windows.Forms.Keys.End)
+                if (key == Keys.End)
                 {
                     if (ctrl) caretPos = data.text.Length;
                     else
@@ -406,7 +411,7 @@ namespace NoForms.Controls
                         caretPos = cp + el;
                     }
                 }
-                if (key == System.Windows.Forms.Keys.Home)
+                if (key == Keys.Home)
                 {
                     if (ctrl) caretPos = 0;
                     else
@@ -420,7 +425,7 @@ namespace NoForms.Controls
                 }
         }
 
-        public void KeyUp(System.Windows.Forms.Keys key)
+        public void KeyUp(Keys key)
         {
             MKeys(key, false);
         }
@@ -530,7 +535,7 @@ namespace NoForms.Controls
         public override void KeyPress(char c)
         {
                 // FIXME unprintable chars
-                if (!FocusManager.FocusGet(this)) return;
+                if (!focusManager.FocusGet(this)) return;
                 if (ctrl || alt || win) return;
                 if (c != '\b')
                     if ((c != '\r' && c != '\n') || layout != LayoutStyle.OneLine)
@@ -587,7 +592,7 @@ namespace NoForms.Controls
                         int extra = 0;
                         if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
                         caretPos = hti.charPos + extra;
-                        FocusManager.FocusSet(this, inComponent);
+                        focusManager.FocusSet(this, inComponent);
                         mouseSelect = true;
                     }
                 }

@@ -1,11 +1,12 @@
 ﻿using System;
+using NoForms.Renderers;
 using Common;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Drawing;
 
-namespace NoForms.Renderers
+namespace NoForms.Windowing.WinForms
 {
     // Base Renderers, exposing some drawing mechanism and options
     public class SDGNormal : IRender, IDraw, IWindow, IController
@@ -104,16 +105,25 @@ namespace NoForms.Renderers
             return true;
         }
 
-        public Cursor Cursor
+        public Common.Cursors Cursor
         {
-            get { return winForm.Cursor; }
-            set { winForm.Cursor = value; }
+            get { return Converters.Translate(winForm.Cursor); }
+            set { winForm.Cursor = Converters.Translate(value); }
         }
 
         public bool CaptureMouse
         {
             get { return winForm.Capture; }
             set { winForm.Capture = value; }
+        }
+
+        public void SetClipboard(String s)
+        {
+            System.Windows.Forms.Clipboard.SetText(s);
+        }
+        public void GetClipboard(out String s)
+        {
+            s = System.Windows.Forms.Clipboard.GetText();
         }
 
         #endregion
@@ -245,8 +255,8 @@ namespace NoForms.Renderers
             winForm.MouseDown += (o,e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
             winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.UP);
             winForm.MouseMove += (o,e) => MouseMove(SDGTr.tr(e.Location));
-            winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
-            winForm.KeyUp += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
+            winForm.KeyDown += (o, e) => KeyUpDown((Common.Keys)e.KeyCode, Common.ButtonState.DOWN);
+            winForm.KeyUp += (o, e) => KeyUpDown((Common.Keys)e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
         }
         MouseButton ConvertFromWinForms(MouseButtons mb) 
@@ -279,7 +289,6 @@ namespace NoForms.Renderers
             get { return SDGTr.tr(System.Windows.Forms.Cursor.Position); }
         }
         #endregion
-
 
         public void Dispose()
         {

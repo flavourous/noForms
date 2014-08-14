@@ -7,8 +7,9 @@ using SharpDX.Direct2D1;
 using SharpDX;
 using System.Windows.Forms;
 using Common;
+using NoForms.Renderers;
 
-namespace NoForms.Renderers
+namespace NoForms.Windowing.WinForms
 {
     // Base Renderers, exposing some drawing mechanism and options
     public class D2DLayered : IRender, IDraw, IWindow, IController
@@ -116,10 +117,10 @@ namespace NoForms.Renderers
             return true;
         }
 
-        public Cursor Cursor
+        public Common.Cursors Cursor
         {
-            get { return winForm.Cursor; }
-            set { winForm.Cursor = value; }
+            get { return Converters.Translate(winForm.Cursor); }
+            set { winForm.Cursor = Converters.Translate(value); }
         }
 
         public bool CaptureMouse
@@ -128,6 +129,14 @@ namespace NoForms.Renderers
             set { winForm.Capture = value; }
         }
 
+        public void SetClipboard(String s)
+        {
+            System.Windows.Forms.Clipboard.SetText(s);
+        }
+        public void GetClipboard(out String s)
+        {
+            s = System.Windows.Forms.Clipboard.GetText();
+        }
         #endregion
 
         #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
@@ -330,8 +339,8 @@ namespace NoForms.Renderers
             winForm.MouseDown += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
             winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.UP);
             winForm.MouseMove += (o,e) => MouseMove(SDGTr.tr(e.Location));
-            winForm.KeyDown += (o, e) => KeyUpDown(e.KeyCode, Common.ButtonState.DOWN);
-            winForm.KeyUp += (o,e) => KeyUpDown(e.KeyCode, Common.ButtonState.UP);
+            winForm.KeyDown += (o, e) => KeyUpDown((Common.Keys)e.KeyCode, Common.ButtonState.DOWN);
+            winForm.KeyUp += (o, e) => KeyUpDown((Common.Keys)e.KeyCode, Common.ButtonState.UP);
             winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
         }
         MouseButton ConvertFromWinForms(MouseButtons mb) 

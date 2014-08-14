@@ -1,17 +1,18 @@
 ﻿using System;
 using NoForms;
 using NoForms.Renderers;
+using NoForms.ComponentBase;
 using Common;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
-    public class MoveHandle : Abstract.BasicContainer
+    public class MoveHandle : BasicContainer
     {
         NoForm controlled;
         public MoveHandle(NoForm MoveControl)
         {
             controlled = MoveControl;
-            Cursor = System.Windows.Forms.Cursors.SizeAll;
+            Cursor = Common.Cursors.SizeAll;
             controlled.controller.MouseMove += MoveMove;
         }
 
@@ -44,11 +45,6 @@ namespace NoForms.Controls
             dp.X += DisplayRectangle.left;
             dp.Y += DisplayRectangle.top;
             return dp;
-        }
-
-        // GDI Support
-        public virtual void Draw(System.Drawing.Graphics graphics)
-        {
         }
 
         // Mousey

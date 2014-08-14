@@ -3,11 +3,26 @@ using System.Windows.Forms;
 using SysRect = System.Drawing.Rectangle;
 using Common;
 
-namespace NoForms.Controls.Abstract
+namespace NoForms.ComponentBase
 {
     public abstract class Component : IComponent
     {
-        public IComponent Parent { get; set; }
+        IComponent parent;
+        public IComponent Parent
+        {
+            get { return parent; }
+            set
+            {
+                parent = value;
+                if(fm == null)
+                    focusManager = Util.GetTopLevelComponent(parent).focusManager;
+                Util.OnAllChildren(this, c =>
+                {
+                    var cc = c as Component; // we can maintain our own and subtypes.
+                    if (cc != null && cc.fm == null) cc.focusManager = focusManager;
+                });
+            }
+        }
         ComponentCollection _components = new AlwaysEmptyComponentCollection(null);
         public virtual ComponentCollection components
         {
@@ -115,8 +130,8 @@ namespace NoForms.Controls.Abstract
             set { _visible = value; }
         }
 
-        Cursor _Cursor = Cursors.Default;
-        public Cursor Cursor { get { return _Cursor; } set { _Cursor = value; } }
+        Common.Cursors _Cursor = Common.Cursors.Default;
+        public Common.Cursors Cursor { get { return _Cursor; } set { _Cursor = value; } }
         public bool _Scrollable = true;
         public bool Scrollable { get { return _Scrollable; } set { _Scrollable = value; } }
 
@@ -138,7 +153,14 @@ namespace NoForms.Controls.Abstract
             
         }
         public virtual void MouseUpDown(Point location, MouseButton mb, Common.ButtonState mbs, bool inComponent, bool amClipped) { }
-        public virtual void KeyUpDown(Keys key, Common.ButtonState bs) { }
+        public virtual void KeyUpDown(Common.Keys key, Common.ButtonState bs) { }
         public virtual void KeyPress(char c) { }
+
+        FocusManager fm;
+        public FocusManager focusManager
+        {
+            get { return fm ?? FocusManager.Empty; }
+            set { fm = value; }
+        }
     }
 }

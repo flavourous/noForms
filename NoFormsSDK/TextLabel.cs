@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using NoForms.Renderers;
+using NoForms;
+using NoForms.ComponentBase;
 using Common;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
-    public class TextLabel : Abstract.BasicContainer
+    public class TextLabel : BasicContainer
     {
         public Object tag = null;
         public USolidBrush background = new USolidBrush() { color = new Color(0, 0, 0, 0) };
@@ -28,7 +30,7 @@ namespace NoForms.Controls
             textData.height = obj.height;
         }
 
-        public event System.Windows.Forms.MethodInvoker clicked;
+        public event VoidAction clicked;
         public override void Draw(IDraw ra)
         {
             ra.uDraw.FillRectangle(DisplayRectangle, background);

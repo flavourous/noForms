@@ -207,6 +207,7 @@ namespace GlyphRunLib
             SDGTextInfo ret = new SDGTextInfo();
 
             // begin on assumption we're top left align..then correct after
+            SDGGlyphRun lastGr = null;
             foreach (var gr in GetGlyphRuns(text))
             {
                 // tracking max height for the line baselineing
@@ -227,7 +228,7 @@ namespace GlyphRunLib
                     currY += maxGlyphHeight;
                     maxGlyphHeight = 0;
                     lastWordBreak = -1;
-                    float xAlighnShifty = (text.width - (currX + gr.runSize.width))/2f;
+                    float xAlighnShifty = GetShift(text.width,(currX + gr.runSize.width), text.halign);
                     currX = 0;
 
                     // resolving the glyphruns of this line
@@ -272,6 +273,7 @@ namespace GlyphRunLib
                         var igr = ret.glyphRuns[lglst];
                         igr.location = new Point(igr.location.X, currY - igr.run.runSize.height);
                     } while (++lglst <= lastWordBreak);
+                    lastGr = gr;
                 }
                 else
                 {// Buisness as Normal
@@ -290,15 +292,17 @@ namespace GlyphRunLib
             currY += maxGlyphHeight;
             maxGlyphHeight = 0;
             lastWordBreak = -1;
+            float lastXShift = GetShift(text.width, (currX + (lastGr == null ? 0 :lastGr.runSize.width)), text.halign);
             currX = 0;
             // resolving the glyphruns of the final line
             do
             {
                 var igr = ret.glyphRuns[lglst];
                 igr.location.Y = currY - igr.run.runSize.height;
+                igr.location.X += lastXShift;
             } while (++lglst < ret.glyphRuns.Count);
 
-            float yAlignShifty = (text.height - currY) / 2f;
+            float yAlignShifty = GetShift(text.height, currY, text.valign);
 
             // assign the linelengths to textinfo and do y alignment
             int cl = 0; int cc = 0; int cnl = 0;
@@ -330,6 +334,27 @@ namespace GlyphRunLib
             ret.minSize = new Size(maxx, cy);
             return ret;
 
+        }
+
+        float GetShift(float layoutWidth, float textWidth, UHAlign align)
+        {
+            switch (align)
+            {
+                default:
+                case UHAlign.Left: return 0;
+                case UHAlign.Center: return (layoutWidth - textWidth) / 2f;
+                case UHAlign.Right: return (layoutWidth - textWidth);
+            }
+        }
+        float GetShift(float layoutHeight, float textHeight, UVAlign align)
+        {
+            switch (align)
+            {
+                default:
+                case UVAlign.Top: return 0;
+                case UVAlign.Middle: return (layoutHeight - textHeight) / 2f;
+                case UVAlign.Bottom: return (layoutHeight - textHeight);
+            }
         }
 
         public UTextHitInfo HitPoint(SDGTextInfo ti, Point hitPoint)

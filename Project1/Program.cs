@@ -6,8 +6,9 @@ using System.Diagnostics;
 using System.Xml;
 using System.IO;
 using NoForms.Renderers;
-using NoForms.Controls;
+using NoFormsSDK;
 using Common;
+using NoForms.Windowing.WinForms;
 
 namespace testapp
 {
@@ -23,9 +24,9 @@ namespace testapp
         {
             Load();
 
-            NoForms.Renderers.D2DLayered d2dlayered = new NoForms.Renderers.D2DLayered();
-            NoForms.Renderers.D2DSwapChain d2dswapchain = new NoForms.Renderers.D2DSwapChain();
-            NoForms.Renderers.SDGNormal sdg = new SDGNormal();
+            IRender d2dlayered = new D2DLayered();
+            IRender d2dswapchain = new D2DSwapChain();
+            IRender sdg = new SDGNormal();
             NoForm nf = rootForm = new MyNoForm(d2dlayered, new CreateOptions(true));
             nf.window.Title = "Test App";
             nf.Size = new Size(700, 500);
@@ -252,7 +253,7 @@ namespace testapp
 
         void newProject_Clicked(Point loc)
         {
-            var renderer = new NoForms.Renderers.D2DLayered();
+            var renderer = new D2DLayered();
 
             Project pref = new Project();
             var editDlg = new ProjectEditDialog(pref, renderer, new CreateOptions(false));
@@ -343,7 +344,7 @@ namespace testapp
         void editProject_Clicked(Point loc)
         {
             Project pref = null;
-            var renderer = new NoForms.Renderers.D2DLayered();
+            var renderer = new D2DLayered();
 
             foreach(var pr in Program.Projects) 
                 if(pr.name == cbProject.selectedText)
@@ -434,7 +435,7 @@ namespace testapp
         
     }
 
-    class MainContainer : NoForms.Controls.Abstract.BasicContainer
+    class MainContainer : NoForms.ComponentBase.BasicContainer
     {
         public StoryListContainer backlog, planned, inprogress,moreinfo, testing, deploy, done;
         StoryListContainer[] slcs;
@@ -494,7 +495,7 @@ namespace testapp
         }
     }
 
-    class StoryListContainer : NoForms.Controls.Abstract.ScrollContainer
+    class StoryListContainer : NoForms.ComponentBase.ScrollContainer
     {
         public String name;
         public StoryState state;
@@ -526,7 +527,7 @@ namespace testapp
             Story ns = new Story("","", state, Program.selectedProject.name);
             Program.Stories.Add(ns);
 
-            var renderer = new NoForms.Renderers.D2DLayered();
+            var renderer = new D2DLayered();
             var editDlg = new StoryEditDialog(ns, renderer, new CreateOptions(false));
             editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
@@ -621,9 +622,9 @@ namespace testapp
 
     enum StoryState { none, backlog, planned, inprogress,moreinfo, testing, deploy, done, undefined };
 
-    class Story : NoForms.Controls.Abstract.BasicContainer
+    class Story : NoForms.ComponentBase.BasicContainer
     {
-        NoForms.Controls.Scribble cx;
+        Scribble cx;
         public Story(String title, String txt, StoryState state, String project)
         {
             projectName = project;
@@ -768,7 +769,7 @@ namespace testapp
                     dragtime = maybeDrag = false;
                     if(state == StoryState.none)
                         state = os;
-                    var renderer = new NoForms.Renderers.D2DLayered();
+                    var renderer = new D2DLayered();
                     var editDlg = new StoryEditDialog(this, renderer, new CreateOptions(false));
                     editDlg.MinSize=editDlg.Size = new Size(400, 300);
                     var pl = Program.rootForm.Location;

@@ -39,8 +39,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common.cs" />
+    <Compile Include="CursorEnum.cs" />
+    <Compile Include="EllipseLib\Ellipse.cs" />
+    <Compile Include="GlyphRunLib\GlyphRun.cs" />
+    <Compile Include="KeysEnum.cs" />
     <Compile Include="ObsCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="EllipseLib\GDI_Test_Code.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

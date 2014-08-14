@@ -20,7 +20,7 @@ namespace NoForms
         bool showIcon { get; set; }
         Icon Icon { get; set; }
         bool BringToFront();
-        Cursor Cursor { get; set; }
+        Common.Cursors Cursor { get; set; }
         bool CaptureMouse { get; set; }
         
         void Close();
@@ -28,5 +28,8 @@ namespace NoForms
         void Show();
         void ShowDialog();
         void Hide();
+
+        void SetClipboard(String s);
+        void GetClipboard(out String s);
     }
 }

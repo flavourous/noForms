@@ -1,11 +1,12 @@
 ﻿using System;
-using SharpDX.Direct2D1;
+using NoForms.ComponentBase;
+using NoForms;
 using NoForms.Renderers;
 using Common;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
-    public class SizeHandle : Abstract.BasicContainer
+    public class SizeHandle : BasicContainer
     {
         NoForm controlled;
         public Direction ResizeMode = Direction.NONE;
@@ -162,10 +163,10 @@ namespace NoForms.Controls
             sw = new SizeHandle(target) { ZIndex = zIndex + 1, ResizeMode = Direction.SOUTH | Direction.WEST, invisible = true };
 
             // cursors
-            s.Cursor = n.Cursor = System.Windows.Forms.Cursors.SizeNS;
-            e.Cursor = w.Cursor = System.Windows.Forms.Cursors.SizeWE;
-            ne.Cursor = sw.Cursor = System.Windows.Forms.Cursors.SizeNESW;
-            se.Cursor = nw.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
+            s.Cursor = n.Cursor = Common.Cursors.SizeNS;
+            e.Cursor = w.Cursor = Common.Cursors.SizeWE;
+            ne.Cursor = sw.Cursor = Common.Cursors.SizeNESW;
+            se.Cursor = nw.Cursor = Common.Cursors.SizeNWSE;
 
             Action<Size> sc = null;
             sc = new Action<Size>(size =>

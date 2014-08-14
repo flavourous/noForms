@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using NoForms;
 using NoForms.Renderers;
+using NoForms.ComponentBase;
 using Common;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
     public enum ComboBoxDirection { None, Above, Below, MostSpace, LeastSpace };
-    public class ComboBox : Abstract.BasicContainer
+    public class ComboBox : BasicContainer
     {
         ListBox lb;
         Scribble dropArrowThing = new Scribble();
@@ -144,7 +146,6 @@ namespace NoForms.Controls
             ud.DrawLine(p2, p3, brsh, strk);
         }
 
-
         int textPad = 3;
         void ComboBox_SizeChanged(Size obj)
         {
@@ -154,8 +155,6 @@ namespace NoForms.Controls
             selectyTexty.height = DisplayRectangle.height - textPad*2;
             selectyTexty.width = DisplayRectangle.width - Size.height - textPad * 2;
         }
-
-
 
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {

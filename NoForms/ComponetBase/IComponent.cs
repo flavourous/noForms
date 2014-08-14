@@ -42,12 +42,15 @@ namespace NoForms
 
         // A container is focusable...
         // Key Events
-        void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs);
+        void KeyUpDown(Common.Keys key, Common.ButtonState bs);
         void KeyPress(char c);
 
         // cursor...
-        Cursor Cursor { get; set; }
+        Common.Cursors Cursor { get; set; }
         bool Scrollable { get; set; }
+
+        // FocusManager
+        FocusManager focusManager { get; }
     }
 
 }

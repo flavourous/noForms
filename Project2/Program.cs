@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using NoForms;
 using NoForms.Renderers;
-using NoForms.Controls;
+using NoForms.Windowing.WinForms;
+using NoFormsSDK;
 using Common;
 
 namespace Easy
@@ -14,8 +15,8 @@ namespace Easy
         static void Main()
         {
             //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
-            NoForms.Renderers.D2DLayered rlw = new D2DLayered();
-            NoForms.Renderers.SDGNormal sd = new SDGNormal();
+            IRender rlw = new D2DLayered();
+            IRender sd = new SDGNormal();
             var nf = new mnf(sd, new CreateOptions(true));
             nf.window.Run();
         }
@@ -23,8 +24,8 @@ namespace Easy
 
     class mnf : NoForm
     {
-        NoForms.Controls.SizeHandle sh;
-        NoForms.Controls.MoveHandle mh;
+        SizeHandle sh;
+        MoveHandle mh;
         public mnf(IRender rn, CreateOptions co) : base(rn,co)
         {
             window.Title = "Test App";
@@ -32,12 +33,12 @@ namespace Easy
             Size = new Size(1150, 600);
             Location = new Point(100, 40);
 
-            mh = new NoForms.Controls.MoveHandle(this);
+            mh = new MoveHandle(this);
             mh.Size = new Size(20, 20);
             mh.Location = new Point(5, 5);
             components.Add(mh);
 
-            sh = new NoForms.Controls.SizeHandle(this);
+            sh = new SizeHandle(this);
             sh.Size = new Size(20, 20);
             sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
             sh.ResizeMode = Direction.SOUTH | Direction.EAST;
@@ -65,8 +66,8 @@ namespace Easy
                 //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), true, false, i));
                 //pth.figures.Add(fig);
             }   
-            UText tx = new UText("This is a noremal sentance in arial 12pt\nThis is a new line",
-                                 UHAlign.Left, UVAlign.Top, true, 500,500);
+            UText tx = new UText("This is a noremal sentance in arial 12pt\nThis is a new line\nthis is more",
+                                 UHAlign.Right, UVAlign.Bottom, true, 500,200);
             tx.font = new UFont("Arial", 12, false, false);
 
             sc.draw += (r, b, s) =>
@@ -85,6 +86,8 @@ namespace Easy
                 //    ws += gr.run.runSize.width;
                 //}
 
+                
+                r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
                 b.color = new Color(1f, 0f, 0f, 0f);
                 r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
             };

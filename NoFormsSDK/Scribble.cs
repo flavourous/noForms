@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using SharpDX.Direct2D1;
+using NoForms.ComponentBase;
 using NoForms.Renderers;
+using NoForms;
 using Common;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
-    public class Scribble : Abstract.BasicContainer
+    public class Scribble : BasicContainer
     {
         public override void Draw(IDraw renderArgument)
         {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
-using NoForms.Controls.Abstract;
+using NoForms.ComponentBase;
 using NoForms.Renderers;
 using Common;
 
@@ -16,6 +16,8 @@ namespace NoForms
     /// </summary>
     public class NoForm : IComponent
     {
+        FocusManager fm = new FocusManager();
+        public FocusManager focusManager { get { return fm; } }
         public IComponent Parent { get { return null; } set { } }
         ComponentCollection _components;
         public ComponentCollection components
@@ -27,7 +29,7 @@ namespace NoForms
 
         protected IRender renderMethod;
 
-        public Cursor Cursor { get; set; } // FIXME does nothing.
+        public Common.Cursors Cursor { get; set; } // FIXME does nothing.
         public bool Scrollable { get; set; } // Begins to be irellivant FIXME?
 
         // Some Model Elements...
@@ -103,7 +105,7 @@ namespace NoForms
         public UBrush background;
 
         // Keyboard Hooks
-        public void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs)
+        public void KeyUpDown(Common.Keys key, Common.ButtonState bs)
         {
             foreach (IComponent inc in components)
                 inc.KeyUpDown(key, bs);

@@ -45,6 +45,10 @@
       <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NoFormsSDK\NoFormsSDK.csproj">
+      <Project>{b4545332-c870-4e26-8f5c-ead5ae49c8b8}</Project>
+      <Name>NoFormsSDK</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NoForms\NoForms.csproj">
       <Project>{4CD83A41-3030-45B4-9D85-2017560D9568}</Project>
       <Name>NoForms</Name>

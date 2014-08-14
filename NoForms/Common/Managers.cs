@@ -4,12 +4,14 @@ using Common;
 
 namespace NoForms
 {
-    // FIXME there can be 1 focus per window!!
-    static class FocusManager
+    public class FocusManager
     {
-        static Object focusLock = new object();
-        static IComponent focused;
-        public static void FocusSet(IComponent setFocus, bool focus)
+        static FocusManager empty = new EmptyFocusManager();
+        public static FocusManager Empty { get { return empty; } }
+
+        Object focusLock = new object();
+        IComponent focused;
+        public virtual void FocusSet(IComponent setFocus, bool focus)
         {
             lock (focusLock)
             {
@@ -19,12 +21,18 @@ namespace NoForms
                     focused = setFocus;
             }
         }
-        public static bool FocusGet(IComponent getFocus)
+        public virtual bool FocusGet(IComponent getFocus)
         {
             lock(focusLock)
                 return object.ReferenceEquals(getFocus, focused);
         }
     }
+    public class EmptyFocusManager : FocusManager
+    {
+        public override bool FocusGet(IComponent getFocus) { return false; }
+        public override void FocusSet(IComponent setFocus, bool focus) { }
+    }
+
 
     // FIXME think about how to get one of these to work, espically with things like the scrollcontainer...
     interface IHitInfo

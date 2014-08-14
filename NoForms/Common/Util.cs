@@ -8,6 +8,20 @@ namespace NoForms
 {
     public static class Util
     {
+        public static void OnAllChildren(IComponent root, Action<IComponent> visit)
+        {
+            foreach (var c in AllChildren(root))
+                visit(c);
+        }
+        public static IEnumerable<IComponent> AllChildren(IComponent root)
+        {
+            foreach (var c in root.components)
+            {
+                yield return c;
+                foreach (var cc in AllChildren(c))
+                    yield return cc;
+            }
+        }
         /// <summary>
         /// If self and all parent chain is visible
         /// </summary>

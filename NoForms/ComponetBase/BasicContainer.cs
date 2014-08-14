@@ -4,7 +4,7 @@ using System.Text;
 using System.Windows.Forms;
 using Common;
 
-namespace NoForms.Controls.Abstract
+namespace NoForms.ComponentBase
 {
     public abstract class BasicContainer : Component
     {
@@ -53,7 +53,7 @@ namespace NoForms.Controls.Abstract
                         amClipped ? true : !DisplayRectangle.Contains(location));
             }
         }
-        public override void KeyUpDown(System.Windows.Forms.Keys key, Common.ButtonState bs)
+        public override void KeyUpDown(Common.Keys key, Common.ButtonState bs)
         {
             foreach (IComponent inc in components)
                 inc.KeyUpDown(key, bs);

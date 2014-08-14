@@ -17,7 +17,7 @@ namespace NoForms
 
     public delegate void MouseUpDownHandler(Point location, MouseButton mb, ButtonState bs);
     public delegate void MouseMoveHandler(Point location);
-    public delegate void KeyUpDownHandler(System.Windows.Forms.Keys key, ButtonState bs);
+    public delegate void KeyUpDownHandler(Common.Keys key, ButtonState bs);
     public delegate void KeyPressHandler(char c);
     public interface IController
     {

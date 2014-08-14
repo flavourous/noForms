@@ -2,13 +2,14 @@
 using NoForms.Renderers;
 using NoForms;
 using Common;
+using NoForms.ComponentBase;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
     public enum ButtonType { Basic, Win8 };
     public enum ButtonControlState { Normal, Hover, Click };
     public enum FontStyle { Normal, Bold, Italic };
-    public class Button : Abstract.BasicContainer
+    public class Button : BasicContainer
     {
         // Properties
         ButtonType _type = ButtonType.Basic;
@@ -86,7 +87,7 @@ namespace NoForms.Controls
 
         void SetBrushColors()
         {
-            bool focus = FocusManager.FocusGet(this);
+            bool focus = focusManager.FocusGet(this);
             if (type == ButtonType.Basic)
             {
                 switch (state)
@@ -127,7 +128,7 @@ namespace NoForms.Controls
                 }
             }
         }
-        SharpDX.DrawingPointF aof(SharpDX.DrawingPointF dp)
+        Point aof(Point dp)
         {
             dp.X += DisplayRectangle.left;
             dp.Y += DisplayRectangle.top;
@@ -150,7 +151,7 @@ namespace NoForms.Controls
             if (mbs == ButtonState.DOWN && inComponent)
             {
                 md = true;
-                FocusManager.FocusSet(this, true);
+                focusManager.FocusSet(this, true);
                 state = ButtonControlState.Click;
             }
             if (mbs == ButtonState.UP && md)

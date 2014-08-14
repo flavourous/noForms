@@ -43,28 +43,21 @@
     <Compile Include="Common\Interfaces\IWindow.cs" />
     <Compile Include="Common\ComponentCollection.cs" />
     <Compile Include="Common\Interfaces\IRender.cs" />
-    <Compile Include="Controls\Abstract\BasicContainer.cs" />
-    <Compile Include="Controls\Abstract\IComponent.cs" />
-    <Compile Include="Controls\Button.cs" />
-    <Compile Include="Controls\ComboBox.cs" />
-    <Compile Include="Controls\ListBox.cs" />
-    <Compile Include="Controls\MoveHandle.cs" />
-    <Compile Include="Controls\Scribble.cs" />
-    <Compile Include="Controls\Abstract\Component.cs" />
+    <Compile Include="ComponetBase\BasicContainer.cs" />
+    <Compile Include="ComponetBase\IComponent.cs" />
+    <Compile Include="ComponetBase\Component.cs" />
     <Compile Include="Common\Managers.cs" />
-    <Compile Include="Controls\Abstract\ScrollContainer.cs" />
-    <Compile Include="Controls\TextLabel.cs" />
+    <Compile Include="ComponetBase\ScrollContainer.cs" />
     <Compile Include="Renderers\SDGDraw.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
     <Compile Include="Common\Util.cs" />
+    <Compile Include="Windowing\WinForms\Converters.cs" />
     <Compile Include="Windowing\WinForms\SDGNormal.cs" />
     <Compile Include="Windowing\WinForms\D2DSwapChain.cs" />
     <Compile Include="Windowing\WinForms\D2DLayered.cs" />
-    <Compile Include="Controls\SizeHandle.cs" />
     <Compile Include="NoForm.cs" />
-    <Compile Include="Controls\Textfield.cs" />
     <Compile Include="Common\Win32.cs" />
-    <Compile Include="Common\Interfaces\UnifiedDraw.cs" />
+    <Compile Include="Common\Interfaces\IUnifiedDraw.cs" />
     <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -97,14 +90,6 @@
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
       <Name>Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\EllipseLib\EllipseLib.csproj">
-      <Project>{9e02051f-4921-4a08-a87b-7dd319c768ac}</Project>
-      <Name>EllipseLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GlyphRunLib\GlyphRunLib.csproj">
-      <Project>{7f09248f-afcb-4111-ae86-44c0291516b4}</Project>
-      <Name>GlyphRunLib</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using NoForms;
 using NoForms.Renderers;
 using Common;
+using NoForms.ComponentBase;
 
-namespace NoForms.Controls
+namespace NoFormsSDK
 {
-    public class ListBox : Abstract.BasicContainer
+    public class ListBox : BasicContainer
     {
         public override void Draw(IDraw renderArgument)
         {
@@ -43,7 +45,7 @@ namespace NoForms.Controls
             lb.textData.halign = UHAlign.Left;
             lb.textData.valign = UVAlign.Middle;
             lb.autosizeY = true;
-            lb.clicked += new System.Windows.Forms.MethodInvoker(() =>
+            lb.clicked += new VoidAction(() =>
             {
                 selected = myIndex;
                 if (selectionChanged != null)

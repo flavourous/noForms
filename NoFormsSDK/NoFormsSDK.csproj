@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7F09248F-AFCB-4111-AE86-44C0291516B4}</ProjectGuid>
+    <ProjectGuid>{B4545332-C870-4E26-8F5C-EAD5AE49C8B8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GlyphRunLib</RootNamespace>
-    <AssemblyName>GlyphRunLib</AssemblyName>
+    <RootNamespace>NoFormsSDK</RootNamespace>
+    <AssemblyName>NoFormsSDK</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -32,15 +32,32 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GlyphRun.cs" />
+    <Compile Include="Button.cs" />
+    <Compile Include="ComboBox.cs" />
+    <Compile Include="ListBox.cs" />
+    <Compile Include="MoveHandle.cs" />
+    <Compile Include="Scribble.cs" />
+    <Compile Include="SizeHandle.cs" />
+    <Compile Include="Textfield.cs" />
+    <Compile Include="TextLabel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
       <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NoForms\NoForms.csproj">
+      <Project>{4cd83a41-3030-45b4-9d85-2017560d9568}</Project>
+      <Name>NoForms</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
