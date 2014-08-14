@@ -8,7 +8,7 @@ using Common;
 
 namespace NoFormsSDK
 {
-    public class Textfield : BasicContainer
+    public class Textfield : Container
     {
         public enum LayoutStyle { OneLine, MultiLine, WrappedMultiLine };
         public LayoutStyle _layout = LayoutStyle.OneLine;

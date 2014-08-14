@@ -7,7 +7,7 @@ using Common;
 
 namespace NoFormsSDK
 {
-    public class TextLabel : BasicContainer
+    public class TextLabel : Container
     {
         public Object tag = null;
         public USolidBrush background = new USolidBrush() { color = new Color(0, 0, 0, 0) };

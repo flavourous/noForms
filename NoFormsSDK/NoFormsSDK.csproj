@@ -45,6 +45,7 @@
     <Compile Include="ListBox.cs" />
     <Compile Include="MoveHandle.cs" />
     <Compile Include="Scribble.cs" />
+    <Compile Include="ScrollContainer.cs" />
     <Compile Include="SizeHandle.cs" />
     <Compile Include="Textfield.cs" />
     <Compile Include="TextLabel.cs" />

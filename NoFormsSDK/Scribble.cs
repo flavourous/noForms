@@ -7,7 +7,7 @@ using Common;
 
 namespace NoFormsSDK
 {
-    public class Scribble : BasicContainer
+    public class Scribble : Container
     {
         public override void Draw(IDraw renderArgument)
         {

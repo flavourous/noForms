@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using NoForms.Renderers;
 using Common;
+using NoForms;
+using NoForms.ComponentBase;
 
-namespace NoForms.ComponentBase
+namespace NoFormsSDK
 {
-    public abstract class ScrollContainer : BasicContainer
+    public abstract class ScrollContainer : Container
     {
         public ScrollContainer() : base()
         {
@@ -221,7 +223,7 @@ namespace NoForms.ComponentBase
             horizontalTracker.Location = new Point(lOfs + (horizontalContainer.Size.width-lOfs*2-horizontalTracker.Size.width)*hFrac, 0);
         }
 
-        class ScrollBarTracker : ComponentBase.Component
+        class ScrollBarTracker : Component
         {
             ScrollContainer controlled;
             Orientation orientation;
@@ -281,7 +283,7 @@ namespace NoForms.ComponentBase
 
         enum Orientation {none,  v, h };
         enum Direction { none, u, d, l, r };
-        class ScrollBarButton : ComponentBase.Component
+        class ScrollBarButton : Component
         {
             Direction type;
             ScrollContainer controlled;
@@ -368,7 +370,7 @@ namespace NoForms.ComponentBase
         }
 
         public static UBrush background = new USolidBrush() { color = new Color(.7f) };
-        class ScrollBarContainer : ComponentBase.BasicContainer
+        class ScrollBarContainer : Container
         {
             public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
             {

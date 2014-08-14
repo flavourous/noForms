@@ -435,7 +435,7 @@ namespace testapp
         
     }
 
-    class MainContainer : NoForms.ComponentBase.BasicContainer
+    class MainContainer : NoForms.ComponentBase.Container
     {
         public StoryListContainer backlog, planned, inprogress,moreinfo, testing, deploy, done;
         StoryListContainer[] slcs;
@@ -495,7 +495,7 @@ namespace testapp
         }
     }
 
-    class StoryListContainer : NoForms.ComponentBase.ScrollContainer
+    class StoryListContainer : NoFormsSDK.ScrollContainer
     {
         public String name;
         public StoryState state;
@@ -622,7 +622,7 @@ namespace testapp
 
     enum StoryState { none, backlog, planned, inprogress,moreinfo, testing, deploy, done, undefined };
 
-    class Story : NoForms.ComponentBase.BasicContainer
+    class Story : NoForms.ComponentBase.Container
     {
         Scribble cx;
         public Story(String title, String txt, StoryState state, String project)

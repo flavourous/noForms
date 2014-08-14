@@ -43,11 +43,10 @@
     <Compile Include="Common\Interfaces\IWindow.cs" />
     <Compile Include="Common\ComponentCollection.cs" />
     <Compile Include="Common\Interfaces\IRender.cs" />
-    <Compile Include="ComponetBase\BasicContainer.cs" />
+    <Compile Include="ComponetBase\Container.cs" />
     <Compile Include="ComponetBase\IComponent.cs" />
     <Compile Include="ComponetBase\Component.cs" />
     <Compile Include="Common\Managers.cs" />
-    <Compile Include="ComponetBase\ScrollContainer.cs" />
     <Compile Include="Renderers\SDGDraw.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
     <Compile Include="Common\Util.cs" />

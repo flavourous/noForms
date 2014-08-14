@@ -6,7 +6,7 @@ using Common;
 
 namespace NoFormsSDK
 {
-    public class MoveHandle : BasicContainer
+    public class MoveHandle : Container
     {
         NoForm controlled;
         public MoveHandle(NoForm MoveControl)

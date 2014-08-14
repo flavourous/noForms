@@ -9,7 +9,7 @@ using Common;
 namespace NoFormsSDK
 {
     public enum ComboBoxDirection { None, Above, Below, MostSpace, LeastSpace };
-    public class ComboBox : BasicContainer
+    public class ComboBox : Container
     {
         ListBox lb;
         Scribble dropArrowThing = new Scribble();

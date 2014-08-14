@@ -7,7 +7,7 @@ using NoForms.ComponentBase;
 
 namespace NoFormsSDK
 {
-    public class ListBox : BasicContainer
+    public class ListBox : Container
     {
         public override void Draw(IDraw renderArgument)
         {

@@ -9,7 +9,7 @@ namespace NoFormsSDK
     public enum ButtonType { Basic, Win8 };
     public enum ButtonControlState { Normal, Hover, Click };
     public enum FontStyle { Normal, Bold, Italic };
-    public class Button : BasicContainer
+    public class Button : Container
     {
         // Properties
         ButtonType _type = ButtonType.Basic;

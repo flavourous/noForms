@@ -6,7 +6,7 @@ using Common;
 
 namespace NoFormsSDK
 {
-    public class SizeHandle : BasicContainer
+    public class SizeHandle : Container
     {
         NoForm controlled;
         public Direction ResizeMode = Direction.NONE;

@@ -6,14 +6,14 @@ using Common;
 
 namespace NoForms.ComponentBase
 {
-    public abstract class BasicContainer : Component
+    public abstract class Container : Component
     {
         protected ComponentCollection _components;
         public override ComponentCollection components
         {
             get { return _components; }
         }
-        public BasicContainer()
+        public Container()
         {
             _components = new ComponentCollection(this);
         }
