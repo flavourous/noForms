@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using SysRect = System.Drawing.Rectangle;
-using Common;
+using NoForms.Common;
 
 namespace NoForms.ComponentBase
 {
@@ -15,16 +15,16 @@ namespace NoForms.ComponentBase
             {
                 parent = value;
                 if(fm == null)
-                    focusManager = Util.GetTopLevelComponent(parent).focusManager;
-                Util.OnAllChildren(this, c =>
+                    focusManager = IComponent_Util.GetTopLevelComponent(parent).focusManager;
+                IComponent_Util.OnAllChildren(this, c =>
                 {
                     var cc = c as Component; // we can maintain our own and subtypes.
                     if (cc != null && cc.fm == null) cc.focusManager = focusManager;
                 });
             }
         }
-        ComponentCollection _components = new AlwaysEmptyComponentCollection(null);
-        public virtual ComponentCollection components
+        IComponent_Collection _components = new IComponent_Collection_AlwaysEmpty(null);
+        public virtual IComponent_Collection components
         {
             get
             {
@@ -130,18 +130,18 @@ namespace NoForms.ComponentBase
             set { _visible = value; }
         }
 
-        Common.Cursors _Cursor = Common.Cursors.Default;
-        public Common.Cursors Cursor { get { return _Cursor; } set { _Cursor = value; } }
+        NoForms.Common.Cursors _Cursor = NoForms.Common.Cursors.Default;
+        public NoForms.Common.Cursors Cursor { get { return _Cursor; } set { _Cursor = value; } }
         public bool _Scrollable = true;
         public bool Scrollable { get { return _Scrollable; } set { _Scrollable = value; } }
 
         public virtual void MouseMove(Point location, bool inComponent, bool amClipped) {
             if (inComponent && !amClipped)
             {
-                var tzo = Util.AmITopZOrder(this, location);
+                var tzo = IComponent_Util.AmITopZOrder(this, location);
                 if (tzo)
                 {
-                    var tlc = Util.GetTopLevelComponent(this);
+                    var tlc = IComponent_Util.GetTopLevelComponent(this);
                     if (tlc is NoForm)
                     {
                         var nf = (tlc as NoForm);
@@ -152,8 +152,8 @@ namespace NoForms.ComponentBase
             }
             
         }
-        public virtual void MouseUpDown(Point location, MouseButton mb, Common.ButtonState mbs, bool inComponent, bool amClipped) { }
-        public virtual void KeyUpDown(Common.Keys key, Common.ButtonState bs) { }
+        public virtual void MouseUpDown(Point location, MouseButton mb, NoForms.Common.ButtonState mbs, bool inComponent, bool amClipped) { }
+        public virtual void KeyUpDown(NoForms.Common.Keys key, NoForms.Common.ButtonState bs) { }
         public virtual void KeyPress(char c) { }
 
         FocusManager fm;

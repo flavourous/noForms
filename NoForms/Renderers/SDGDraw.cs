@@ -1,5 +1,5 @@
 ﻿using System;
-using Common;
+using NoForms.Common;
 using GlyphRunLib;
 using System.Collections.Generic;
 using System.Text;
@@ -11,13 +11,13 @@ namespace NoForms.Renderers
 {
     class SDGTr
     {
-        static public System.Drawing.SizeF trF(Common.Size s) { return new System.Drawing.SizeF(s.width, s.height); }
-        static public System.Drawing.Size trI(Common.Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
-        static public System.Drawing.PointF trF(Common.Point p) { return new System.Drawing.PointF(p.X, p.Y); }
-        static public System.Drawing.Point trI(Common.Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
-        static public Common.Point tr(System.Drawing.Point p) { return new Common.Point(p.X, p.Y); }
-        static public Common.Size tr(System.Drawing.Size s) { return new Common.Size(s.Width,s.Height); }
-        static public Common.Size tr(System.Drawing.SizeF s) { return new Common.Size(s.Width, s.Height); }
+        static public System.Drawing.SizeF trF(NoForms.Common.Size s) { return new System.Drawing.SizeF(s.width, s.height); }
+        static public System.Drawing.Size trI(NoForms.Common.Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
+        static public System.Drawing.PointF trF(NoForms.Common.Point p) { return new System.Drawing.PointF(p.X, p.Y); }
+        static public System.Drawing.Point trI(NoForms.Common.Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
+        static public NoForms.Common.Point tr(System.Drawing.Point p) { return new NoForms.Common.Point(p.X, p.Y); }
+        static public NoForms.Common.Size tr(System.Drawing.Size s) { return new NoForms.Common.Size(s.Width,s.Height); }
+        static public NoForms.Common.Size tr(System.Drawing.SizeF s) { return new NoForms.Common.Size(s.Width, s.Height); }
     }
     /// <summary>
     /// SDG stands for system.drawing.graphics
@@ -35,13 +35,13 @@ namespace NoForms.Renderers
             );
         }
         Stack<System.Drawing.Region> PushedClips = new Stack<System.Drawing.Region>();
-        public void PushAxisAlignedClip(Common.Rectangle clipRect, bool ignoreRenderOffset)
+        public void PushAxisAlignedClip(NoForms.Common.Rectangle clipRect, bool ignoreRenderOffset)
         {
             // This probabbly pushes an empty clip...
             if (PushedClips.Count == 0) PushedClips.Push(realRenderer.graphics.Clip);
 
             var cr = clipRect;
-            if (ignoreRenderOffset) cr -= new Common.Point(realRenderer.graphics.Transform.OffsetX, realRenderer.graphics.Transform.OffsetY);
+            if (ignoreRenderOffset) cr -= new NoForms.Common.Point(realRenderer.graphics.Transform.OffsetX, realRenderer.graphics.Transform.OffsetY);
             var cr2 = new System.Drawing.Region(clipRect);
             realRenderer.graphics.Clip = cr2;
             PushedClips.Push(cr2);
@@ -51,13 +51,13 @@ namespace NoForms.Renderers
             PushedClips.Pop();
             realRenderer.graphics.Clip = PushedClips.Peek();
         }
-        public void SetRenderOffset(Common.Point offset)
+        public void SetRenderOffset(NoForms.Common.Point offset)
         {
             var ox = realRenderer.graphics.Transform.OffsetX;
             var oy = realRenderer.graphics.Transform.OffsetY;
             realRenderer.graphics.Transform.Translate(offset.X - ox, offset.Y - oy);
         }
-        public void Clear(Common.Color color)
+        public void Clear(NoForms.Common.Color color)
         {
             realRenderer.graphics.Clear(color);
         }
@@ -69,7 +69,7 @@ namespace NoForms.Renderers
         {
             realRenderer.graphics.DrawPath(CreatePen(brush,stroke), CreatePath(path));
         }
-        public void DrawBitmap(UBitmap bitmap, float opacity, UInterp interp, Common.Rectangle source, Common.Rectangle destination)
+        public void DrawBitmap(UBitmap bitmap, float opacity, UInterp interp, NoForms.Common.Rectangle source, NoForms.Common.Rectangle destination)
         {
             var bm = CreateBitmap(bitmap);
             if(opacity<1.0f)
@@ -82,37 +82,37 @@ namespace NoForms.Renderers
             realRenderer.graphics.DrawImage(bm, destination, source, GraphicsUnit.Pixel);
             realRenderer.graphics.CompositingQuality = previousInterp;
         }
-        public void FillEllipse(Common.Point center, float radiusX, float radiusY, UBrush brush)
+        public void FillEllipse(NoForms.Common.Point center, float radiusX, float radiusY, UBrush brush)
         {
             realRenderer.graphics.FillEllipse(CreateBrush(brush), center.X - radiusX, center.Y - radiusY, radiusX * 2, radiusY * 2);
         }
-        public void DrawEllipse(Common.Point center, float radiusX, float radiusY, UBrush brush, UStroke stroke)
+        public void DrawEllipse(NoForms.Common.Point center, float radiusX, float radiusY, UBrush brush, UStroke stroke)
         {
             realRenderer.graphics.DrawEllipse(CreatePen(brush, stroke), center.X - radiusX, center.Y - radiusY, radiusX * 2, radiusY * 2);
         }
-        public void DrawLine(Common.Point start, Common.Point end, UBrush brush, UStroke stroke)
+        public void DrawLine(NoForms.Common.Point start, NoForms.Common.Point end, UBrush brush, UStroke stroke)
         {
             realRenderer.graphics.DrawLine(CreatePen(brush,stroke),SDGTr.trF(start), SDGTr.trF(end));
         }
-        public void DrawRectangle(Common.Rectangle rect, UBrush brush, UStroke stroke)
+        public void DrawRectangle(NoForms.Common.Rectangle rect, UBrush brush, UStroke stroke)
         {
             realRenderer.graphics.DrawRectangle(CreatePen(brush, stroke), rect.left, rect.top, rect.width, rect.height);
         }
-        public void FillRectangle(Common.Rectangle rect, UBrush brush)
+        public void FillRectangle(NoForms.Common.Rectangle rect, UBrush brush)
         {
             realRenderer.graphics.FillRectangle(CreateBrush(brush), rect.left, rect.top, rect.width, rect.height);
         }
-        public void DrawRoundedRectangle(Common.Rectangle rect, float radX, float radY, UBrush brush, UStroke stroke)
+        public void DrawRoundedRectangle(NoForms.Common.Rectangle rect, float radX, float radY, UBrush brush, UStroke stroke)
         {
             var rr = ShapeHelpers.RoundedRectangle(rect, radX, radY);
             realRenderer.graphics.DrawPath(CreatePen(brush, stroke), rr);
         }
-        public void FillRoundedRectangle(Common.Rectangle rect, float radX, float radY, UBrush brush)
+        public void FillRoundedRectangle(NoForms.Common.Rectangle rect, float radX, float radY, UBrush brush)
         {
             var rr = ShapeHelpers.RoundedRectangle(rect, radX, radY);
             realRenderer.graphics.FillPath(CreateBrush(brush), rr);
         }
-        public void DrawText(UText textObject, Common.Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
+        public void DrawText(UText textObject, NoForms.Common.Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
         {
             var tl = glyphRunner.GetSDGTextInfo(textObject);
 
@@ -124,7 +124,7 @@ namespace NoForms.Renderers
                 var sdgFont = Translate(font);
                 UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
                 if (style != null && style.bgOverride != null)
-                    FillRectangle(new Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
+                    FillRectangle(new NoForms.Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
                 realRenderer.graphics.DrawString(glyphrun.run.content, sdgFont, CreateBrush(brsh), SDGTr.trF(location + glyphrun.location), StringFormat.GenericTypographic);
             }
         }
@@ -133,21 +133,21 @@ namespace NoForms.Renderers
         //         on same line, which get "baselined".  Is this what really happens?  What about line,word and char spacing adjustments?
         //         dirty way would be to adjust char rects, but does SDG do that? (does it even support that?)
         // Text Measuring - isText tells you if you actually hit a part of the string...
-        public UTextHitInfo HitPoint(Common.Point hitPoint, UText text)
+        public UTextHitInfo HitPoint(NoForms.Common.Point hitPoint, UText text)
         {
             // Grab a ref to the sdgtextinfo
             var ti = glyphRunner.GetSDGTextInfo(text);
             return glyphRunner.HitPoint(ti, hitPoint);
         }
 
-        public Common.Point HitText(int pos, bool trailing, UText text)
+        public NoForms.Common.Point HitText(int pos, bool trailing, UText text)
         {
             // Grab a ref to the sdgtextinfo
             var ti = glyphRunner.GetSDGTextInfo(text);
             return glyphRunner.HitText(ti, pos, trailing);
         }
 
-        public IEnumerable<Common.Rectangle> HitTextRange(int start, int length, Common.Point offset, UText text)
+        public IEnumerable<NoForms.Common.Rectangle> HitTextRange(int start, int length, NoForms.Common.Point offset, UText text)
         {
             // Grab a ref to the sdgtextinfo
             var ti = glyphRunner.GetSDGTextInfo(text);
@@ -313,7 +313,7 @@ namespace NoForms.Renderers
             {
                 // FIXME hollow/filled not used here.
                 gp.StartFigure();
-                Common.Point current = f.startPoint;
+                NoForms.Common.Point current = f.startPoint;
                 foreach (var gb in f.geoElements) AppendGeometry(ref gp, gb, current);
                 gp.CloseFigure();
             }
@@ -326,7 +326,7 @@ namespace NoForms.Renderers
         //       a portion of the Uxxx if it doesnt match D2D?  Factory could be configured for d2d/ogl etc.  This links in with cacheing
         //       code too? Not sure if this will static compile :/ thats kinda the point...  we'd need the Uxxx.ICreateStuff to be a specific
         //       D2D interface...could subclass... would check if(ICreateStuff is D2DCreator) as d2dcreator else Icreatestuff=new d2dcreator...
-        void AppendGeometry(ref GraphicsPath path, UGeometryBase geo, Common.Point start) // ref GraphicsPath will allow us to recreate it if we want with new.
+        void AppendGeometry(ref GraphicsPath path, UGeometryBase geo, NoForms.Common.Point start) // ref GraphicsPath will allow us to recreate it if we want with new.
         {
             if (geo is UArc)
             {
@@ -372,7 +372,7 @@ namespace NoForms.Renderers
         // Drawing Helpers
         static class ShapeHelpers
         {
-            public static GraphicsPath RoundedRectangle(Common.Rectangle r, float rx, float ry)
+            public static GraphicsPath RoundedRectangle(NoForms.Common.Rectangle r, float rx, float ry)
             {
                 // FIXME surely this is slow? we need some special caching for GDI?
                 var gp = new GraphicsPath();

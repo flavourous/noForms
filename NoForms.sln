@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test App", "Project1\Test A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test Easy", "Project2\Test Easy.csproj", "{45CAF8C0-E911-4D76-B9D5-B3E4B90AA59E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{0B373DB2-BD85-454A-B739-6021DD47C917}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms.Common", "Common\NoForms.Common.csproj", "{0B373DB2-BD85-454A-B739-6021DD47C917}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoFormsSDK", "NoFormsSDK\NoFormsSDK.csproj", "{B4545332-C870-4E26-8F5C-EAD5AE49C8B8}"
 EndProject

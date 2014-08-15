@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Common;
+using NoForms.Common;
 
 namespace GlyphRunLib
 {
@@ -414,7 +414,7 @@ namespace GlyphRunLib
 
             return new UTextHitInfo(charPos, leading, isText);
         }
-        public Common.Point HitText(SDGTextInfo ti, int pos, bool trailing)
+        public NoForms.Common.Point HitText(SDGTextInfo ti, int pos, bool trailing)
         {
             // Find the hit glyphrun
             int g, cc = 0;
@@ -432,9 +432,9 @@ namespace GlyphRunLib
                 cx -= ti.glyphRuns[g].run.charSizes[i].width;
 
             // Get any y-offset of hit char in the glyph and return
-            return ti.glyphRuns[g].location + new Common.Point(cx, ti.glyphRuns[g].run.runSize.height - ti.glyphRuns[g].run.charSizes[i].height);
+            return ti.glyphRuns[g].location + new NoForms.Common.Point(cx, ti.glyphRuns[g].run.runSize.height - ti.glyphRuns[g].run.charSizes[i].height);
         }
-        public IEnumerable<Common.Rectangle> HitTextRange(SDGTextInfo ti, int start, int length, Common.Point offset)
+        public IEnumerable<NoForms.Common.Rectangle> HitTextRange(SDGTextInfo ti, int start, int length, NoForms.Common.Point offset)
         {
             int cc = 0;
             foreach (var glyph in ti.glyphRuns)
@@ -452,7 +452,7 @@ namespace GlyphRunLib
                     if (cc >= start + length) yield break;
 
                     // calculate and yield the current char rect
-                    yield return new Common.Rectangle(glyph.location.X + cx,
+                    yield return new NoForms.Common.Rectangle(glyph.location.X + cx,
                                                glyph.location.Y + (glyph.run.runSize.height - gchar.height),
                                                gchar.width,
                                                gchar.height);

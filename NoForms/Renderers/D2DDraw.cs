@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SharpDX.DirectWrite;
 using SharpDX.Direct2D1;
-using Common;
+using NoForms.Common;
 
 namespace NoForms.Renderers
 {

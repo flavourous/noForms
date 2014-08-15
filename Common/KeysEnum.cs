@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Common
+namespace NoForms.Common
 {
     // Summary:
     //     Specifies key codes and modifiers.

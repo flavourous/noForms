@@ -1,6 +1,6 @@
 ﻿using System;
 using NoForms.Renderers;
-using Common;
+using NoForms.Common;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -105,7 +105,7 @@ namespace NoForms.Windowing.WinForms
             return true;
         }
 
-        public Common.Cursors Cursor
+        public NoForms.Common.Cursors Cursor
         {
             get { return Converters.Translate(winForm.Cursor); }
             set { winForm.Cursor = Converters.Translate(value); }
@@ -252,11 +252,11 @@ namespace NoForms.Windowing.WinForms
         #region IController - Provides input.  May be intimately linked to IWindow (eg WinForms) or not (eg DirectInput)
         void ControllerRegistration()
         {
-            winForm.MouseDown += (o,e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.DOWN);
-            winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), Common.ButtonState.UP);
+            winForm.MouseDown += (o,e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), NoForms.Common.ButtonState.DOWN);
+            winForm.MouseUp += (o, e) => MouseUpDown(SDGTr.tr(e.Location), ConvertFromWinForms(e.Button), NoForms.Common.ButtonState.UP);
             winForm.MouseMove += (o,e) => MouseMove(SDGTr.tr(e.Location));
-            winForm.KeyDown += (o, e) => KeyUpDown((Common.Keys)e.KeyCode, Common.ButtonState.DOWN);
-            winForm.KeyUp += (o, e) => KeyUpDown((Common.Keys)e.KeyCode, Common.ButtonState.UP);
+            winForm.KeyDown += (o, e) => KeyUpDown((NoForms.Common.Keys)e.KeyCode, NoForms.Common.ButtonState.DOWN);
+            winForm.KeyUp += (o, e) => KeyUpDown((NoForms.Common.Keys)e.KeyCode, NoForms.Common.ButtonState.UP);
             winForm.KeyPress += (o,e) => KeyPress(e.KeyChar);
         }
         MouseButton ConvertFromWinForms(MouseButtons mb) 
@@ -284,7 +284,7 @@ namespace NoForms.Windowing.WinForms
         public event MouseMoveHandler MouseMove = delegate { };
         public event KeyUpDownHandler KeyUpDown = delegate { };
         public event KeyPressHandler KeyPress = delegate { };
-        public Common.Point MouseScreenLocation
+        public NoForms.Common.Point MouseScreenLocation
         {
             get { return SDGTr.tr(System.Windows.Forms.Cursor.Position); }
         }

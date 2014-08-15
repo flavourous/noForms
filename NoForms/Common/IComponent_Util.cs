@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using SysRect = System.Drawing.Rectangle;
-using Common;
+using NoForms.Common;
 
 namespace NoForms
 {
-    public static class Util
+    public static class IComponent_Util
     {
         public static void OnAllChildren(IComponent root, Action<IComponent> visit)
         {

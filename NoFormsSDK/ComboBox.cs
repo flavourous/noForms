@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using NoForms;
 using NoForms.Renderers;
 using NoForms.ComponentBase;
-using Common;
+using NoForms.Common;
 
 namespace NoFormsSDK
 {
@@ -68,7 +68,7 @@ namespace NoFormsSDK
         IComponent tlc;
         void dropArrowThing_Clicked(Point loc)
         {
-            tlc = Util.GetTopLevelComponent(this);
+            tlc = IComponent_Util.GetTopLevelComponent(this);
             if (dropRenderer != null) recreateddf();
 
             ComboBox_SizeChanged(Size);
@@ -87,7 +87,7 @@ namespace NoFormsSDK
         {
             base.OnLocationChanged();
 
-            tlc = Util.GetTopLevelComponent(this);
+            tlc = IComponent_Util.GetTopLevelComponent(this);
             float abo = DisplayRectangle.top - lb.Size.height + 1f;
             float bel = DisplayRectangle.bottom - 1f;
             float abo_spc = DisplayRectangle.top;

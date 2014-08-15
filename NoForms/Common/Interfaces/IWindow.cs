@@ -20,7 +20,7 @@ namespace NoForms
         bool showIcon { get; set; }
         Icon Icon { get; set; }
         bool BringToFront();
-        Common.Cursors Cursor { get; set; }
+        NoForms.Common.Cursors Cursor { get; set; }
         bool CaptureMouse { get; set; }
         
         void Close();

@@ -6,7 +6,7 @@ using NoForms;
 using NoForms.Renderers;
 using NoForms.Windowing.WinForms;
 using NoFormsSDK;
-using Common;
+using NoForms.Common;
 
 namespace Easy
 {
@@ -17,7 +17,7 @@ namespace Easy
             //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
             IRender rlw = new D2DLayered();
             IRender sd = new SDGNormal();
-            var nf = new mnf(sd, new CreateOptions(true));
+            var nf = new mnf(rlw, new CreateOptions(true));
             nf.window.Run();
         }
     }

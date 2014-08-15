@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using NoForms.ComponentBase;
 using NoForms.Renderers;
-using Common;
+using NoForms.Common;
 
 namespace NoForms
 {
@@ -19,8 +19,8 @@ namespace NoForms
         FocusManager fm = new FocusManager();
         public FocusManager focusManager { get { return fm; } }
         public IComponent Parent { get { return null; } set { } }
-        ComponentCollection _components;
-        public ComponentCollection components
+        IComponent_Collection _components;
+        public IComponent_Collection components
         {
             get { return _components; }
         }
@@ -29,7 +29,7 @@ namespace NoForms
 
         protected IRender renderMethod;
 
-        public Common.Cursors Cursor { get; set; } // FIXME does nothing.
+        public NoForms.Common.Cursors Cursor { get; set; } // FIXME does nothing.
         public bool Scrollable { get; set; } // Begins to be irellivant FIXME?
 
         // Some Model Elements...
@@ -95,7 +95,7 @@ namespace NoForms
         /// </param>
         public NoForm(IRender renderMethod, CreateOptions createOptions)
         {
-            _components = new ComponentCollection(this);
+            _components = new IComponent_Collection(this);
             background = new USolidBrush() { color = new Color(1) };
 
             this.renderMethod = renderMethod;
@@ -105,7 +105,7 @@ namespace NoForms
         public UBrush background;
 
         // Keyboard Hooks
-        public void KeyUpDown(Common.Keys key, Common.ButtonState bs)
+        public void KeyUpDown(NoForms.Common.Keys key, NoForms.Common.ButtonState bs)
         {
             foreach (IComponent inc in components)
                 inc.KeyUpDown(key, bs);
@@ -117,7 +117,7 @@ namespace NoForms
         }
 
         // Mouse Hooks
-        public void MouseUpDown(Point location, MouseButton mb, Common.ButtonState bs, bool inComponent, bool amClipped)
+        public void MouseUpDown(Point location, MouseButton mb, NoForms.Common.ButtonState bs, bool inComponent, bool amClipped)
         {
             foreach (IComponent c in components)
             {
@@ -139,7 +139,7 @@ namespace NoForms
             }
 
             // FIXME should derrive from component?
-            if (Util.AmITopZOrder(this, location))
+            if (IComponent_Util.AmITopZOrder(this, location))
                 window.Cursor = Cursor;
         }
 

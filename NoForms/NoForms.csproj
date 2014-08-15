@@ -16,7 +16,7 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -41,21 +41,21 @@
     <Compile Include="Common\Interfaces\IController.cs" />
     <Compile Include="Common\Interfaces\IDraw.cs" />
     <Compile Include="Common\Interfaces\IWindow.cs" />
-    <Compile Include="Common\ComponentCollection.cs" />
+    <Compile Include="Common\IComponent_Collection.cs" />
     <Compile Include="Common\Interfaces\IRender.cs" />
     <Compile Include="ComponetBase\Container.cs" />
     <Compile Include="ComponetBase\IComponent.cs" />
     <Compile Include="ComponetBase\Component.cs" />
-    <Compile Include="Common\Managers.cs" />
+    <Compile Include="Common\IComponent_Managers.cs" />
     <Compile Include="Renderers\SDGDraw.cs" />
     <Compile Include="Renderers\D2DDraw.cs" />
-    <Compile Include="Common\Util.cs" />
+    <Compile Include="Common\IComponent_Util.cs" />
     <Compile Include="Windowing\WinForms\Converters.cs" />
     <Compile Include="Windowing\WinForms\SDGNormal.cs" />
     <Compile Include="Windowing\WinForms\D2DSwapChain.cs" />
     <Compile Include="Windowing\WinForms\D2DLayered.cs" />
     <Compile Include="NoForm.cs" />
-    <Compile Include="Common\Win32.cs" />
+    <Compile Include="Windowing\WinForms\Win32.cs" />
     <Compile Include="Common\Interfaces\IUnifiedDraw.cs" />
     <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
   </ItemGroup>
@@ -86,9 +86,9 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
+    <ProjectReference Include="..\Common\NoForms.Common.csproj">
       <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>Common</Name>
+      <Name>NoForms.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

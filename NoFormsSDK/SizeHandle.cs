@@ -2,7 +2,7 @@
 using NoForms.ComponentBase;
 using NoForms;
 using NoForms.Renderers;
-using Common;
+using NoForms.Common;
 
 namespace NoFormsSDK
 {
@@ -138,7 +138,7 @@ namespace NoFormsSDK
         }
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == ButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this, location))
+            if (mbs == ButtonState.DOWN && inComponent && !amClipped && IComponent_Util.AmITopZOrder(this, location))
             {
                 defosit = new Point(0, 0);
                 deltaLoc = controlled.controller.MouseScreenLocation;
@@ -163,10 +163,10 @@ namespace NoFormsSDK
             sw = new SizeHandle(target) { ZIndex = zIndex + 1, ResizeMode = Direction.SOUTH | Direction.WEST, invisible = true };
 
             // cursors
-            s.Cursor = n.Cursor = Common.Cursors.SizeNS;
-            e.Cursor = w.Cursor = Common.Cursors.SizeWE;
-            ne.Cursor = sw.Cursor = Common.Cursors.SizeNESW;
-            se.Cursor = nw.Cursor = Common.Cursors.SizeNWSE;
+            s.Cursor = n.Cursor = NoForms.Common.Cursors.SizeNS;
+            e.Cursor = w.Cursor = NoForms.Common.Cursors.SizeWE;
+            ne.Cursor = sw.Cursor = NoForms.Common.Cursors.SizeNESW;
+            se.Cursor = nw.Cursor = NoForms.Common.Cursors.SizeNWSE;
 
             Action<Size> sc = null;
             sc = new Action<Size>(size =>

@@ -4,7 +4,7 @@ using NoForms;
 using NoForms.Renderers;
 using System.Text.RegularExpressions;
 using System.Text;
-using Common;
+using NoForms.Common;
 
 namespace NoFormsSDK
 {
@@ -77,7 +77,7 @@ namespace NoFormsSDK
             selectRange = new UStyleRange(0,0, null, selectFG, selectBG);
             data.styleRanges.Add(selectRange);
 
-            Cursor = Common.Cursors.IBeam;
+            Cursor = NoForms.Common.Cursors.IBeam;
 
             UpdateTextLayout();
             System.Timers.Timer tm = new System.Timers.Timer(800) { AutoReset = true };
@@ -179,12 +179,12 @@ namespace NoFormsSDK
 
         void SetClip(String cs)
         {
-            var nf = Util.GetTopLevelComponent(this) as NoForm;
+            var nf = IComponent_Util.GetTopLevelComponent(this) as NoForm;
             if(nf !=null) nf.window.SetClipboard(cs);
         }
         String GetClip()
         {
-            var nf = Util.GetTopLevelComponent(this) as NoForm;
+            var nf = IComponent_Util.GetTopLevelComponent(this) as NoForm;
             String ot;
             nf.window.GetClipboard(out ot);
             return ot;

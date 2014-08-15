@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
-using Common;
+using NoForms.Common;
 
 namespace NoForms.ComponentBase
 {
     public abstract class Container : Component
     {
-        protected ComponentCollection _components;
-        public override ComponentCollection components
+        protected IComponent_Collection _components;
+        public override IComponent_Collection components
         {
             get { return _components; }
         }
         public Container()
         {
-            _components = new ComponentCollection(this);
+            _components = new IComponent_Collection(this);
         }
 
         // NOTE: No need to VisibilityChain in these events, because they terminate from the base.
@@ -43,7 +43,7 @@ namespace NoForms.ComponentBase
                 }
             }
         }
-        public override void MouseUpDown(Point location,MouseButton mb,  Common.ButtonState bs, bool inComponent, bool amClipped)
+        public override void MouseUpDown(Point location,MouseButton mb,  NoForms.Common.ButtonState bs, bool inComponent, bool amClipped)
         {
             base.MouseUpDown(location, mb, bs, inComponent, amClipped);
             foreach (IComponent c in components)
@@ -53,7 +53,7 @@ namespace NoForms.ComponentBase
                         amClipped ? true : !DisplayRectangle.Contains(location));
             }
         }
-        public override void KeyUpDown(Common.Keys key, Common.ButtonState bs)
+        public override void KeyUpDown(NoForms.Common.Keys key, NoForms.Common.ButtonState bs)
         {
             foreach (IComponent inc in components)
                 inc.KeyUpDown(key, bs);

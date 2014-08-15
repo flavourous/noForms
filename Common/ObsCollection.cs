@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Common
+namespace NoForms.Common
 {
     public delegate void VoidAction();
     public interface IObservable

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Common;
+using NoForms.Common;
 
 namespace NoForms
 {
@@ -17,7 +17,7 @@ namespace NoForms
 
     public delegate void MouseUpDownHandler(Point location, MouseButton mb, ButtonState bs);
     public delegate void MouseMoveHandler(Point location);
-    public delegate void KeyUpDownHandler(Common.Keys key, ButtonState bs);
+    public delegate void KeyUpDownHandler(NoForms.Common.Keys key, ButtonState bs);
     public delegate void KeyPressHandler(char c);
     public interface IController
     {

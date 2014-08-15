@@ -7,9 +7,9 @@ using System;
 namespace NoForms
 {
     // I do so little. FIXME what are the implications of using new vs virtial/override or a common base class/interface
-    public class AlwaysEmptyComponentCollection : ComponentCollection
+    public class IComponent_Collection_AlwaysEmpty : IComponent_Collection
     {
-        public AlwaysEmptyComponentCollection(IComponent dontCare) : base(null) { }
+        public IComponent_Collection_AlwaysEmpty(IComponent dontCare) : base(null) { }
         public new bool Contains(IComponent item) { return false; }
         public new void Add(IComponent item) { }
         public new bool Remove(IComponent item) { return false; }
@@ -22,10 +22,10 @@ namespace NoForms
         public new IComponent this[int i] { get { return null; } }
     }
 
-    public class ComponentCollection : ICollection<IComponent>
+    public class IComponent_Collection : ICollection<IComponent>
     {
         IComponent myParent;
-        public ComponentCollection(IComponent myParent)
+        public IComponent_Collection(IComponent myParent)
         {
             this.myParent = myParent;
 

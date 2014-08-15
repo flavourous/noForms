@@ -2,7 +2,7 @@
 using NoForms;
 using NoForms.Renderers;
 using NoForms.ComponentBase;
-using Common;
+using NoForms.Common;
 
 namespace NoFormsSDK
 {
@@ -12,7 +12,7 @@ namespace NoFormsSDK
         public MoveHandle(NoForm MoveControl)
         {
             controlled = MoveControl;
-            Cursor = Common.Cursors.SizeAll;
+            Cursor = NoForms.Common.Cursors.SizeAll;
             controlled.controller.MouseMove += MoveMove;
         }
 
@@ -63,7 +63,7 @@ namespace NoFormsSDK
         }
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
         {
-            if (mbs == ButtonState.DOWN && inComponent && !amClipped && Util.AmITopZOrder(this,location))
+            if (mbs == ButtonState.DOWN && inComponent && !amClipped && IComponent_Util.AmITopZOrder(this,location))
             {
                 deltaLoc = controlled.controller.MouseScreenLocation;
                 controlled.window.CaptureMouse = true;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NoForms.Renderers;
-using Common;
+using NoForms.Common;
 using NoForms;
 using NoForms.ComponentBase;
 
@@ -242,7 +242,7 @@ namespace NoFormsSDK
             public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
             {
                 base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
-                if (inComponent && !amClipped && Util.AmITopZOrder(this, location) && mbs == ButtonState.DOWN)
+                if (inComponent && !amClipped && IComponent_Util.AmITopZOrder(this, location) && mbs == ButtonState.DOWN)
                 {
                     downed = true;
                     var sloc = location;
@@ -299,7 +299,7 @@ namespace NoFormsSDK
             public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
             {
                 base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
-                bool tzo = Util.AmITopZOrder(this, location);
+                bool tzo = IComponent_Util.AmITopZOrder(this, location);
                 if (!downed && (!inComponent || amClipped || !tzo) ) return;
                 if (mbs == ButtonState.DOWN)
                 {
@@ -376,7 +376,7 @@ namespace NoFormsSDK
             {
 
                 base.MouseUpDown(location, mb, mbs, inComponent, amClipped);
-                bool topz = Util.AmITopZOrder(this, location);
+                bool topz = IComponent_Util.AmITopZOrder(this, location);
                 if (inComponent && !amClipped && topz && mbs == ButtonState.DOWN)
                     (background as USolidBrush).color = new Color(.8f);
                 else (background as USolidBrush).color = new Color(.7f);
@@ -434,7 +434,7 @@ namespace NoFormsSDK
 
             // We trick the children by modifying these positions using the x and y offsets
             var scrollOffset = new Point(xOffset,yOffset);
-            var tll = Util.GetTopLevelLocation(this);
+            var tll = IComponent_Util.GetTopLevelLocation(this);
 
             foreach (IComponent c in components)
             {

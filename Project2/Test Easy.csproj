@@ -15,7 +15,7 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -50,9 +50,9 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
+    <ProjectReference Include="..\Common\NoForms.Common.csproj">
       <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>Common</Name>
+      <Name>NoForms.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\NoFormsSDK\NoFormsSDK.csproj">
       <Project>{b4545332-c870-4e26-8f5c-ead5ae49c8b8}</Project>

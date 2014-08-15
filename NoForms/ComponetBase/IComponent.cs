@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
 using SharpDX.Direct2D1;
-using Common;
+using NoForms.Common;
 
 namespace NoForms
 {
@@ -16,7 +16,7 @@ namespace NoForms
         /// So that we can query the parent displayrectangle
         /// </summary>
         IComponent Parent { get; set; }
-        ComponentCollection components { get; }
+        IComponent_Collection components { get; }
 
         // Properties
         Point Location { get; set; }
@@ -38,15 +38,15 @@ namespace NoForms
 
         // Mouse events
         void MouseMove(Point location, bool inComponent, bool amClipped);
-        void MouseUpDown(Point location, MouseButton mb, Common.ButtonState mbs, bool inComponent, bool amClipped);
+        void MouseUpDown(Point location, MouseButton mb, NoForms.Common.ButtonState mbs, bool inComponent, bool amClipped);
 
         // A container is focusable...
         // Key Events
-        void KeyUpDown(Common.Keys key, Common.ButtonState bs);
+        void KeyUpDown(NoForms.Common.Keys key, NoForms.Common.ButtonState bs);
         void KeyPress(char c);
 
         // cursor...
-        Common.Cursors Cursor { get; set; }
+        NoForms.Common.Cursors Cursor { get; set; }
         bool Scrollable { get; set; }
 
         // FocusManager

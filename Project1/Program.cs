@@ -7,7 +7,7 @@ using System.Xml;
 using System.IO;
 using NoForms.Renderers;
 using NoFormsSDK;
-using Common;
+using NoForms.Common;
 using NoForms.Windowing.WinForms;
 
 namespace testapp
@@ -523,7 +523,7 @@ namespace testapp
 
         void add_Clicked(Point loc)
         {
-            if (!Util.AmITopZOrder(add, loc)) return;
+            if (!IComponent_Util.AmITopZOrder(add, loc)) return;
             Story ns = new Story("","", state, Program.selectedProject.name);
             Program.Stories.Add(ns);
 
@@ -650,7 +650,7 @@ namespace testapp
 
         void cx_Clicked(Point loc)
         {
-            if (dragtime || !Util.AmITopZOrder(cx,loc)) return;
+            if (dragtime || !IComponent_Util.AmITopZOrder(cx,loc)) return;
             state = StoryState.undefined;
             Parent.components.Remove(this);
             Program.Stories.Remove(this);
@@ -760,7 +760,7 @@ namespace testapp
         public StoryState os;
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState bs, bool inComponent, bool amClipped)
         {
-            bool tzo = Util.AmITopZOrder(this, location);
+            bool tzo = IComponent_Util.AmITopZOrder(this, location);
             if (mb == MouseButton.LEFT && bs == ButtonState.UP && inComponent && !amClipped)
             {
                 var dt = DateTime.Now.Subtract(dtLastClick);

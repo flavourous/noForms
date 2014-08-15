@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace Common
+namespace NoForms.Common
 {
     public delegate void NoFormsAction();
     public class CreateOptions
