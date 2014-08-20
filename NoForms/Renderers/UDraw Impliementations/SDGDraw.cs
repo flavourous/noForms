@@ -9,16 +9,7 @@ using System.Drawing.Drawing2D;
 
 namespace NoForms.Renderers
 {
-    class SDGTr
-    {
-        static public System.Drawing.SizeF trF(NoForms.Common.Size s) { return new System.Drawing.SizeF(s.width, s.height); }
-        static public System.Drawing.Size trI(NoForms.Common.Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
-        static public System.Drawing.PointF trF(NoForms.Common.Point p) { return new System.Drawing.PointF(p.X, p.Y); }
-        static public System.Drawing.Point trI(NoForms.Common.Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
-        static public NoForms.Common.Point tr(System.Drawing.Point p) { return new NoForms.Common.Point(p.X, p.Y); }
-        static public NoForms.Common.Size tr(System.Drawing.Size s) { return new NoForms.Common.Size(s.Width,s.Height); }
-        static public NoForms.Common.Size tr(System.Drawing.SizeF s) { return new NoForms.Common.Size(s.Width, s.Height); }
-    }
+    
     /// <summary>
     /// SDG stands for system.drawing.graphics
     /// </summary>

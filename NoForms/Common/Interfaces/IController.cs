@@ -19,6 +19,10 @@ namespace NoForms
     public delegate void MouseMoveHandler(Point location);
     public delegate void KeyUpDownHandler(NoForms.Common.Keys key, ButtonState bs);
     public delegate void KeyPressHandler(char c);
+    public interface IController<T> : IController
+    {
+        void Init(T initObj, NoForm nf);
+    }
     public interface IController
     {
         Point MouseScreenLocation { get; }

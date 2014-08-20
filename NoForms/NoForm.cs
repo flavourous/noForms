@@ -27,8 +27,6 @@ namespace NoForms
         public int ZIndex { get { return 0; } }
         public event Action<IComponent> ZIndexChanged = delegate { };
 
-        protected IRender renderMethod;
-
         public NoForms.Common.Cursors Cursor { get; set; } // FIXME does nothing.
         public bool Scrollable { get; set; } // Begins to be irellivant FIXME?
 
@@ -93,14 +91,12 @@ namespace NoForms
         /// encapsulates options that for whatever reason can only be set
         /// once.
         /// </param>
-        public NoForm(IRender renderMethod, CreateOptions createOptions)
+        public NoForm(IPlatform plat, CreateOptions createOptions)
         {
             _components = new IComponent_Collection(this);
             background = new USolidBrush() { color = new Color(1) };
 
-            this.renderMethod = renderMethod;
-            renderMethod.Init(this, createOptions, out window, out controller);
-            RegisterToController();
+            plat.Init(this, createOptions);
         }
         public UBrush background;
 
@@ -161,15 +157,6 @@ namespace NoForms
 
         public IWindow window;
         public IController controller;
-        
-        void RegisterToController()
-        {
-            // FIXME deregistering, mouse capture?
-            controller.MouseUpDown += (loc, mb, bs) => MouseUpDown(loc, mb, bs, true, false);
-            controller.MouseMove += loc => MouseMove(loc, true, false);
-            controller.KeyUpDown += KeyUpDown;
-            controller.KeyPress += KeyPress;
-        }
 
         // FIXME some isp could avoid this and keep the hierachy intact..
         public bool visible

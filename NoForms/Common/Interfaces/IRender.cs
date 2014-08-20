@@ -10,11 +10,16 @@ using NoForms.Common;
 namespace NoForms
 {
     // Interfaces
+    public interface IRender<T> : IRender
+    {
+        void Init(T initObj, NoForm nf);
+    }
     public interface IRender : IDisposable
     {
-        void Init(NoForm nf, CreateOptions co, out IWindow w, out IController c);
         void BeginRender();
-        void EndRender(MethodInvoker endedCallback);
+        void EndRender();
+        event VoidAction stopped;
+        bool running { get; }
         NoForm noForm { get; set; }
     }
 }

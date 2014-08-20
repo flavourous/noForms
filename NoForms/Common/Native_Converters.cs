@@ -3,9 +3,24 @@ using System.Collections.Generic;
 using System.Text;
 using c = System.Windows.Forms.Cursors;
 
-namespace NoForms.Windowing.WinForms
+namespace NoForms.Common
 {
-    class Converters
+    class SDGTr
+    {
+        static public System.Drawing.SizeF trF(NoForms.Common.Size s) { return new System.Drawing.SizeF(s.width, s.height); }
+        static public System.Drawing.Size trI(NoForms.Common.Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
+        static public System.Drawing.PointF trF(NoForms.Common.Point p) { return new System.Drawing.PointF(p.X, p.Y); }
+        static public System.Drawing.Point trI(NoForms.Common.Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
+        static public NoForms.Common.Point tr(System.Drawing.Point p) { return new NoForms.Common.Point(p.X, p.Y); }
+        static public NoForms.Common.Size tr(System.Drawing.Size s) { return new NoForms.Common.Size(s.Width, s.Height); }
+        static public NoForms.Common.Size tr(System.Drawing.SizeF s) { return new NoForms.Common.Size(s.Width, s.Height); }
+    }
+    class D2DTr
+    {
+        static public SharpDX.DrawingSizeF tr(Size s) { return new SharpDX.DrawingSizeF(s.width, s.height); }
+        static public SharpDX.DrawingPointF tr(Point p) { return new SharpDX.DrawingPointF(p.X, p.Y); }
+    }
+    class WFTr
     {
         public static System.Windows.Forms.Cursor Translate(NoForms.Common.Cursors cur)
         {
@@ -73,6 +88,28 @@ namespace NoForms.Windowing.WinForms
             if (cur == c.VSplit) return NoForms.Common.Cursors.VSplit;
             if (cur == c.WaitCursor) return NoForms.Common.Cursors.WaitCursor;
             return NoForms.Common.Cursors.Default;
+        }
+        public static MouseButton Translate(System.Windows.Forms.MouseButtons mb)
+        {
+            // FIXME where da buttons?
+            switch (mb)
+            {
+                case System.Windows.Forms.MouseButtons.Left:
+                    return MouseButton.LEFT;
+                case System.Windows.Forms.MouseButtons.Middle:
+                    break;
+                case System.Windows.Forms.MouseButtons.None:
+                    break;
+                case System.Windows.Forms.MouseButtons.Right:
+                    return MouseButton.RIGHT;
+                case System.Windows.Forms.MouseButtons.XButton1:
+                    break;
+                case System.Windows.Forms.MouseButtons.XButton2:
+                    break;
+                default:
+                    return MouseButton.NONE;
+            }
+            return MouseButton.NONE;
         }
     }
 }

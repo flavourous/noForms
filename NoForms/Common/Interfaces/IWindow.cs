@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using NoForms.Common;
 using System.Drawing;
 using System.Windows.Forms;
 
 namespace NoForms
 {
+    public interface IPlatform
+    {
+        void Init(NoForm toDisplay, CreateOptions co);
+    }
     // FIXME different windowing systems are going to have different capabilities, some will be wildly different eg xbox/android.  How to cope?
     //       probable dirty solution: unify with approximate or null implimentations...NotImplimentedException may be a bit harsh...compiler warnings would be better.
     //                                for example "On xbox, showdialog is the same as show.  window is always maximised.  Only one window may be created, others will be ignored"

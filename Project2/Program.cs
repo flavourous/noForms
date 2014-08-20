@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using NoForms;
 using NoForms.Renderers;
-using NoForms.Windowing.WinForms;
 using NoFormsSDK;
 using NoForms.Common;
+using NoForms.Windowing;
 
 namespace Easy
 {
@@ -15,9 +15,8 @@ namespace Easy
         static void Main()
         {
             //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
-            IRender rlw = new D2DLayered();
-            IRender sd = new SDGNormal();
-            var nf = new mnf(rlw, new CreateOptions(true));
+            IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
+            var nf = new mnf(plt, new CreateOptions(true,false));
             nf.window.Run();
         }
     }
@@ -26,7 +25,7 @@ namespace Easy
     {
         SizeHandle sh;
         MoveHandle mh;
-        public mnf(IRender rn, CreateOptions co) : base(rn,co)
+        public mnf(IPlatform rn, CreateOptions co) : base(rn,co)
         {
             window.Title = "Test App";
             background = new USolidBrush() { color = new Color(.8f,.5f,.5f,.8f) };
@@ -70,6 +69,7 @@ namespace Easy
                                  UHAlign.Right, UVAlign.Bottom, true, 500,200);
             tx.font = new UFont("Arial", 12, false, false);
 
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             sc.draw += (r, b, s) =>
             {
                 s.strokeWidth = 1;
@@ -86,7 +86,8 @@ namespace Easy
                 //    ws += gr.run.runSize.width;
                 //}
 
-                
+                double ssw = Math.Sin(sw.ElapsedMilliseconds/1000.0);
+                b.color = new Color(1f, (float)(ssw+1.0/2.0), 0f, 0f);
                 r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
                 b.color = new Color(1f, 0f, 0f, 0f);
                 r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);

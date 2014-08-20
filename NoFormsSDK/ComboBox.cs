@@ -17,16 +17,16 @@ namespace NoFormsSDK
         public ComboBoxDirection dropDirection = ComboBoxDirection.MostSpace;
         public float dropLength { get { return lb.Size.height; } set { lb.Size = new Size(Size.width, value); OnLocationChanged(); } }
 
-        IRender dropRenderer = null;
+        IPlatform dropPlatform = null;
         NoForm ddf;
         void recreateddf()
         {
-            ddf = new NoForm(dropRenderer, new CreateOptions(false)) { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
+            ddf = new NoForm(dropPlatform, new CreateOptions(false, false)) { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
             ddf.components.Add(lb);
         }
-        public ComboBox(IRender dropRenderer = null)
+        public ComboBox(IPlatform dropPlatform = null)
         {
-            if (dropRenderer != null) this.dropRenderer = dropRenderer;
+            if (dropPlatform != null) this.dropPlatform = dropPlatform;
             lb = new ListBox();
             dropLength = 50;
             lb.SizeChanged += s => { if (ddf != null) ddf.Size = s; };
@@ -69,7 +69,7 @@ namespace NoFormsSDK
         void dropArrowThing_Clicked(Point loc)
         {
             tlc = IComponent_Util.GetTopLevelComponent(this);
-            if (dropRenderer != null) recreateddf();
+            if (dropPlatform != null) recreateddf();
 
             ComboBox_SizeChanged(Size);
             if (ddf == null)
@@ -110,7 +110,7 @@ namespace NoFormsSDK
                     break;
             }
 
-            if (dropRenderer == null) 
+            if (dropPlatform == null) 
             {
                 lb.Location = new Point(DisplayRectangle.left, toppy);
             }

@@ -7,11 +7,13 @@ namespace NoForms.Common
     public delegate void NoFormsAction();
     public class CreateOptions
     {
-        public CreateOptions(bool showInTaskbar)
+        public CreateOptions(bool showInTaskbar, bool borderedWindow)
         {
             this.showInTaskbar = showInTaskbar;
+            this.borderedWindow = borderedWindow;
         }
         public bool showInTaskbar { get; private set; }
+        public bool borderedWindow { get; private set; }
     }
 
     [Flags]

@@ -7,11 +7,7 @@ using NoForms.Common;
 
 namespace NoForms.Renderers
 {
-    class D2DTr
-    {
-        static public SharpDX.DrawingSizeF tr(Size s) { return new SharpDX.DrawingSizeF(s.width, s.height); }
-        static public SharpDX.DrawingPointF tr(Point p) { return new SharpDX.DrawingPointF(p.X, p.Y); }
-    }
+    
     class D2DDraw : IUnifiedDraw
     {
         // FIXME this should go somewere in the d2d renderelements...
