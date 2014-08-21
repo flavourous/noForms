@@ -21,6 +21,15 @@ namespace NoForms.Windowing
             }
             protected override void OnPaint(PaintEventArgs e) { }
             protected override void OnPaintBackground(PaintEventArgs e) { }
+            //protected override CreateParams CreateParams
+            //{
+            //    get
+            //    {
+            //        var cp = base.CreateParams;
+            //        cp.ExStyle |= Win32Util.WS_EX_LAYERED;
+            //        return cp;
+            //    }
+            //}
         }
 
         protected WFBase winForm;
@@ -133,12 +142,7 @@ namespace NoForms.Windowing
             renderer.Init(this, toDisplay);
             controller.Init(this, toDisplay);
             winForm.Shown += (o, e) => renderer.BeginRender();
-            winForm.FormClosing += (o, e) =>
-            {
-                e.Cancel = renderer.running;
-                renderer.stopped += () => winForm.Invoke(new VoidAction(() => winForm.Close()));
-                renderer.EndRender();
-            };
+            winForm.FormClosing += (o, e) => renderer.EndRender();
             ProcessCreateOptions(co);
             toDisplay.window = this;
         }
@@ -177,12 +181,7 @@ namespace NoForms.Windowing
             controller.Init(this, toDisplay);
 
             winForm.Shown += (o, e) => renderer.BeginRender();
-            winForm.FormClosing += (o, e) =>
-            {
-                e.Cancel = renderer.running;
-                renderer.stopped += () => winForm.Invoke(new VoidAction(() => winForm.Close()));
-                renderer.EndRender();
-            };
+            winForm.FormClosing += (o, e) => renderer.EndRender();
             ProcessCreateOptions(co);
             toDisplay.window = this;
         }

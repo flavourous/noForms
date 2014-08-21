@@ -18,8 +18,6 @@ namespace NoForms
     {
         void BeginRender();
         void EndRender();
-        event VoidAction stopped;
-        bool running { get; }
         NoForm noForm { get; set; }
     }
 }

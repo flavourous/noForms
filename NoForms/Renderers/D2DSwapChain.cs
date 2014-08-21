@@ -63,26 +63,29 @@ namespace NoForms.Renderers
         {
             renderThread = new Thread(new ThreadStart(() =>
             {
-                while (running)
-                    RenderPass();
+                lock (lo)
+                {
+                    while (running)
+                        RenderPass();
 
-                // free unmanaged
-                d2dRenderTarget.Dispose();
-                surface.Dispose();
-                renderView.Dispose();
-                backBuffer.Dispose();
-                swapchain.Dispose();
-                device.Dispose();
-                stopped();
+                    // free unmanaged
+                    d2dRenderTarget.Dispose();
+                    surface.Dispose();
+                    renderView.Dispose();
+                    backBuffer.Dispose();
+                    swapchain.Dispose();
+                    device.Dispose();
+                }
             }));
             running = true;
             renderThread.Start();
         }
-        public event NoForms.Common.VoidAction stopped = delegate { };
-        public bool running { get; private set; }
+        Object lo = new object();
+        bool running = false;
         public void EndRender()
         {
             running = false;
+            lock (lo) { }
         }
 
         public NoForm noForm { get; set; }
@@ -101,10 +104,10 @@ namespace NoForms.Renderers
                 d2dRenderTarget.PopAxisAlignedClip();
                 d2dRenderTarget.EndDraw();
 
-                winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
+                winForm.BeginInvoke(new System.Windows.Forms.MethodInvoker(() =>
                 {
-                        winForm.Size = SDGTr.trI(noForm.Size);
-                        winForm.Location = SDGTr.trI(noForm.Location);
+                    winForm.Size = SDGTr.trI(noForm.Size);
+                    winForm.Location = SDGTr.trI(noForm.Location);
                 }));
 
                 swapchain.Present(0, PresentFlags.None);

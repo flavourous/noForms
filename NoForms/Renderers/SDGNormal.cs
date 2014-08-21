@@ -43,16 +43,16 @@ namespace NoForms.Renderers
             {
                 while (running)
                     RenderPass();
-                stopped();
             }));
             running = true;
             renderThread.Start();
         }
-        public bool running { get; private set; }
-        public event VoidAction stopped = delegate { };
+        Object lo = new object();
+        bool running = false;
         public void EndRender()
         {
             running = false;
+            renderThread.Join();
         }
 
         // object because IRender could be anything, gdi, opengl etc...

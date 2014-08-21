@@ -8,6 +8,7 @@ using System.IO;
 using NoForms.Renderers;
 using NoFormsSDK;
 using NoForms.Common;
+using NoForms.Controllers;
 using NoForms.Windowing;
 
 namespace testapp
@@ -183,7 +184,7 @@ namespace testapp
 
             SizeChanged += new Action<Size>(MyNoForm_OnSizeChanged);
 
-            IPlatform dl = new NoForms.Windowing.Win32(new D2DLayered(), new NoForms.Windowing.WinformsController());
+            IPlatform dl = new NoForms.Windowing.Win32(new D2DLayered(), new WinformsController());
             cbProject = new ComboBox(dl);
             cbProject.dropDirection = ComboBoxDirection.LeastSpace;
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
@@ -205,7 +206,7 @@ namespace testapp
             components.Add(newProject);
 
             collectGC = new Button();
-            collectGC.textData = new UText("GC Collect", UHAlign.Center, UVAlign.Middle, false, 120, 30) { font = new UFont("Arial", 12, false, false) };
+            collectGC.textData = new UText("GC Collect", UHAlign.Center, UVAlign.Middle, false, 120, 30) { font = new UFont("Arial", 9f, false, false) };
             collectGC.ButtonClicked += clearGC_ButtonClicked;
             components.Add(collectGC);
 
@@ -233,7 +234,7 @@ namespace testapp
                     Program.selectedProject = p;
         }
 
-        UText n = new UText("n", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        UText n = new UText("n", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 9f, false, false) };
         void newProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new Color(.5f, 1, 1, 1);
@@ -263,7 +264,7 @@ namespace testapp
             Program.Projects.Add(pref);
         }
 
-        UText d = new UText("d", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        UText d = new UText("d", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 9f, false, false) };
         void delProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new Color(.5f, 1, 1, 1);
@@ -324,7 +325,7 @@ namespace testapp
             }
         }
 
-        UText e = new UText("e", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 12f, false, false) };
+        UText e = new UText("e", UHAlign.Center, UVAlign.Middle, false, 0, 0) { font = new UFont("Arial", 9f, false, false) };
         void editProject_draw(IUnifiedDraw ud, USolidBrush scb, UStroke stroke)
         {
             scb.color = new Color(.5f, 1, 1, 1);
@@ -636,8 +637,8 @@ namespace testapp
             SizeChanged += new Action<Size>(Story_SizeChanged);
 
 
-            bsr = new UStyleRange(0, storyTitle.Length, new UFont("Arial", 12f, true, false), red, null);
-            textyTime = new UText("", UHAlign.Left, UVAlign.Top, true, inRect2.width, 0) { font = new UFont("Arial", 10f, false, false) };
+            bsr = new UStyleRange(0, storyTitle.Length, new UFont("Arial", 9f, true, false), red, null);
+            textyTime = new UText("", UHAlign.Left, UVAlign.Top, true, inRect2.width, 0) { font = new UFont("Arial", 7f, false, false) };
             textyTime.styleRanges.Add(bsr);
 
             cx.draw += new Scribble.scribble(cx_draw);
@@ -897,7 +898,7 @@ namespace testapp
         USolidBrush scb, scb1, brushBars;
         UText titleText = new UText("Editing Story", UHAlign.Center, UVAlign.Middle, false, 0, 0)
         {
-            font = new UFont("Arial", 12f, false, false)
+            font = new UFont("Arial", 9f, false, false)
         };
         
     }
@@ -1051,7 +1052,7 @@ namespace testapp
         USolidBrush scb, scb1, brushBars;
         UText titleText = new UText("Editing Project", UHAlign.Center, UVAlign.Middle, false, 0, 0)
         {
-            font = new UFont("Arial", 12f, false, false)
+            font = new UFont("Arial", 9f, false, false)
         };
         
     }

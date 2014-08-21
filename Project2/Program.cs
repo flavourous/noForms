@@ -18,7 +18,7 @@ namespace Easy
             //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
             IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
             IPlatform plt2 = new WinForms(new D2DSwapChain(), new WinformsController());
-            var nf = new mnf(plt2, new CreateOptions(true,false));
+            var nf = new mnf(plt, new CreateOptions(true,false));
             nf.window.Run();
         }
     }
@@ -27,10 +27,11 @@ namespace Easy
     {
         SizeHandle sh;
         MoveHandle mh;
+        
         public mnf(IPlatform rn, CreateOptions co) : base(rn,co)
         {
             window.Title = "Test App";
-            background = new USolidBrush() { color = new Color(.8f,.5f,.5f,.8f) };
+            background = new USolidBrush() { color = new Color(.5f, 0f, 0f, .7f) };
             Size = new Size(1150, 600);
             Location = new Point(100, 40);
 

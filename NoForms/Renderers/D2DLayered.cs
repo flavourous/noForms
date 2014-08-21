@@ -63,7 +63,7 @@ namespace NoForms.Renderers
             }
         }
 
-
+        IntPtr hWnd;
         SolidColorBrush scbTrans;
         public Thread renderThread = null;
         public void BeginRender()
@@ -79,22 +79,23 @@ namespace NoForms.Renderers
                 surface.Dispose();
                 renderView.Dispose();
                 backBuffer.Dispose();
-                stopped();
             }));
 
             // Make sure it gets layered!
-            var wl = Win32Util.GetWindowLong(w32.handle, Win32Util.GWL_EXSTYLE);
-            var ret = Win32Util.SetWindowLong(w32.handle, Win32Util.GWL_EXSTYLE, wl | Win32Util.WS_EX_LAYERED);
-                
+            hWnd = w32.handle;
+            var wl = Win32Util.GetWindowLong(hWnd, Win32Util.GWL_EXSTYLE);
+            var ret = Win32Util.SetWindowLong(hWnd, Win32Util.GWL_EXSTYLE, wl | Win32Util.WS_EX_LAYERED);
+
             // Begin.
             running = true;
             renderThread.Start();
         }
-        public event NoForms.Common.VoidAction stopped = delegate { };
-        public bool running { get; private set; }
+        Object lo = new object();
+        bool running = false;
         public void EndRender()
         {
             running = false;
+            renderThread.Join();
         }
 
         // object because IRender could be anything, gdi, opengl etc...
@@ -103,6 +104,9 @@ namespace NoForms.Renderers
         {
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
             Resize();
+            // make size...
+            Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), hWnd);
+            Win32Util.SetWindowSize(new Win32Util.Size((int)noForm.Size.width, (int)noForm.Size.height), hWnd);
 
             lock (noForm)
             {
@@ -126,11 +130,7 @@ namespace NoForms.Renderers
                 Win32Util.Size pSize = new Win32Util.Size(rtSize.Width, rtSize.Height);
                 Win32Util.BLENDFUNCTION bf = new Win32Util.BLENDFUNCTION() { SourceConstantAlpha = 255, AlphaFormat = Win32Util.AC_SRC_ALPHA, BlendFlags = 0, BlendOp = 0 };
 
-                // make size...
-                Win32Util.SetWindowLocation(dstPoint, w32.handle);
-                Win32Util.SetWindowSize(pSize, w32.handle);
-
-                bool suc = Win32Util.UpdateLayeredWindow(w32.handle, someDC, ref dstPoint, ref pSize, dxHdc, ref srcPoint, 1, ref bf, 2);
+                bool suc = Win32Util.UpdateLayeredWindow(hWnd, someDC, ref dstPoint, ref pSize, dxHdc, ref srcPoint, 1, ref bf, 2);
                 surface.ReleaseDC();
                 dxdc.Dispose();
             }
