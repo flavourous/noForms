@@ -125,6 +125,11 @@ namespace NoForms.Renderers
                 Win32Util.Point srcPoint = new Win32Util.Point(0, 0);
                 Win32Util.Size pSize = new Win32Util.Size(rtSize.Width, rtSize.Height);
                 Win32Util.BLENDFUNCTION bf = new Win32Util.BLENDFUNCTION() { SourceConstantAlpha = 255, AlphaFormat = Win32Util.AC_SRC_ALPHA, BlendFlags = 0, BlendOp = 0 };
+
+                // make size...
+                Win32Util.SetWindowLocation(dstPoint, w32.handle);
+                Win32Util.SetWindowSize(pSize, w32.handle);
+
                 bool suc = Win32Util.UpdateLayeredWindow(w32.handle, someDC, ref dstPoint, ref pSize, dxHdc, ref srcPoint, 1, ref bf, 2);
                 surface.ReleaseDC();
                 dxdc.Dispose();
@@ -137,9 +142,6 @@ namespace NoForms.Renderers
             renderView.Dispose();
             surface.Dispose();
             backBuffer.Dispose();
-
-            Win32Util.SetWindowSize(new Win32Util.Size((int)noForm.Size.width + edgeBufferSize, (int)noForm.Size.height + edgeBufferSize), w32.handle);
-            Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), w32.handle);
 
             // Initialise d2d things
             backBuffer = new Texture2D(device, new Texture2DDescription()

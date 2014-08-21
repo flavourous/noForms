@@ -115,38 +115,6 @@ namespace NoForms.Windowing
         }
     }
 
-    public class WinformsController : IController<IWFWin>
-    {
-        Form winForm;
-        NoForm nf;
-        void IController<IWFWin>.Init(IWFWin initObj, NoForm nf)
-        {
-            winForm = initObj.form;
-            this.nf = nf;
-            nf.controller = this;
-
-            // Register!
-            winForm.MouseDown += (o, e) => nf.MouseUpDown(SDGTr.tr(e.Location), WFTr.Translate(e.Button), NoForms.Common.ButtonState.DOWN, true, false);
-            winForm.MouseUp += (o, e) => nf.MouseUpDown(SDGTr.tr(e.Location), WFTr.Translate(e.Button), NoForms.Common.ButtonState.UP, true, false);
-            winForm.MouseMove += (o, e) => nf.MouseMove(SDGTr.tr(e.Location), true, false);
-            winForm.KeyDown += (o, e) => nf.KeyUpDown((NoForms.Common.Keys)e.KeyCode, NoForms.Common.ButtonState.DOWN);
-            winForm.KeyUp += (o, e) => nf.KeyUpDown((NoForms.Common.Keys)e.KeyCode, NoForms.Common.ButtonState.UP);
-            winForm.KeyPress += (o, e) => nf.KeyPress(e.KeyChar);
-        }
-
-        public Point MouseScreenLocation
-        {
-            get { return SDGTr.tr(System.Windows.Forms.Cursor.Position); }
-        }
-
-        public event MouseUpDownHandler MouseUpDown;
-
-        public event MouseMoveHandler MouseMove;
-
-        public event KeyUpDownHandler KeyUpDown;
-
-        public event KeyPressHandler KeyPress;
-    }
 
     public class Win32 : WinBase, IPlatform, IW32Win, IWFWin
     {

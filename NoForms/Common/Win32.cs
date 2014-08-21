@@ -21,12 +21,12 @@ namespace NoForms
         static public void SetWindowSize(Size sz, IntPtr hWnd)
         {
             var loc = GetWindowLocation(hWnd);
-            SetWindowPos(hWnd, IntPtr.Zero, loc.x, loc.y, sz.cx, sz.cy, SetWindowPosFlags.SHOWWINDOW);
+            SetWindowPos(hWnd, IntPtr.Zero, loc.x, loc.y, sz.cx, sz.cy,SetWindowPosFlags.SHOWWINDOW);
         }
         static public void SetWindowLocation(Point loc, IntPtr hWnd)  
         {
             var sz = GetWindowSize(hWnd);
-            SetWindowPos(hWnd, IntPtr.Zero, loc.x, loc.y, sz.cx, sz.cy, SetWindowPosFlags.SHOWWINDOW);
+            SetWindowPos(hWnd, IntPtr.Zero, loc.x, loc.y, sz.cx, sz.cy,SetWindowPosFlags.SHOWWINDOW);
         }
 
         enum SetWindowPosFlags

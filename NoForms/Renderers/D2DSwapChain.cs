@@ -101,10 +101,10 @@ namespace NoForms.Renderers
                 d2dRenderTarget.PopAxisAlignedClip();
                 d2dRenderTarget.EndDraw();
 
-                winForm.BeginInvoke(new System.Windows.Forms.MethodInvoker(() =>
+                winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
                 {
-                    winForm.Size = SDGTr.trI(noForm.Size);
-                    winForm.Location = SDGTr.trI(noForm.Location);
+                        winForm.Size = SDGTr.trI(noForm.Size);
+                        winForm.Location = SDGTr.trI(noForm.Location);
                 }));
 
                 swapchain.Present(0, PresentFlags.None);
@@ -116,8 +116,6 @@ namespace NoForms.Renderers
             renderView.Dispose();
             surface.Dispose();
             backBuffer.Dispose();
-
-            
 
             swapchain.ResizeBuffers(0, (int)noForm.Size.width, (int)noForm.Size.height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
             backBuffer = Texture2D.FromSwapChain<Texture2D>(swapchain, 0);

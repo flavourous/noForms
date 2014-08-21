@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NoForms.Controllers;
 using NoForms;
 using NoForms.Renderers;
 using NoFormsSDK;
@@ -16,7 +17,8 @@ namespace Easy
         {
             //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
             IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
-            var nf = new mnf(plt, new CreateOptions(true,false));
+            IPlatform plt2 = new WinForms(new D2DSwapChain(), new WinformsController());
+            var nf = new mnf(plt2, new CreateOptions(true,false));
             nf.window.Run();
         }
     }
@@ -75,7 +77,6 @@ namespace Easy
                 s.strokeWidth = 1;
                 b.color = new Color(1f, 1, 0f, 0);
                 r.DrawPath(pth,b,s);
-                
 
                 //var ti = (r as NoForms.Renderers.SDGDraw).GetSDGTextInfo(tx);
                 //float ws = 0;
@@ -93,7 +94,7 @@ namespace Easy
                 r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
             };
             components.Add(sc);
-            
+            SizeChanged += mnf_SizeChanged;
         }
         
 
