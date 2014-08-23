@@ -9,7 +9,7 @@ namespace NoFormsSDK
 {
     public class Scribble : Container
     {
-        public override void Draw(IDraw renderArgument)
+        public override void Draw(IDraw renderArgument, Region dirty)
         {
             draw(renderArgument.uDraw, tehBrush, tehStroke);
         }

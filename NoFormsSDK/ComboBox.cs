@@ -21,7 +21,7 @@ namespace NoFormsSDK
         NoForm ddf;
         void recreateddf()
         {
-            ddf = new NoForm(dropPlatform, new CreateOptions(false, false)) { background = new USolidBrush() { color = new Color(1, 1, 0, 0) } };
+            ddf = new NoForm(dropPlatform, new CreateOptions(false, false));
             ddf.components.Add(lb);
         }
         public ComboBox(IPlatform dropPlatform = null)
@@ -170,7 +170,7 @@ namespace NoFormsSDK
         {
             font = new UFont("Arial", 12f, false, false)
         };
-        public override void Draw(IDraw ra)
+        public override void Draw(IDraw ra, Region dirty)
         {
             // Draw bg
             ra.uDraw.FillRectangle(DisplayRectangle, back);

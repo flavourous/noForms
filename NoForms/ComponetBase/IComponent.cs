@@ -34,7 +34,8 @@ namespace NoForms
         void RecalculateLocation();
 
         // Rendering Support, passing one object for requesting each rendering type
-        void DrawBase(IDraw renderArgument);
+        void DrawBase(IDraw renderArgument, Region dirty);
+        void Dirty(Rectangle rect);
 
         // Mouse events
         void MouseMove(Point location, bool inComponent, bool amClipped);

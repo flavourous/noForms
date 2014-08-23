@@ -31,7 +31,6 @@ namespace Easy
         public mnf(IPlatform rn, CreateOptions co) : base(rn,co)
         {
             window.Title = "Test App";
-            background = new USolidBrush() { color = new Color(.5f, 0f, 0f, .7f) };
             Size = new Size(1150, 600);
             Location = new Point(100, 40);
 
@@ -97,7 +96,11 @@ namespace Easy
             components.Add(sc);
             SizeChanged += mnf_SizeChanged;
         }
-        
+        public override void Draw(IDraw rt, Region dirty)
+        {
+            base.Draw(rt, dirty);
+            rt.uDraw.Clear(new Color(1, 0, 0, 1));
+        }
 
         void mnf_SizeChanged(Size sz)
         {

@@ -191,8 +191,29 @@ namespace NoForms.Common
     }
     public struct Rectangle
     {
+        /// <summary>
+        /// combines bounds of the rects
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public Rectangle Combine(Rectangle other)
+        {
+            return new Rectangle(
+                new Point(
+                    Math.Min(left,other.left),
+                    Math.Min(top,other.top)
+                ),
+                new Point(
+                    Math.Max(right,other.right),
+                    Math.Max(bottom,other.bottom)
+                )
+            );
+        }
 
-
+        public bool Intersects(Rectangle r)
+        {
+            return r.left < right && r.right > left && r.top < bottom && r.bottom > top;
+        }
         public bool Contains(Point pt)
         {
             if (pt.X >= left && pt.X <= right)
@@ -305,6 +326,26 @@ namespace NoForms.Common
             return new System.Drawing.RectangleF(me.left, me.top, me.width, me.height);
         }
     }
+
+    public class Region
+    {
+        System.Collections.ObjectModel.Collection<Rectangle> rects = new System.Collections.ObjectModel.Collection<Rectangle>();
+        public IEnumerable<Rectangle> AsRectangles()
+        {
+            return rects;
+        }
+        public void Add(Rectangle r) { rects.Add(r); }
+        public void Reset() { rects.Clear(); }
+        public bool Intersects(Rectangle r)
+        {
+            foreach (var rr in rects)
+                if (rr.Intersects(r))
+                    return true;
+            return false;
+        }
+        public bool IsEmpty { get { return rects.Count == 0; } }
+    }
+
     public class UStyleRange : IObservable
     {
         int _start;

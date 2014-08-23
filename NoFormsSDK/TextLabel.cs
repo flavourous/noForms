@@ -31,7 +31,7 @@ namespace NoFormsSDK
         }
 
         public event VoidAction clicked;
-        public override void Draw(IDraw ra)
+        public override void Draw(IDraw ra, Region dirty)
         {
             ra.uDraw.FillRectangle(DisplayRectangle, background);
             ra.uDraw.DrawText(textData,DisplayRectangle.Location, foreground, UTextDrawOptions.None,false);

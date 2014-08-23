@@ -30,6 +30,7 @@ namespace NoForms.Renderers
         {
             // do the form
             noForm = root;
+            noForm.renderer = this;
             this.winForm = iwf.form;
             winHandle = iwf.form.Handle;
 
@@ -88,6 +89,12 @@ namespace NoForms.Renderers
             lock (lo) { }
         }
 
+        Common.Region dirty = new Common.Region();
+        public void Dirty(Common.Rectangle rect)
+        {
+            dirty.Add(rect);
+        }
+
         public NoForm noForm { get; set; }
         void RenderPass()
         {
@@ -100,7 +107,7 @@ namespace NoForms.Renderers
                 DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
                 d2dRenderTarget.BeginDraw();
                 d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
-                noForm.DrawBase(this);
+                noForm.DrawBase(this, dirty);
                 d2dRenderTarget.PopAxisAlignedClip();
                 d2dRenderTarget.EndDraw();
 

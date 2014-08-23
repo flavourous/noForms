@@ -103,7 +103,7 @@ namespace testapp
     class mmh : MoveHandle
     {
         public mmh(NoForm c) : base(c) { }
-        public override void Draw(IDraw ra)
+        public override void Draw(IDraw ra, Region dirty)
         {
             //ra.uDraw.FillRectangle(DisplayRectangle, new USolidBrush() { color = new Color(.5f, .7f, .1f, .1f) });
         }
@@ -120,7 +120,6 @@ namespace testapp
 
         public MyNoForm(IPlatform rm, CreateOptions co) : base(rm,co)
         {
-            background = new USolidBrush() { color = new Color(0.5f, 0, 0, 0) };
 
             // move and resize
             mh = new mmh(this);
@@ -380,7 +379,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         Color themeColor = new Color(1, 95f/255f,150f/255f,190f/255f);
-        public override void Draw(IDraw rt) 
+        public override void Draw(IDraw rt, Region dirty) 
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, Size.height), scb);
@@ -488,7 +487,7 @@ namespace testapp
             }
         }
 
-        public override void Draw(IDraw renderArgument)
+        public override void Draw(IDraw renderArgument, Region dirty)
         {
         }
     }
@@ -572,7 +571,7 @@ namespace testapp
         }
 
         Scribble add;
-        public override void Draw(IDraw ra)
+        public override void Draw(IDraw ra, Region dirty)
         {
             lock (this)
             {
@@ -687,7 +686,7 @@ namespace testapp
         //}
 
         // Drawybit
-        public override void Draw(IDraw ra)
+        public override void Draw(IDraw ra, Region dirty)
         {
             DetermineTextAndSize(ra.uDraw);
             ra.uDraw.DrawText(textyTime, inRect2.Location, scb_text, UTextDrawOptions.None,false);
@@ -871,7 +870,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         Color themeColor = new Color(1, 0.7f, 0.7f, 0.75f);
-        public override void Draw(IDraw rt)
+        public override void Draw(IDraw rt, Region dirty)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);
@@ -1025,7 +1024,7 @@ namespace testapp
         float gap = 5;
         float barwid = 30;
         Color themeColor = new Color(1, 0.7f, 0.7f, 0.75f);
-        public override void Draw(IDraw rt)
+        public override void Draw(IDraw rt, Region dirty)
         {
             rt.uDraw.FillRectangle(new Rectangle(0, 0, Size.width, gap), scb);
             rt.uDraw.FillRectangle(new Rectangle(0, Size.height - gap, Size.width, gap), scb);

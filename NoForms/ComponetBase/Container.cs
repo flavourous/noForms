@@ -19,16 +19,16 @@ namespace NoForms.ComponentBase
         }
 
         // NOTE: No need to VisibilityChain in these events, because they terminate from the base.
-        public override void DrawBase(IDraw renderArgument)
+        public override void DrawBase(IDraw renderArgument, Region dirty)
         {
-            Draw(renderArgument);
+            Draw(renderArgument, dirty);
             renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
-                if (c.visible)
-                    c.DrawBase(renderArgument);
+                if (c.visible && dirty.Intersects(c.DisplayRectangle))
+                    c.DrawBase(renderArgument, dirty);
             renderArgument.uDraw.PopAxisAlignedClip();
         }
-        public abstract void Draw(IDraw renderArgument);
+        public abstract void Draw(IDraw renderArgument, Region dirty);
 
         public override void MouseMove(Point location, bool inComponent, bool amClipped)
         {

@@ -111,7 +111,7 @@ namespace NoFormsSDK
         UBrush defBrush = new USolidBrush() { color = new Color(0) };
         System.Collections.Generic.Queue<Action<IDraw>> runNextRender = new System.Collections.Generic.Queue<Action<IDraw>>();
         UTextInfo lastTextInfo = new UTextInfo();
-        public override void Draw(IDraw rt)
+        public override void Draw(IDraw rt, Region dirty)
         {
             if (textLayoutNeedsUpdate) UpdateTextLayout(rt);
             while (runNextRender.Count > 0)

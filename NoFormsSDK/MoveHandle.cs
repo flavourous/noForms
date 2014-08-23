@@ -20,7 +20,7 @@ namespace NoFormsSDK
         USolidBrush back = new USolidBrush() { color = new Color(1.0f, 0f, 0f, 0f) };
         UStroke stroke = new UStroke() { strokeWidth = 2f };
         // Render methody
-        public override void Draw(IDraw ra)
+        public override void Draw(IDraw ra, Region dirty)
         {
             ra.uDraw.FillRectangle(DisplayRectangle,back);
             

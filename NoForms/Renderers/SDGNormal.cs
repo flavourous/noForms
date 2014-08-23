@@ -20,6 +20,7 @@ namespace NoForms.Renderers
         public void Init(IWFWin wf, NoForm root)
         {
             noForm = root;
+            noForm.renderer = this;
             lock (noForm)
             {
                 winForm = wf.form;
@@ -55,6 +56,12 @@ namespace NoForms.Renderers
             renderThread.Join();
         }
 
+        Common.Region dirty = new Common.Region();
+        public void Dirty(Common.Rectangle rect)
+        {
+            dirty.Add(rect);
+        }
+
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
         void RenderPass()
@@ -65,7 +72,7 @@ namespace NoForms.Renderers
             lock (noForm)
             {
                 // Do Drawing stuff
-                noForm.DrawBase(this);
+                noForm.DrawBase(this, dirty);
 
                 // flush buffer to window
                 var winGr = winForm.CreateGraphics();

@@ -20,7 +20,7 @@ namespace NoFormsSDK
         public UBrush background = new USolidBrush() { color = new Color(0) };
         public UBrush foreground = new USolidBrush() { color = new Color(1) };
         public UStroke lineStroke = new UStroke() { strokeWidth = 2f };
-        public override void Draw(IDraw renderArg)
+        public override void Draw(IDraw renderArg, Region dirty)
         {
             if (invisible) return;
             renderArg.uDraw.FillRectangle(DisplayRectangle, background);

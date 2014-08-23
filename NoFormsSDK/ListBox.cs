@@ -9,7 +9,7 @@ namespace NoFormsSDK
 {
     public class ListBox : Container
     {
-        public override void Draw(IDraw renderArgument)
+        public override void Draw(IDraw renderArgument, Region dirty)
         {
             PoisitionItems();
             renderArgument.uDraw.FillRectangle(DisplayRectangle, brushy2);

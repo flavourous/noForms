@@ -45,9 +45,10 @@ namespace NoForms.ComponentBase
             get { return _DisplayRectangle; }
             set
             {
+                var dirty = _DisplayRectangle.Combine(value);
                 _DisplayRectangle = value;
-                RecalculateLocation();
                 Size = value.Size;
+                Dirty(dirty);
             }
         }
         public event Action<Size> SizeChanged;
@@ -65,8 +66,10 @@ namespace NoForms.ComponentBase
             get { return _DisplayRectangle.Size; }
             set
             {
+                var dirty = _DisplayRectangle.Combine(new  Rectangle(_DisplayRectangle.Location,value));
                 _DisplayRectangle.Size = value;
                 OnSizeChanged();
+                Dirty(dirty);
             }
         }
         public event Action<Point> LocationChanged;
@@ -89,9 +92,11 @@ namespace NoForms.ComponentBase
             }
             set
             {
+                var dirty = _DisplayRectangle.Combine(new Rectangle(value, _DisplayRectangle.Size));
                 _Location = value;
                 OnLocationChanged();
                 RecalculateDisplayRectangle();
+                Dirty(dirty);
             }
         }
 
@@ -121,7 +126,12 @@ namespace NoForms.ComponentBase
                 c.RecalculateLocation();
         }
 
-        public abstract void DrawBase(IDraw renderArgument);
+        public abstract void DrawBase(IDraw renderArgument, Region dirty);
+        public virtual void Dirty(Rectangle rect)
+        {
+            if(parent != null)
+                parent.Dirty(rect);
+        }
 
         bool _visible = true;
         public bool visible

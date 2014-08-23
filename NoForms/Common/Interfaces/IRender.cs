@@ -19,5 +19,6 @@ namespace NoForms
         void BeginRender();
         void EndRender();
         NoForm noForm { get; set; }
+        void Dirty(Rectangle rect);
     }
 }

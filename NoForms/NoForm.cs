@@ -94,11 +94,17 @@ namespace NoForms
         public NoForm(IPlatform plat, CreateOptions createOptions)
         {
             _components = new IComponent_Collection(this);
-            background = new USolidBrush() { color = new Color(1) };
-
             plat.Init(this, createOptions);
         }
-        public UBrush background;
+        /// <summary>
+        /// called on by children, to let us know drawing needs doing...
+        /// </summary>
+        /// <param name="rect"></param>
+        public void Dirty(Rectangle rect)
+        {
+            //...just tell the renderer!
+            renderer.Dirty(rect);
+        }
 
         // Keyboard Hooks
         public void KeyUpDown(NoForms.Common.Keys key, NoForms.Common.ButtonState bs)
@@ -139,24 +145,27 @@ namespace NoForms
                 window.Cursor = Cursor;
         }
 
-        public void DrawBase(IDraw rt)
+        USolidBrush trans = new USolidBrush() { color = new Color(0, 0, 0, 0) };
+        public void DrawBase(IDraw rt, Region dirty)
         {
-            rt.uDraw.Clear(new Color(0f,0f,0f,0f)); // this lets alphas to desktop happen.
-            rt.uDraw.FillRectangle(DisplayRectangle, background);
-            Draw(rt);
+            foreach (var rect in dirty.AsRectangles())
+                rt.uDraw.FillRectangle(rect, trans); // this lets alphas to desktop happen.
+            Draw(rt, dirty);
 
             // Now we need to draw our childrens....
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
-                if (c.visible) c.DrawBase(rt);
+                if (c.visible && dirty.Intersects(c.DisplayRectangle)) 
+                    c.DrawBase(rt, dirty);
             rt.uDraw.PopAxisAlignedClip();
         }
-        public virtual void Draw(IDraw rt)
+        public virtual void Draw(IDraw rt, Region dirty)
         {
         }
 
         public IWindow window;
         public IController controller;
+        public IRender renderer;
 
         // FIXME some isp could avoid this and keep the hierachy intact..
         public bool visible

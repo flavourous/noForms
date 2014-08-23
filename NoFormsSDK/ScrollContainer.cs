@@ -233,7 +233,7 @@ namespace NoFormsSDK
                 this.orientation = orientation;
             }
             UBrush trackBrush = new USolidBrush() { color = new Color(.6f) };
-            public override void DrawBase(IDraw renderArgument)
+            public override void DrawBase(IDraw renderArgument, Region dirty)
             {
                 renderArgument.uDraw.FillRoundedRectangle(DisplayRectangle.Deflated(new Thickness(2f)), 5, 3, trackBrush);
             }
@@ -328,7 +328,7 @@ namespace NoFormsSDK
                 }
                 controlled.OnSizeChanged();
             }
-            public override void DrawBase(IDraw renderArgument)
+            public override void DrawBase(IDraw renderArgument, Region dirty)
             {
                 Rectangle dr = DisplayRectangle;
                 float gx = dr.width/4;
@@ -381,39 +381,43 @@ namespace NoFormsSDK
                     (background as USolidBrush).color = new Color(.8f);
                 else (background as USolidBrush).color = new Color(.7f);
             }
-            public override void Draw(IDraw renderArgument)
+            public override void Draw(IDraw renderArgument, Region dirty)
             {
                 renderArgument.uDraw.FillRectangle(DisplayRectangle, background);
             }
         }
 
-        public sealed override void DrawBase(IDraw renderArgument)
+        public sealed override void DrawBase(IDraw renderArgument, Region dirty)
         {
             bool offset = false;
 
             // trimSize is the size sans scrollbars.  but maybe we should just let the thing overdraw...
-            Draw(renderArgument);
+            Draw(renderArgument, dirty);
             renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
             {
                 if (!c.visible) continue;
                 if (c.Scrollable)
                 {
+                    var cdr = c.DisplayRectangle;
+                    var fdr = new Rectangle(cdr.left - xOffset, cdr.top - yOffset, cdr.width, cdr.height);
+                    if (!dirty.Intersects(fdr)) continue;
                     if (!offset)
                     {
                         renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
                         offset = true;
                     }
-                    c.DrawBase(renderArgument);
+                    c.DrawBase(renderArgument, dirty);
                 }
                 else
                 {
+                    if (!dirty.Intersects(c.DisplayRectangle)) continue;
                     if (offset)
                     {
                         renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
                         offset = false;
                     }
-                    c.DrawBase(renderArgument);
+                    c.DrawBase(renderArgument, dirty);
                 }
             }
             renderArgument.uDraw.PopAxisAlignedClip();

@@ -35,6 +35,7 @@ namespace NoForms.Renderers
         {
             this.w32 = w32;
             noForm = root;
+            noForm.renderer = this;
             lock (noForm)
             {
                 var sz = root.Size;
@@ -65,37 +66,55 @@ namespace NoForms.Renderers
 
         IntPtr hWnd;
         SolidColorBrush scbTrans;
-        public Thread renderThread = null;
+        System.Threading.Timer dirtyWatcher;
         public void BeginRender()
         {
-            renderThread = new Thread(new ThreadStart(() =>
-            {
-                while (running)
-                    RenderPass();
+            // Make sure it gets layered!
+            hWnd = w32.handle;
+            var wl = Win32Util.GetWindowLong(hWnd, Win32Util.GWL_EXSTYLE);
+            var ret = Win32Util.SetWindowLong(hWnd, Win32Util.GWL_EXSTYLE, wl | Win32Util.WS_EX_LAYERED);
 
+            // dirty it
+            Dirty(noForm.DisplayRectangle);
+
+            // Start the watcher
+            running = true;
+            dirtyWatcher = new System.Threading.Timer(DirtyLook, null, 0, System.Threading.Timeout.Infinite);
+        }
+        void DirtyLook(Object o)
+        {
+            lock (dirties)
+            {
+                if (!running) return;
+                if (!dirty.IsEmpty)
+                {
+                    RenderPass();
+                    dirty.Reset();
+                }
+            }
+            // Aim for about 60fps max
+            dirtyWatcher.Change(17, System.Threading.Timeout.Infinite);
+        }
+        Object lo = new object();
+        bool running = false;
+        public void EndRender()
+        {
+            lock (dirties)
+            {
                 // Free unmanaged stuff
                 scbTrans.Dispose();
                 d2dRenderTarget.Dispose();
                 surface.Dispose();
                 renderView.Dispose();
                 backBuffer.Dispose();
-            }));
-
-            // Make sure it gets layered!
-            hWnd = w32.handle;
-            var wl = Win32Util.GetWindowLong(hWnd, Win32Util.GWL_EXSTYLE);
-            var ret = Win32Util.SetWindowLong(hWnd, Win32Util.GWL_EXSTYLE, wl | Win32Util.WS_EX_LAYERED);
-
-            // Begin.
-            running = true;
-            renderThread.Start();
+                running = false;
+            }
         }
-        Object lo = new object();
-        bool running = false;
-        public void EndRender()
+
+        System.Collections.Queue dirties = new System.Collections.Queue();
+        public void Dirty(Common.Rectangle rect)
         {
-            running = false;
-            renderThread.Join();
+            dirties.Enqueue(rect);
         }
 
         // object because IRender could be anything, gdi, opengl etc...
@@ -113,9 +132,12 @@ namespace NoForms.Renderers
                 // Do Drawing stuff
                 DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
                 d2dRenderTarget.BeginDraw();
-                d2dRenderTarget.PushAxisAlignedClip(noForm.DisplayRectangle, AntialiasMode.Aliased);
-                noForm.DrawBase(this);
-                d2dRenderTarget.PopAxisAlignedClip();
+                //var drs = dirty.AsRectangles();
+                //foreach(var dr in drs)
+                //    d2dRenderTarget.PushAxisAlignedClip(dr, AntialiasMode.Aliased);
+                noForm.DrawBase(this, dirty);
+                //foreach (var dr in drs)
+                //    d2dRenderTarget.PopAxisAlignedClip();
 
                 // Fill with transparency the edgeBuffer!
                 d2dRenderTarget.FillRectangle(new RectangleF(0, noForm.Size.height, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);

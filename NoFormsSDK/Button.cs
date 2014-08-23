@@ -55,7 +55,7 @@ namespace NoFormsSDK
         }
 
         // Render methody
-        public override void Draw(IDraw rt)
+        public override void Draw(IDraw rt, Region dirty)
         {
             float lt = edge.strokeWidth;
             float bv = lt / 2;
