@@ -66,7 +66,7 @@ namespace NoForms
                         Math.Max(Math.Min(value.width, MaxSize.width), MinSize.width),
                         Math.Max(Math.Min(value.height, MaxSize.height), MinSize.height)
                         );
-
+                    bool isDirty = !_Size.Equals(_DisplayRectangle.Size);
                     _DisplayRectangle.Size = new Size(Size.width, Size.height);
                     SizeChanged(_Size);
                 }

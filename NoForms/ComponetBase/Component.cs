@@ -66,10 +66,11 @@ namespace NoForms.ComponentBase
             get { return _DisplayRectangle.Size; }
             set
             {
+                bool isDirty = !value.Equals(_DisplayRectangle.Size);
                 var dirty = _DisplayRectangle.Combine(new  Rectangle(_DisplayRectangle.Location,value));
                 _DisplayRectangle.Size = value;
                 OnSizeChanged();
-                Dirty(dirty);
+                if (isDirty) Dirty(dirty);
             }
         }
         public event Action<Point> LocationChanged;
@@ -92,11 +93,12 @@ namespace NoForms.ComponentBase
             }
             set
             {
+                bool isDirty = !value.Equals(_Location);
                 var dirty = _DisplayRectangle.Combine(new Rectangle(value, _DisplayRectangle.Size));
                 _Location = value;
                 OnLocationChanged();
                 RecalculateDisplayRectangle();
-                Dirty(dirty);
+                if(isDirty) Dirty(dirty);
             }
         }
 

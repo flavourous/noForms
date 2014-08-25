@@ -41,7 +41,7 @@ namespace NoForms.Renderers
         {
             var cr = clipRect;
             if (ignoreRenderOffset) cr -= new Point(realRenderer.renderTarget.Transform.M31, realRenderer.renderTarget.Transform.M32);
-            realRenderer.renderTarget.PushAxisAlignedClip(cr, AntialiasMode.PerPrimitive);
+            realRenderer.renderTarget.PushAxisAlignedClip(D2DTr.tr(cr), AntialiasMode.PerPrimitive);
         }
         public void PopAxisAlignedClip()
         {
@@ -55,7 +55,7 @@ namespace NoForms.Renderers
         }
         public void Clear(Color color)
         {
-            realRenderer.renderTarget.Clear(color);
+            realRenderer.renderTarget.Clear(D2DTr.tr(color));
         }
         public void FillPath(UPath path, UBrush brush)
         {
@@ -67,7 +67,7 @@ namespace NoForms.Renderers
         }
         public void DrawBitmap(UBitmap bitmap, float opacity, UInterp interp, Rectangle source, Rectangle destination)
         {
-            realRenderer.renderTarget.DrawBitmap(CreateBitmap(bitmap), destination, opacity, Translate(interp), source);
+            realRenderer.renderTarget.DrawBitmap(CreateBitmap(bitmap), D2DTr.tr(destination), opacity, Translate(interp), D2DTr.tr(source));
         }
         public void FillEllipse(Point center, float radiusX, float radiusY, UBrush brush)
         {
@@ -83,17 +83,17 @@ namespace NoForms.Renderers
         }
         public void DrawRectangle(Rectangle rect, UBrush brush, UStroke stroke)
         {
-            realRenderer.renderTarget.DrawRectangle(rect, CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
+            realRenderer.renderTarget.DrawRectangle(D2DTr.tr(rect), CreateBrush(brush), stroke.strokeWidth, CreateStroke(stroke));
         }
         public void FillRectangle(Rectangle rect, UBrush brush)
         {
-            realRenderer.renderTarget.FillRectangle(rect, CreateBrush(brush));
+            realRenderer.renderTarget.FillRectangle(D2DTr.tr(rect), CreateBrush(brush));
         }
         public void DrawRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush, UStroke stroke)
         {
             var rr = new RoundedRectangle()
             {
-                Rect = rect,
+                Rect = D2DTr.tr(rect),
                 RadiusX = radX,
                 RadiusY = radY
             };
@@ -103,7 +103,7 @@ namespace NoForms.Renderers
         {
             var rr = new RoundedRectangle()
             {
-                Rect = rect,
+                Rect = D2DTr.tr(rect),
                 RadiusX = radX,
                 RadiusY = radY
             };
@@ -206,7 +206,7 @@ namespace NoForms.Renderers
             {
                 // FIXME support brushProperties
                 USolidBrush sb = b as USolidBrush;
-                ret= new SolidColorBrush(realRenderer.renderTarget, sb.color);
+                ret= new SolidColorBrush(realRenderer.renderTarget, D2DTr.tr(sb.color));
             }
             else if (b is ULinearGradientBrush)
             {
@@ -220,8 +220,8 @@ namespace NoForms.Renderers
                 },
                 new GradientStopCollection(realRenderer.renderTarget,
                 new GradientStop[] {
-                    new GradientStop() { Color = lb.color1, Position = 0f },
-                    new GradientStop() { Color = lb.color2, Position = 1f } },
+                    new GradientStop() { Color = D2DTr.tr(lb.color1), Position = 0f },
+                    new GradientStop() { Color = D2DTr.tr(lb.color2), Position = 1f } },
                     Gamma.StandardRgb,
                     ExtendMode.Clamp)
                 );

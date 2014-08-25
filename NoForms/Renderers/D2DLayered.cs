@@ -86,11 +86,10 @@ namespace NoForms.Renderers
             lock (dirties)
             {
                 if (!running) return;
-                if (!dirty.IsEmpty)
-                {
-                    RenderPass();
-                    dirty.Reset();
-                }
+                Region dirty = new Region();
+                while (dirties.Count > 0)
+                    dirty.Add((Common.Rectangle)dirties.Dequeue());
+                RenderPass(dirty);
             }
             // Aim for about 60fps max
             dirtyWatcher.Change(17, System.Threading.Timeout.Infinite);
@@ -114,12 +113,12 @@ namespace NoForms.Renderers
         System.Collections.Queue dirties = new System.Collections.Queue();
         public void Dirty(Common.Rectangle rect)
         {
-            dirties.Enqueue(rect);
+            lock(dirties) dirties.Enqueue(rect);
         }
 
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
-        void RenderPass()
+        void RenderPass(Region dirty)
         {
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
             Resize();

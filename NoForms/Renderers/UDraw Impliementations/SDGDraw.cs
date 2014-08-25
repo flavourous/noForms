@@ -33,7 +33,7 @@ namespace NoForms.Renderers
 
             var cr = clipRect;
             if (ignoreRenderOffset) cr -= new NoForms.Common.Point(realRenderer.graphics.Transform.OffsetX, realRenderer.graphics.Transform.OffsetY);
-            var cr2 = new System.Drawing.Region(clipRect);
+            var cr2 = new System.Drawing.Region(SDGTr.trF(clipRect));
             realRenderer.graphics.Clip = cr2;
             PushedClips.Push(cr2);
         }
@@ -50,7 +50,7 @@ namespace NoForms.Renderers
         }
         public void Clear(NoForms.Common.Color color)
         {
-            realRenderer.graphics.Clear(color);
+            realRenderer.graphics.Clear(SDGTr.tr(color));
         }
         public void FillPath(UPath path, UBrush brush)
         {
@@ -70,7 +70,7 @@ namespace NoForms.Renderers
 
             var previousInterp = realRenderer.graphics.CompositingQuality;
             realRenderer.graphics.CompositingQuality = Translate(interp);
-            realRenderer.graphics.DrawImage(bm, destination, source, GraphicsUnit.Pixel);
+            realRenderer.graphics.DrawImage(bm, SDGTr.trF(destination), SDGTr.trF(source), GraphicsUnit.Pixel);
             realRenderer.graphics.CompositingQuality = previousInterp;
         }
         public void FillEllipse(NoForms.Common.Point center, float radiusX, float radiusY, UBrush brush)
@@ -177,12 +177,12 @@ namespace NoForms.Renderers
             {
                 // FIXME support brushProperties
                 USolidBrush sb = b as USolidBrush;
-                ret = new SolidBrush(sb.color);
+                ret = new SolidBrush(SDGTr.tr(sb.color));
             }
             else if (b is ULinearGradientBrush)
             {
                 var lb = b as ULinearGradientBrush;
-                ret = new LinearGradientBrush(SDGTr.trF(lb.point1), SDGTr.trF(lb.point2), lb.color1, lb.color2);
+                ret = new LinearGradientBrush(SDGTr.trF(lb.point1), SDGTr.trF(lb.point2), SDGTr.tr(lb.color1), SDGTr.tr(lb.color2));
             }
             else throw new NotImplementedException();
             return ret;

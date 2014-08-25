@@ -2,92 +2,104 @@
 using System.Collections.Generic;
 using System.Text;
 using c = System.Windows.Forms.Cursors;
+using NoForms.Common;
 
-namespace NoForms.Common
+namespace NoForms
 {
     class SDGTr
     {
-        static public System.Drawing.SizeF trF(NoForms.Common.Size s) { return new System.Drawing.SizeF(s.width, s.height); }
-        static public System.Drawing.Size trI(NoForms.Common.Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
-        static public System.Drawing.PointF trF(NoForms.Common.Point p) { return new System.Drawing.PointF(p.X, p.Y); }
-        static public System.Drawing.Point trI(NoForms.Common.Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
-        static public NoForms.Common.Point tr(System.Drawing.Point p) { return new NoForms.Common.Point(p.X, p.Y); }
-        static public NoForms.Common.Size tr(System.Drawing.Size s) { return new NoForms.Common.Size(s.Width, s.Height); }
-        static public NoForms.Common.Size tr(System.Drawing.SizeF s) { return new NoForms.Common.Size(s.Width, s.Height); }
+        static public System.Drawing.SizeF trF(Size s) { return new System.Drawing.SizeF(s.width, s.height); }
+        static public System.Drawing.Size trI(Size s) { return new System.Drawing.Size((int)s.width, (int)s.height); }
+        static public System.Drawing.PointF trF(Point p) { return new System.Drawing.PointF(p.X, p.Y); }
+        static public System.Drawing.Point trI(Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
+        static public System.Drawing.RectangleF trF(Rectangle r) { return new System.Drawing.RectangleF(r.left, r.top, r.width, r.height); }
+        static public System.Drawing.Color tr(Color c) 
+        {
+            int a = (int)Math.Round(c.a * 255);
+            int r = (int)Math.Round(c.r * 255);
+            int g = (int)Math.Round(c.g * 255);
+            int b = (int)Math.Round(c.b * 255);
+            return System.Drawing.Color.FromArgb(a, r, g, b);
+        }
+        static public Point tr(System.Drawing.Point p) { return new Point(p.X, p.Y); }
+        static public Size tr(System.Drawing.Size s) { return new Size(s.Width, s.Height); }
+        static public Size tr(System.Drawing.SizeF s) { return new Size(s.Width, s.Height); }
     }
     class D2DTr
     {
         static public SharpDX.DrawingSizeF tr(Size s) { return new SharpDX.DrawingSizeF(s.width, s.height); }
         static public SharpDX.DrawingPointF tr(Point p) { return new SharpDX.DrawingPointF(p.X, p.Y); }
+        static public SharpDX.DrawingRectangleF tr(Rectangle r) { return new SharpDX.DrawingRectangleF(r.left, r.top, r.width, r.height); }
+        static public SharpDX.Color tr(Color c) { return new SharpDX.Color(c.r, c.g, c.b, c.a); }
     }
     class WFTr
     {
-        public static System.Windows.Forms.Cursor Translate(NoForms.Common.Cursors cur)
+        public static System.Windows.Forms.Cursor Translate(Cursors cur)
         {
             switch (cur)
             {
-                case NoForms.Common.Cursors.AppStarting: return c.AppStarting;
-                case NoForms.Common.Cursors.Arrow: return c.Arrow;
-                case NoForms.Common.Cursors.Cross: return c.Cross;
+                case Cursors.AppStarting: return c.AppStarting;
+                case Cursors.Arrow: return c.Arrow;
+                case Cursors.Cross: return c.Cross;
                 default:
-                case NoForms.Common.Cursors.Default: return c.Default;
-                case NoForms.Common.Cursors.Hand: return c.Hand;
-                case NoForms.Common.Cursors.Help: return c.Help;
-                case NoForms.Common.Cursors.HSplit: return c.HSplit;
-                case NoForms.Common.Cursors.IBeam: return c.IBeam;
-                case NoForms.Common.Cursors.No: return c.No;
-                case NoForms.Common.Cursors.NoMove2D: return c.NoMove2D;
-                case NoForms.Common.Cursors.NoMoveHoriz: return c.NoMoveHoriz;
-                case NoForms.Common.Cursors.NoMoveVert: return c.NoMoveVert;
-                case NoForms.Common.Cursors.PanEast: return c.PanEast;
-                case NoForms.Common.Cursors.PanNE: return c.PanNE;
-                case NoForms.Common.Cursors.PanNorth: return c.PanNorth;
-                case NoForms.Common.Cursors.PanNW: return c.PanNW;
-                case NoForms.Common.Cursors.PanSE: return c.PanSE;
-                case NoForms.Common.Cursors.PanSouth: return c.PanSouth;
-                case NoForms.Common.Cursors.PanSW: return c.PanSW;
-                case NoForms.Common.Cursors.PanWest: return c.PanWest;
-                case NoForms.Common.Cursors.SizeAll: return c.SizeAll;
-                case NoForms.Common.Cursors.SizeNESW: return c.SizeNESW;
-                case NoForms.Common.Cursors.SizeNS: return c.SizeNS;
-                case NoForms.Common.Cursors.SizeNWSE: return c.SizeNWSE;
-                case NoForms.Common.Cursors.SizeWE: return c.SizeWE;
-                case NoForms.Common.Cursors.UpArrow: return c.UpArrow;
-                case NoForms.Common.Cursors.VSplit: return c.VSplit;
-                case NoForms.Common.Cursors.WaitCursor: return c.WaitCursor;
+                case Cursors.Default: return c.Default;
+                case Cursors.Hand: return c.Hand;
+                case Cursors.Help: return c.Help;
+                case Cursors.HSplit: return c.HSplit;
+                case Cursors.IBeam: return c.IBeam;
+                case Cursors.No: return c.No;
+                case Cursors.NoMove2D: return c.NoMove2D;
+                case Cursors.NoMoveHoriz: return c.NoMoveHoriz;
+                case Cursors.NoMoveVert: return c.NoMoveVert;
+                case Cursors.PanEast: return c.PanEast;
+                case Cursors.PanNE: return c.PanNE;
+                case Cursors.PanNorth: return c.PanNorth;
+                case Cursors.PanNW: return c.PanNW;
+                case Cursors.PanSE: return c.PanSE;
+                case Cursors.PanSouth: return c.PanSouth;
+                case Cursors.PanSW: return c.PanSW;
+                case Cursors.PanWest: return c.PanWest;
+                case Cursors.SizeAll: return c.SizeAll;
+                case Cursors.SizeNESW: return c.SizeNESW;
+                case Cursors.SizeNS: return c.SizeNS;
+                case Cursors.SizeNWSE: return c.SizeNWSE;
+                case Cursors.SizeWE: return c.SizeWE;
+                case Cursors.UpArrow: return c.UpArrow;
+                case Cursors.VSplit: return c.VSplit;
+                case Cursors.WaitCursor: return c.WaitCursor;
             }
         }
-        public static NoForms.Common.Cursors Translate(System.Windows.Forms.Cursor cur)
+        public static Cursors Translate(System.Windows.Forms.Cursor cur)
         {
-            if (cur == c.AppStarting) return NoForms.Common.Cursors.AppStarting;
-            if (cur == c.Arrow) return NoForms.Common.Cursors.Arrow;
-            if (cur == c.Cross) return NoForms.Common.Cursors.Cross;
-            if (cur == c.Default) return NoForms.Common.Cursors.Default;
-            if (cur == c.Hand) return NoForms.Common.Cursors.Hand;
-            if (cur == c.Help) return NoForms.Common.Cursors.Help;
-            if (cur == c.HSplit) return NoForms.Common.Cursors.HSplit;
-            if (cur == c.IBeam) return NoForms.Common.Cursors.IBeam;
-            if (cur == c.No) return NoForms.Common.Cursors.No;
-            if (cur == c.NoMove2D) return NoForms.Common.Cursors.NoMove2D;
-            if (cur == c.NoMoveHoriz) return NoForms.Common.Cursors.NoMoveHoriz;
-            if (cur == c.NoMoveVert) return NoForms.Common.Cursors.NoMoveVert;
-            if (cur == c.PanEast) return NoForms.Common.Cursors.PanEast;
-            if (cur == c.PanNE) return NoForms.Common.Cursors.PanNE;
-            if (cur == c.PanNorth) return NoForms.Common.Cursors.PanNorth;
-            if (cur == c.PanNW) return NoForms.Common.Cursors.PanNW;
-            if (cur == c.PanSE) return NoForms.Common.Cursors.PanSE;
-            if (cur == c.PanSouth) return NoForms.Common.Cursors.PanSouth;
-            if (cur == c.PanSW) return NoForms.Common.Cursors.PanSW;
-            if (cur == c.PanWest) return NoForms.Common.Cursors.PanWest;
-            if (cur == c.SizeAll) return NoForms.Common.Cursors.SizeAll;
-            if (cur == c.SizeNESW) return NoForms.Common.Cursors.SizeNESW;
-            if (cur == c.SizeNS) return NoForms.Common.Cursors.SizeNS;
-            if (cur == c.SizeNWSE) return NoForms.Common.Cursors.SizeNWSE;
-            if (cur == c.SizeWE) return NoForms.Common.Cursors.SizeWE;
-            if (cur == c.UpArrow) return NoForms.Common.Cursors.UpArrow;
-            if (cur == c.VSplit) return NoForms.Common.Cursors.VSplit;
-            if (cur == c.WaitCursor) return NoForms.Common.Cursors.WaitCursor;
-            return NoForms.Common.Cursors.Default;
+            if (cur == c.AppStarting) return Cursors.AppStarting;
+            if (cur == c.Arrow) return Cursors.Arrow;
+            if (cur == c.Cross) return Cursors.Cross;
+            if (cur == c.Default) return Cursors.Default;
+            if (cur == c.Hand) return Cursors.Hand;
+            if (cur == c.Help) return Cursors.Help;
+            if (cur == c.HSplit) return Cursors.HSplit;
+            if (cur == c.IBeam) return Cursors.IBeam;
+            if (cur == c.No) return Cursors.No;
+            if (cur == c.NoMove2D) return Cursors.NoMove2D;
+            if (cur == c.NoMoveHoriz) return Cursors.NoMoveHoriz;
+            if (cur == c.NoMoveVert) return Cursors.NoMoveVert;
+            if (cur == c.PanEast) return Cursors.PanEast;
+            if (cur == c.PanNE) return Cursors.PanNE;
+            if (cur == c.PanNorth) return Cursors.PanNorth;
+            if (cur == c.PanNW) return Cursors.PanNW;
+            if (cur == c.PanSE) return Cursors.PanSE;
+            if (cur == c.PanSouth) return Cursors.PanSouth;
+            if (cur == c.PanSW) return Cursors.PanSW;
+            if (cur == c.PanWest) return Cursors.PanWest;
+            if (cur == c.SizeAll) return Cursors.SizeAll;
+            if (cur == c.SizeNESW) return Cursors.SizeNESW;
+            if (cur == c.SizeNS) return Cursors.SizeNS;
+            if (cur == c.SizeNWSE) return Cursors.SizeNWSE;
+            if (cur == c.SizeWE) return Cursors.SizeWE;
+            if (cur == c.UpArrow) return Cursors.UpArrow;
+            if (cur == c.VSplit) return Cursors.VSplit;
+            if (cur == c.WaitCursor) return Cursors.WaitCursor;
+            return Cursors.Default;
         }
         public static MouseButton Translate(System.Windows.Forms.MouseButtons mb)
         {

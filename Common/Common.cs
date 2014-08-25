@@ -66,30 +66,30 @@ namespace NoForms.Common
             return inp;
         }
 
-        public static implicit operator Color(SharpDX.Color4 input)
-        {
-            return new Color(input.Alpha, input.Red, input.Green, input.Blue);
-        }
-        public static implicit operator SharpDX.Color4(Color input)
-        {
-            return new SharpDX.Color4(input.r, input.g, input.b, input.a);
-        }
-        public static implicit operator SharpDX.Color(Color input)
-        {
-            return new SharpDX.Color(input.r, input.g, input.b, input.a);
-        }
-        public static implicit operator System.Drawing.Color(Color input)
-        {
-            int a = (int)Math.Round(input.a * 255);
-            int r = (int)Math.Round(input.r * 255);
-            int g = (int)Math.Round(input.g * 255);
-            int b = (int)Math.Round(input.b * 255);
-            return System.Drawing.Color.FromArgb(a, r, g, b);
-        }
-        public static implicit operator Color(System.Drawing.Color input)
-        {
-            return new Color(input.A / 255f, input.R / 255f, input.G / 255f, input.B / 255f);
-        }
+        //public static implicit operator Color(SharpDX.Color4 input)
+        //{
+        //    return new Color(input.Alpha, input.Red, input.Green, input.Blue);
+        //}
+        //public static implicit operator SharpDX.Color4(Color input)
+        //{
+        //    return new SharpDX.Color4(input.r, input.g, input.b, input.a);
+        //}
+        //public static implicit operator SharpDX.Color(Color input)
+        //{
+        //    return new SharpDX.Color(input.r, input.g, input.b, input.a);
+        //}
+        //public static implicit operator System.Drawing.Color(Color input)
+        //{
+        //    int a = (int)Math.Round(input.a * 255);
+        //    int r = (int)Math.Round(input.r * 255);
+        //    int g = (int)Math.Round(input.g * 255);
+        //    int b = (int)Math.Round(input.b * 255);
+        //    return System.Drawing.Color.FromArgb(a, r, g, b);
+        //}
+        //public static implicit operator Color(System.Drawing.Color input)
+        //{
+        //    return new Color(input.A / 255f, input.R / 255f, input.G / 255f, input.B / 255f);
+        //}
     }
 
     public struct Size
@@ -102,6 +102,22 @@ namespace NoForms.Common
         }
         public float height;
         public float width;
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Size)) return false;
+            Size s = (Size)obj;
+            if (!s.width.Equals(width)) return false;
+            if (!s.height.Equals(height)) return false;
+            return true;
+        }
+        public override int GetHashCode()
+        {
+            int hc = 17;
+            hc = hc * 31 + height.GetHashCode();
+            hc = hc * 31 + width.GetHashCode();
+            return hc;
+        }
 
         //public static implicit operator System.Drawing.Size(Size me)
         //{
@@ -317,14 +333,14 @@ namespace NoForms.Common
 
 
         // implicits
-        public static implicit operator SharpDX.RectangleF(Rectangle me)
-        {
-            return new SharpDX.RectangleF(me.left, me.top, me.right, me.bottom);
-        }
-        public static implicit operator System.Drawing.RectangleF(Rectangle me)
-        {
-            return new System.Drawing.RectangleF(me.left, me.top, me.width, me.height);
-        }
+        //public static implicit operator SharpDX.RectangleF(Rectangle me)
+        //{
+        //    return new SharpDX.RectangleF(me.left, me.top, me.right, me.bottom);
+        //}
+        //public static implicit operator System.Drawing.RectangleF(Rectangle me)
+        //{
+        //    return new System.Drawing.RectangleF(me.left, me.top, me.width, me.height);
+        //}
     }
 
     public class Region
