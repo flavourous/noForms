@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using STimer = System.Threading.Timer;
 using System.Diagnostics;
 using SharpDX.Direct3D10;
 using SharpDX.DXGI;
@@ -12,7 +13,7 @@ using NoForms.Windowing;
 
 namespace NoForms.Renderers
 {
-    public class D2DSwapChain : IRender<IWFWin>, IDraw
+    public class D2DSwapChain : IRender<IW32Win>, IDraw
     {
         SharpDX.Direct3D10.Device1 device;
         SharpDX.Direct2D1.Factory d2dFactory = new SharpDX.Direct2D1.Factory();
@@ -24,16 +25,17 @@ namespace NoForms.Renderers
         Surface1 surface;
         RenderTarget d2dRenderTarget;
         IntPtr winHandle;
-        Form winForm;
+        IW32Win w32;
 
-        public void Init(IWFWin iwf, NoForm root)
+        public void Init(IW32Win w32, NoForm root)
         {
             // do the form
             noForm = root;
             noForm.renderer = this;
-            this.winForm = iwf.form;
-            winHandle = iwf.form.Handle;
-
+            this.w32 = w32;
+        }
+        void HandleCreatedStuff()
+        {
             SwapChainDescription swapchainDescription = new SwapChainDescription()
             {
                 BufferCount = 1,
@@ -57,69 +59,114 @@ namespace NoForms.Renderers
             _backRenderer = new D2D_RenderElements(d2dRenderTarget);
             _uDraw = new D2DDraw(_backRenderer);
 
-            
         }
-        public Thread renderThread = null;
         public void BeginRender()
         {
-            renderThread = new Thread(new ThreadStart(() =>
-            {
-                lock (lo)
-                {
-                    while (running)
-                        RenderPass();
+            // Make sure it gets layered!
+            winHandle = w32.handle;
 
-                    // free unmanaged
-                    d2dRenderTarget.Dispose();
-                    surface.Dispose();
-                    renderView.Dispose();
-                    backBuffer.Dispose();
-                    swapchain.Dispose();
-                    device.Dispose();
-                }
-            }));
+            // dirty it
+            Dirty(noForm.DisplayRectangle);
+
+            // hook move!
+            noForm.LocationChanged += noForm_LocationChanged;
+
+            // sutff
+            HandleCreatedStuff();
+
+            // Start the watcher
+            dtm = new STimer(o => DirtyLook(), null, 0, 17);
             running = true;
-            renderThread.Start();
         }
-        Object lo = new object();
+
+        void noForm_LocationChanged(Point obj)
+        {
+            Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), winHandle);
+        }
+
+        public Object lock_dirty = new object(), lock_render = new object();
         bool running = false;
         public void EndRender()
         {
-            running = false;
-            lock (lo) { }
+            lock (lock_render)
+            {
+                // Free unmanaged stuff
+                noForm.LocationChanged -= noForm_LocationChanged;
+                running = false;
+                d2dRenderTarget.Dispose();
+                surface.Dispose();
+                renderView.Dispose();
+                backBuffer.Dispose();
+            }
         }
-
-        Common.Region dirty = new Common.Region();
+        Region dirty = new Region();
         public void Dirty(Common.Rectangle rect)
         {
-            dirty.Add(rect);
+            lock (lock_dirty)
+                dirty.Add(rect);
+        }
+        STimer dtm;
+        void DirtyLook()
+        {
+            Region dc = null;
+            lock (lock_dirty)
+            {
+                if (dirty.IsEmpty) return;
+                dc = new Region(dirty);
+                dirty.Reset();
+            }
+
+            lock (lock_render)
+            {
+                if (!running) return;
+                if (dc != null) RenderPass(dc);
+            }
         }
 
+
         public NoForm noForm { get; set; }
-        void RenderPass()
+        void RenderPass(Region dc)
         {
+            // Resize the form and backbuffer to noForm.Size
+            Resize();
+
+            Win32Util.Size w32Size = new Win32Util.Size((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
+            Win32Util.SetWindowSize(w32Size, winHandle);
+
+
             lock (noForm)
             {
-                // Resize the form and backbuffer to noForm.Size
-                Resize();
-
                 // Do Drawing stuff
                 DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
-                d2dRenderTarget.BeginDraw();
-                noForm.DrawBase(this, dirty);
-                d2dRenderTarget.EndDraw();
-
-                winForm.BeginInvoke(new System.Windows.Forms.MethodInvoker(() =>
+                using (Texture2D t2d = new Texture2D(backBuffer.Device, backBuffer.Description))
                 {
-                    winForm.Size = SDGTr.trI(noForm.Size);
-                    winForm.Location = SDGTr.trI(noForm.Location);
-                }));
+                    using (Surface1 srf = t2d.QueryInterface<Surface1>())
+                    {
+                        using (RenderTarget trt = new RenderTarget(d2dFactory, srf, new RenderTargetProperties(d2dRenderTarget.PixelFormat)))
+                        {
+                            _backRenderer.renderTarget = trt;
+                            trt.BeginDraw();
+                            noForm.DrawBase(this, dc);
+                            trt.EndDraw();
 
+                            foreach (var rc in dc.AsRectangles())
+                                t2d.Device.CopySubresourceRegion(t2d, 0,
+                                    new ResourceRegion() { Left = (int)rc.left, Right = (int)rc.right, Top = (int)rc.top, Bottom = (int)rc.bottom, Back = 1, Front = 0 }, backBuffer, 0,
+                                    (int)rc.left, (int)rc.top, 0);
+                        }
+                    }
+                }
                 swapchain.Present(0, PresentFlags.None);
             }
         }
         void Resize()
         {
+            var w = (int)d2dRenderTarget.Size.Width;
+            var h = (int)d2dRenderTarget.Size.Height;
+            var nbb = new Texture2D(device, backBuffer.Description);
+            ResourceRegion rrgn = new ResourceRegion() { Front = 0, Back = 1, Top = 0, Left = 0, Right = w, Bottom = h };
+            device.CopySubresourceRegion(backBuffer, 0, rrgn, nbb, 0, 0, 0, 0);
+
             d2dRenderTarget.Dispose();
             renderView.Dispose();
             surface.Dispose();
@@ -130,7 +177,9 @@ namespace NoForms.Renderers
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
-            _backRenderer.renderTarget = d2dRenderTarget;
+
+            device.CopySubresourceRegion(nbb, 0, rrgn, backBuffer, 0, 0, 0, 0);
+            nbb.Dispose();
         }
 
         // IRenderType

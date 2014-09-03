@@ -17,8 +17,8 @@ namespace Easy
         {
             //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
             IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
-            IPlatform plt2 = new WinForms(new D2DSwapChain(), new WinformsController());
-            var nf = new mnf(plt, new CreateOptions(true,false));
+            IPlatform plt2 = new Win32(new D2DSwapChain(), new WinformsController());
+            var nf = new mnf(plt2, new CreateOptions(true,false));
             nf.window.Run();
         }
     }
@@ -96,7 +96,6 @@ namespace Easy
                 //    r.DrawRectangle(new Rectangle(ws+sc.Location.X, sc.Location.Y, gr.run.runSize.width, gr.run.runSize.height), b, s);
                 //    ws += gr.run.runSize.width;
                 //}
-
                 
                 r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
                 b.color = new Color(1f, 0f, 0f, 0f);
