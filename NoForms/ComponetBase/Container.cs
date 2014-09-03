@@ -22,11 +22,9 @@ namespace NoForms.ComponentBase
         public override void DrawBase(IDraw renderArgument, Region dirty)
         {
             Draw(renderArgument, dirty);
-            renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
                 if (c.visible && dirty.Intersects(c.DisplayRectangle))
                     c.DrawBase(renderArgument, dirty);
-            renderArgument.uDraw.PopAxisAlignedClip();
         }
         public abstract void Draw(IDraw renderArgument, Region dirty);
 

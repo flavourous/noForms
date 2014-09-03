@@ -53,10 +53,6 @@ namespace NoForms.Renderers
             rtt = new SharpDX.Matrix3x2(rtt.M11, rtt.M12, rtt.M21, rtt.M22, offset.X, offset.Y);
             realRenderer.renderTarget.Transform = rtt;
         }
-        public void Clear(Color color)
-        {
-            realRenderer.renderTarget.Clear(D2DTr.tr(color));
-        }
         public void FillPath(UPath path, UBrush brush)
         {
             realRenderer.renderTarget.FillGeometry(CreatePath(path), CreateBrush(brush));

@@ -13,7 +13,6 @@ namespace NoForms.Renderers
         void SetRenderOffset(Point renderOffset);
 
         // Drawing Methods
-        void Clear(Color color);
         void FillPath(UPath path, UBrush brush);
         void DrawPath(UPath path, UBrush brush, UStroke stroke);
         void DrawBitmap(UBitmap bitmap, float opacity, UInterp interp, Rectangle source, Rectangle destination);

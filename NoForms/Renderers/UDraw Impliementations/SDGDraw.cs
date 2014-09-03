@@ -48,10 +48,6 @@ namespace NoForms.Renderers
             var oy = realRenderer.graphics.Transform.OffsetY;
             realRenderer.graphics.Transform.Translate(offset.X - ox, offset.Y - oy);
         }
-        public void Clear(NoForms.Common.Color color)
-        {
-            realRenderer.graphics.Clear(SDGTr.tr(color));
-        }
         public void FillPath(UPath path, UBrush brush)
         {
             realRenderer.graphics.FillPath(CreateBrush(brush), CreatePath(path));

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 
 
@@ -267,17 +268,29 @@ namespace NoForms.Common
             Size = new Size(width, height);
         }
 
-        public Rectangle(Point p1, Point p2)
+        public Rectangle(Point p1, Point p2, bool allowNegative = false)
         {
             float x1 = p1.X;
             float x2 = p2.X;
             float y1 = p1.Y;
             float y2 = p2.Y;
 
-            float x = x1 > x2 ? x2 : x1;
-            float y = y1 > y2 ? y2 : y1;
-            float w = Math.Abs(x1 - x2);
-            float h = Math.Abs(y1 - y2);
+            float x, y, w, h;
+
+            if (allowNegative)
+            {
+                x = x1;
+                y = y1;
+                w = x2 - x1;
+                h = y2 - y1;
+            }
+            else
+            {
+                x = x1 > x2 ? x2 : x1;
+                y = y1 > y2 ? y2 : y1;
+                w = Math.Abs(x1 - x2);
+                h = Math.Abs(y1 - y2);
+            }
 
             Location = new Point(x, y);
             Size = new Size(w, h);
@@ -331,6 +344,7 @@ namespace NoForms.Common
             return ret;
         }
 
+        
 
         // implicits
         //public static implicit operator SharpDX.RectangleF(Rectangle me)
@@ -343,14 +357,112 @@ namespace NoForms.Common
         //}
     }
 
+    // struct for the assignment semantics
     public class Region
     {
-        System.Collections.ObjectModel.Collection<Rectangle> rects = new System.Collections.ObjectModel.Collection<Rectangle>();
+        StringBuilder sb = new StringBuilder();
+        public override string ToString()
+        {
+            sb.Length = 0;
+            foreach (var r in rects)
+                sb.AppendFormat("{0:f1},{1:f1} {2:f1}x{3:f1}   ", r.left, r.top, r.width, r.height);
+            return sb.ToString();
+        }
+        public Region()
+        {
+            rects = new List<Rectangle>();
+        }
+        public Region(Region toCopy)
+        {
+            rects = new List<Rectangle>(toCopy.rects);
+        }
+        List<Rectangle> rects;
         public IEnumerable<Rectangle> AsRectangles()
         {
             return rects;
         }
-        public void Add(Rectangle r) { rects.Add(r); }
+        public void Add(Rectangle r) 
+        {
+            foreach (var er in rects)
+                if (er.left <= r.left && er.right >= r.right && er.top <= r.top && er.bottom >= r.bottom)
+                    return; // because this one is completely contained by an existing one!
+
+            for (int i = 0; i < rects.Count; i++)
+            {
+                var rr = rects[i];
+                if (r.left <= rr.left && r.right >= rr.right && r.top <= rr.top && r.bottom >= rr.bottom)
+                    rects.RemoveAt(i--); // because existing one is completely contained by this new one we will add!
+            }
+
+            rects.Add(r);
+
+            // Shattering logic...clever but not good enough.
+            //IEnumerable<Rectangle> toadd = new Rectangle[] { r };
+            //foreach(var er in rects)
+            //    toadd = MultiExclude(er, toadd);
+            //rects.AddRange(toadd); 
+        }
+        static List<Rectangle> MultiExclude(Rectangle excl, IEnumerable<Rectangle> from)
+        {
+            List<Rectangle> lr = new List<Rectangle>();
+            foreach (var r in from)
+                foreach (var rr in Exclude(excl, r))
+                    lr.Add(rr);
+            return lr;
+        }
+        public static List<Rectangle> Exclude(Rectangle exclusion, Rectangle from)
+        {
+
+            //   EX CONTAINED BY FRM         
+            //                               
+            //   frm (outside)               
+            //   -------------------------   
+            //   |1a  |2a           |3a  |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |  1b|           2b|  3b|   
+            //   |----|-------------|----|   
+            //   |4a  |ex (inside)  |5a  |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |  4b|             |  5b|   
+            //   |----|-------------|----|   
+            //   |6a  |7a           |8a  |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |    |             |    |   
+            //   |  6b|           7b|  8b|   
+            //   -------------------------   
+
+            // Try and create the 8 regions (corner and sides)
+            // if out of range, it wont make sense so dont create.
+
+            // FIXME there only need to be 4 regions infact.  so many optimises possible here...needed?
+
+            // These constrain the exclusion rect to within the from rect, when there is axial intersection.
+            float ex_top = exclusion.top < from.top && from.top < exclusion.bottom ? from.top : exclusion.top;
+            float ex_bot = exclusion.bottom > from.bottom && from.bottom > exclusion.top ? from.bottom : exclusion.bottom;
+            float ex_lft = exclusion.left < from.left && from.left < exclusion.right ? from.left : exclusion.left;
+            float ex_rht = exclusion.right > from.right && from.right > exclusion.left ? from.right : exclusion.right;
+
+            // FIXME less object spawning please
+            List<Rectangle> lr = new List<Rectangle>();
+            Rectangle nr;
+            if ((nr = new Rectangle(new Point(from.left, from.top), new Point(ex_lft, ex_top), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(ex_lft, from.top), new Point(ex_rht, ex_top), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(ex_rht, from.top), new Point(from.right, ex_top), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(from.left, ex_top), new Point(ex_lft, ex_bot), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(ex_rht, ex_top), new Point(from.right, ex_bot), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(from.left, ex_bot), new Point(ex_lft, from.bottom), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(ex_lft, ex_bot), new Point(ex_lft, ex_bot), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            if ((nr = new Rectangle(new Point(ex_rht, ex_bot), new Point(from.right, from.bottom), true)).width > 0 && nr.height > 0) lr.Add(nr);
+            return lr;
+        }
         public void Reset() { rects.Clear(); }
         public bool Intersects(Rectangle r)
         {

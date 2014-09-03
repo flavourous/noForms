@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Diagnostics;
+using STimer = System.Threading.Timer;
 using SharpDX.Direct3D10;
 using SharpDX.DXGI;
 using SharpDX.Direct2D1;
@@ -50,7 +51,7 @@ namespace NoForms.Renderers
                     Height = (int)sz.height,
                     Usage = ResourceUsage.Default,
                     BindFlags = BindFlags.RenderTarget,
-                    Format = Format.B8G8R8A8_UNorm
+                    Format = Format.B8G8R8A8_UNorm,
                 });
                 renderView = new RenderTargetView(device, backBuffer);
                 surface = backBuffer.QueryInterface<Surface1>();
@@ -66,7 +67,6 @@ namespace NoForms.Renderers
 
         IntPtr hWnd;
         SolidColorBrush scbTrans;
-        System.Threading.Timer dirtyWatcher;
         public void BeginRender()
         {
             // Make sure it gets layered!
@@ -77,95 +77,119 @@ namespace NoForms.Renderers
             // dirty it
             Dirty(noForm.DisplayRectangle);
 
+            // hook move!
+            noForm.LocationChanged += noForm_LocationChanged;
+
             // Start the watcher
+            dtm = new STimer(o => DirtyLook(), null, 0, 17);
             running = true;
-            dirtyWatcher = new System.Threading.Timer(DirtyLook, null, 0, System.Threading.Timeout.Infinite);
         }
-        void DirtyLook(Object o)
+
+        void noForm_LocationChanged(Point obj)
         {
-            lock (dirties)
-            {
-                if (!running) return;
-                Region dirty = new Region();
-                while (dirties.Count > 0)
-                    dirty.Add((Common.Rectangle)dirties.Dequeue());
-                RenderPass(dirty);
-            }
-            // Aim for about 60fps max
-            dirtyWatcher.Change(17, System.Threading.Timeout.Infinite);
+            Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), hWnd);
         }
-        Object lo = new object();
+       
+        public Object lock_dirty = new object(), lock_render = new object();
         bool running = false;
         public void EndRender()
         {
-            lock (dirties)
+            lock (lock_render)
             {
                 // Free unmanaged stuff
+                noForm.LocationChanged -= noForm_LocationChanged;
+                running = false;
                 scbTrans.Dispose();
                 d2dRenderTarget.Dispose();
                 surface.Dispose();
                 renderView.Dispose();
                 backBuffer.Dispose();
-                running = false;
             }
         }
-
-        System.Collections.Queue dirties = new System.Collections.Queue();
+        Region dirty = new Region();
         public void Dirty(Common.Rectangle rect)
         {
-            lock(dirties) dirties.Enqueue(rect);
+            lock(lock_dirty)
+                dirty.Add(rect);
+        }
+        STimer dtm;
+        void DirtyLook()
+        {
+            Region dc = null;
+            lock (lock_dirty)
+            {
+                if (dirty.IsEmpty) return;
+                dc = new Region(dirty);
+                dirty.Reset();
+            }
+
+            lock (lock_render)
+            {
+                if (!running) return;
+                if (dc != null) RenderPass(dc);
+            }
         }
 
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
-        void RenderPass(Region dirty)
+        void RenderPass(Region dc)
         {
+            // FIXME so much object spam and disposal in this very high frequency function (also inside Resize called belw).  My poor megabytes!
+
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
             Resize();
+
             // make size...
-            Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), hWnd);
-            Win32Util.SetWindowSize(new Win32Util.Size((int)noForm.Size.width, (int)noForm.Size.height), hWnd);
+            Win32Util.Size w32Size =new Win32Util.Size((int)noForm.Size.width, (int)noForm.Size.height); 
+            Win32Util.SetWindowSize(w32Size, hWnd);
 
             lock (noForm)
             {
                 // Do Drawing stuff
                 DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
-                d2dRenderTarget.BeginDraw();
-                //var drs = dirty.AsRectangles();
-                //foreach(var dr in drs)
-                //    d2dRenderTarget.PushAxisAlignedClip(dr, AntialiasMode.Aliased);
-                noForm.DrawBase(this, dirty);
-                //foreach (var dr in drs)
-                //    d2dRenderTarget.PopAxisAlignedClip();
+                using (Texture2D t2d = new Texture2D(backBuffer.Device, backBuffer.Description))
+                {
+                    using (Surface1 srf = t2d.QueryInterface<Surface1>())
+                    {
+                        using (RenderTarget trt = new RenderTarget(d2dFactory, srf, new RenderTargetProperties(d2dRenderTarget.PixelFormat)))
+                        {
+                            _backRenderer.renderTarget = trt;
+                            trt.BeginDraw();
+                            noForm.DrawBase(this, dc);
+                            // Fill with transparency the edgeBuffer!
+                            trt.FillRectangle(new RectangleF(0, noForm.Size.height, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
+                            trt.FillRectangle(new RectangleF(noForm.Size.width, 0, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
+                            trt.EndDraw();
 
-                // Fill with transparency the edgeBuffer!
-                d2dRenderTarget.FillRectangle(new RectangleF(0, noForm.Size.height, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
-                d2dRenderTarget.FillRectangle(new RectangleF(noForm.Size.width, 0, noForm.Size.width + edgeBufferSize, noForm.Size.height + edgeBufferSize), scbTrans);
-                d2dRenderTarget.EndDraw();
+                            foreach (var rc in dc.AsRectangles())
+                                t2d.Device.CopySubresourceRegion(t2d, 0,
+                                    new ResourceRegion() { Left = (int)rc.left, Right = (int)rc.right, Top = (int)rc.top, Bottom = (int)rc.bottom, Back = 1, Front = 0 }, backBuffer, 0,
+                                    (int)rc.left, (int)rc.top, 0);
+                        }
+                    }
+                }
 
                 // Present DC to windows (ugh layered windows sad times)
                 IntPtr dxHdc = surface.GetDC(false);
                 System.Drawing.Graphics dxdc = System.Drawing.Graphics.FromHdc(dxHdc);
-                Win32Util.Point dstPoint = new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y);
-                Win32Util.Point srcPoint = new Win32Util.Point(0, 0);
-                Win32Util.Size pSize = new Win32Util.Size(rtSize.Width, rtSize.Height);
+                Win32Util.Point dstPoint = new Win32Util.Point((int)(noForm.Location.X), (int)(noForm.Location.Y ));
+                Win32Util.Point srcPoint = new Win32Util.Point(0,0);
+                Win32Util.Size pSize = new Win32Util.Size(rtSize.Width,rtSize.Height);
                 Win32Util.BLENDFUNCTION bf = new Win32Util.BLENDFUNCTION() { SourceConstantAlpha = 255, AlphaFormat = Win32Util.AC_SRC_ALPHA, BlendFlags = 0, BlendOp = 0 };
 
                 bool suc = Win32Util.UpdateLayeredWindow(hWnd, someDC, ref dstPoint, ref pSize, dxHdc, ref srcPoint, 1, ref bf, 2);
+
                 surface.ReleaseDC();
                 dxdc.Dispose();
             }
+
         }
         public int edgeBufferSize = 128;
         void Resize()
         {
-            d2dRenderTarget.Dispose();
-            renderView.Dispose();
-            surface.Dispose();
-            backBuffer.Dispose();
-
+            
             // Initialise d2d things
-            backBuffer = new Texture2D(device, new Texture2DDescription()
+            var nbb = new Texture2D(device, new Texture2DDescription()
             {
                 ArraySize = 1,
                 MipLevels = 1,
@@ -177,12 +201,56 @@ namespace NoForms.Renderers
                 BindFlags = BindFlags.RenderTarget,
                 Format = Format.B8G8R8A8_UNorm
             });
+
+            ResourceRegion rrgn = new ResourceRegion()
+            {
+                Front = 0,
+                Back = 1,
+                Top = 0,
+                Left = 0,
+                Right = (int)noForm.Size.width,
+                Bottom = (int)noForm.Size.height
+            };
+
+            //int bef = HashResource(nbb);
+            device.CopySubresourceRegion(backBuffer, 0, rrgn, nbb, 0, 0, 0, 0);
+            //int aft = HashResource(nbb);
+
+            backBuffer.Dispose();
+            backBuffer = nbb;
+
+            renderView.Dispose();
+            surface.Dispose();
+            d2dRenderTarget.Dispose();
+
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
-            _backRenderer.renderTarget = d2dRenderTarget;
         }
+        int HashResource(Texture2D tx)
+        {
+            var ds = tx.Description;
 
+            ds.Usage = ResourceUsage.Staging;
+            ds.OptionFlags = ResourceOptionFlags.None;
+            ds.BindFlags = BindFlags.None;
+            ds.CpuAccessFlags = CpuAccessFlags.Read;
+
+            int hashy = 31;
+            using (Texture2D ttx = new Texture2D(tx.Device, ds))
+            {
+                tx.Device.CopyResource(tx, ttx);
+                DataStream dStream;
+                ttx.Map(0, MapMode.Read, SharpDX.Direct3D10.MapFlags.None, out dStream);
+                unchecked
+                {
+                    while (dStream.RemainingLength > 0)
+                        hashy = hashy * 17 + dStream.ReadByte().GetHashCode();
+                }
+            }
+
+            return hashy;
+        }
         public void Dispose()
         {
             d2dFactory.Dispose();

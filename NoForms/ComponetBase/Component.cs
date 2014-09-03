@@ -21,6 +21,7 @@ namespace NoForms.ComponentBase
                     var cc = c as Component; // we can maintain our own and subtypes.
                     if (cc != null && cc.fm == null) cc.focusManager = focusManager;
                 });
+                Dirty(DisplayRectangle);
             }
         }
         IComponent_Collection _components = new IComponent_Collection_AlwaysEmpty(null);

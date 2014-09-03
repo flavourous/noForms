@@ -69,6 +69,7 @@ namespace NoForms
                     bool isDirty = !_Size.Equals(_DisplayRectangle.Size);
                     _DisplayRectangle.Size = new Size(Size.width, Size.height);
                     SizeChanged(_Size);
+                    if (isDirty) Dirty(DisplayRectangle);
                 }
             }
         }
@@ -148,12 +149,12 @@ namespace NoForms
         USolidBrush trans = new USolidBrush() { color = new Color(0, 0, 0, 0) };
         public void DrawBase(IDraw rt, Region dirty)
         {
-            foreach (var rect in dirty.AsRectangles())
-                rt.uDraw.FillRectangle(rect, trans); // this lets alphas to desktop happen.
+            rt.uDraw.PushAxisAlignedClip(DisplayRectangle, false);
+            //foreach(var ddr in dirty.AsRectangles())
+            //    rt.uDraw.FillRectangle(ddr, trans);
             Draw(rt, dirty);
 
             // Now we need to draw our childrens....
-            rt.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
             foreach (IComponent c in components)
                 if (c.visible && dirty.Intersects(c.DisplayRectangle)) 
                     c.DrawBase(rt, dirty);

@@ -106,9 +106,7 @@ namespace NoForms.Renderers
                 // Do Drawing stuff
                 DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
                 d2dRenderTarget.BeginDraw();
-                d2dRenderTarget.PushAxisAlignedClip(D2DTr.tr(noForm.DisplayRectangle), AntialiasMode.Aliased);
                 noForm.DrawBase(this, dirty);
-                d2dRenderTarget.PopAxisAlignedClip();
                 d2dRenderTarget.EndDraw();
 
                 winForm.BeginInvoke(new System.Windows.Forms.MethodInvoker(() =>

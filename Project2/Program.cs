@@ -27,7 +27,17 @@ namespace Easy
     {
         SizeHandle sh;
         MoveHandle mh;
-        
+        Scribble sc;
+
+        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+        System.Threading.Timer st;
+        void procq(Object o)
+        {
+            var cdr = sc.DisplayRectangle;
+            cdr.top -= 50;
+            Dirty(cdr);
+        }
+
         public mnf(IPlatform rn, CreateOptions co) : base(rn,co)
         {
             window.Title = "Test App";
@@ -45,7 +55,7 @@ namespace Easy
             sh.ResizeMode = Direction.SOUTH | Direction.EAST;
             components.Add(sh);
 
-            var sc = new Scribble();
+            sc = new Scribble();
             sc.Location = new Point(300, 300);
             sc.Size = new Size(500, 500);
 
@@ -71,11 +81,11 @@ namespace Easy
                                  UHAlign.Right, UVAlign.Bottom, true, 500,200);
             tx.font = new UFont("Arial", 12, false, false);
 
-            var sw = System.Diagnostics.Stopwatch.StartNew();
             sc.draw += (r, b, s) =>
             {
                 s.strokeWidth = 1;
-                b.color = new Color(1f, 1, 0f, 0);
+                double ssw = Math.Sin(sw.ElapsedMilliseconds / 1000.0);
+                b.color = new Color(1f, (float)(ssw + 1.0 / 2.0), 0f, 0f);
                 r.DrawPath(pth,b,s);
 
                 //var ti = (r as NoForms.Renderers.SDGDraw).GetSDGTextInfo(tx);
@@ -87,19 +97,23 @@ namespace Easy
                 //    ws += gr.run.runSize.width;
                 //}
 
-                double ssw = Math.Sin(sw.ElapsedMilliseconds/1000.0);
-                b.color = new Color(1f, (float)(ssw+1.0/2.0), 0f, 0f);
+                
                 r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
                 b.color = new Color(1f, 0f, 0f, 0f);
                 r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
             };
+            sc.Clicked += p => Size = new Size(Size.width - 10, Size.height-10);
             components.Add(sc);
             SizeChanged += mnf_SizeChanged;
+
+            st = new System.Threading.Timer(procq, null, 0, 10);
         }
+
+        UBrush bgb = new USolidBrush() { color = new Color(1, 0, 0, 1) };
         public override void Draw(IDraw rt, Region dirty)
         {
             base.Draw(rt, dirty);
-            rt.uDraw.Clear(new Color(1, 0, 0, 1));
+            rt.uDraw.FillRectangle(DisplayRectangle, bgb);
         }
 
         void mnf_SizeChanged(Size sz)

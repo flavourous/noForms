@@ -394,35 +394,41 @@ namespace NoFormsSDK
             // trimSize is the size sans scrollbars.  but maybe we should just let the thing overdraw...
             Draw(renderArgument, dirty);
             renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
-            foreach (IComponent c in components)
-            {
-                if (!c.visible) continue;
-                if (c.Scrollable)
-                {
-                    var cdr = c.DisplayRectangle;
-                    var fdr = new Rectangle(cdr.left - xOffset, cdr.top - yOffset, cdr.width, cdr.height);
-                    if (!dirty.Intersects(fdr)) continue;
-                    if (!offset)
-                    {
-                        renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
-                        offset = true;
-                    }
-                    c.DrawBase(renderArgument, dirty);
-                }
-                else
-                {
-                    if (!dirty.Intersects(c.DisplayRectangle)) continue;
-                    if (offset)
-                    {
-                        renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
-                        offset = false;
-                    }
-                    c.DrawBase(renderArgument, dirty);
-                }
-            }
+
+            // Old method...not use, better to keep child logic in Container Superclass.
+            //foreach (IComponent c in components)
+            //{
+            //    if (!c.visible) continue;
+            //    if (c.Scrollable)
+            //    {
+            //        var cdr = c.DisplayRectangle;
+            //        var fdr = new Rectangle(cdr.left - xOffset, cdr.top - yOffset, cdr.width, cdr.height);
+            //        if (!dirty.Intersects(fdr)) continue;
+            //        if (!offset)
+            //        {
+            //            renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
+            //            offset = true;
+            //        }
+            //        c.DrawBase(renderArgument, dirty);
+            //    }
+            //    else
+            //    {
+            //        if (!dirty.Intersects(c.DisplayRectangle)) continue;
+            //        if (offset)
+            //        {
+            //            renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
+            //            offset = false;
+            //        }
+            //        c.DrawBase(renderArgument, dirty);
+            //    }
+            //}
+            
+            // JUST use 2 internal containers!! ugh FIXME
+
             renderArgument.uDraw.PopAxisAlignedClip();
             if (offset) renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
 
+            // Corner square hax
             float hgap = HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;
             float vgap = VerticalScrollbarVisible ? VerticalScrollbarWidth : 0;
             renderArgument.uDraw.FillRectangle(new Rectangle(Location.X + Size.width - vgap, Location.Y+ Size.height - hgap, vgap, hgap), background);
