@@ -81,8 +81,11 @@ namespace NoForms.Renderers
             noForm.LocationChanged += noForm_LocationChanged;
 
             // Start the watcher
-            dtm = new STimer(o => DirtyLook(), null, 0, 17);
             running = true;
+            DirtyObserver = new Thread(DirtyObs);
+            DirtyObserver.IsBackground = false;
+            DirtyObserver.Start();
+            noForm_LocationChanged(noForm.Location);
         }
 
         void noForm_LocationChanged(Point obj)
@@ -112,12 +115,23 @@ namespace NoForms.Renderers
             lock(lock_dirty)
                 dirty.Add(rect);
         }
-        STimer dtm;
+        Thread DirtyObserver;
+        void DirtyObs(Object o)
+        {
+            while (running)
+            {
+                DirtyLook();
+                Thread.Sleep(17);
+            }
+        }
         void DirtyLook()
         {
             Region dc = null;
             lock (lock_dirty)
             {
+                // dirty animated regions...
+                foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
+
                 if (dirty.IsEmpty) return;
                 dc = new Region(dirty);
                 dirty.Reset();
@@ -130,10 +144,14 @@ namespace NoForms.Renderers
             }
         }
 
+
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
-        void RenderPass(Region dc)
+        Stopwatch renderTime = new Stopwatch();
+        public float currentFps { get; private set; }
+        void RenderPass(Common.Region dc)
         {
+            renderTime.Start();
             // FIXME so much object spam and disposal in this very high frequency function (also inside Resize called belw).  My poor megabytes!
 
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
@@ -182,6 +200,8 @@ namespace NoForms.Renderers
                 surface.ReleaseDC();
                 dxdc.Dispose();
             }
+            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            renderTime.Reset();
 
         }
         public int edgeBufferSize = 128;

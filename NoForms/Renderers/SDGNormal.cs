@@ -2,6 +2,7 @@
 using NoForms.Renderers;
 using NoForms.Common;
 using System.Threading;
+using STimer = System.Threading.Timer;
 using System.Diagnostics;
 using NoForms.Windowing;
 using System.Windows.Forms;
@@ -37,60 +38,117 @@ namespace NoForms.Renderers
 
         }
 
-        public Thread renderThread = null;
         public void BeginRender()
         {
-            renderThread = new Thread(new ThreadStart(() =>
-            {
-                while (running)
-                    RenderPass();
-            }));
+            // dirty it
+            Dirty(noForm.DisplayRectangle);
+
+            // hook move!
+            noForm.LocationChanged += noForm_LocationChanged;
+
+            // Start the watcher
             running = true;
-            renderThread.Start();
+            DirtyObserver = new Thread(DirtyObs);
+            DirtyObserver.IsBackground = false;
+            DirtyObserver.Start();
+            noForm_LocationChanged(noForm.Location);
         }
-        Object lo = new object();
+
+        void noForm_LocationChanged(Common.Point obj)
+        {
+            winForm.Location = new System.Drawing.Point((int)noForm.Location.X, (int)noForm.Location.Y);
+        }
+
+        public Object lock_dirty = new object(), lock_render = new object();
         bool running = false;
         public void EndRender()
         {
-            running = false;
-            renderThread.Join();
+            lock (lock_render)
+            {
+                // Free unmanaged stuff
+                noForm.LocationChanged -= noForm_LocationChanged;
+                running = false;
+            }
         }
-
         Common.Region dirty = new Common.Region();
         public void Dirty(Common.Rectangle rect)
         {
-            dirty.Add(rect);
+            lock (lock_dirty)
+                dirty.Add(rect);
+        }
+        Thread DirtyObserver;
+        void DirtyObs(Object o)
+        {
+            while (running)
+            {
+                DirtyLook();
+                Thread.Sleep(17);
+            }
+        }
+        void DirtyLook()
+        {
+            Common.Region dc = null;
+            lock (lock_dirty)
+            {
+                // dirty animated regions...
+                foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
+
+                if (dirty.IsEmpty) return;
+                dc = new Common.Region(dirty);
+                dirty.Reset();
+            }
+
+            lock (lock_render)
+            {
+                if (!running) return;
+                if (dc != null) RenderPass(dc);
+            }
         }
 
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
-        void RenderPass()
+        Stopwatch renderTime = new Stopwatch();
+        public float currentFps { get; private set; }
+        void RenderPass(Common.Region dc)
         {
+            renderTime.Start();
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
             Resize();
 
             lock (noForm)
             {
                 // Do Drawing stuff
-                noForm.DrawBase(this, dirty);
+                noForm.DrawBase(this, dc);
 
                 // flush buffer to window
                 var winGr = winForm.CreateGraphics();
-                winGr.DrawImageUnscaled(buffer, new System.Drawing.Point(0, 0));
+                foreach (var dr in dc.AsRectangles())
+                {
+                    var sdr = SDGTr.trF(dr);
+                    winGr.DrawImage(buffer, sdr, sdr, GraphicsUnit.Pixel);
+                }
                 winGr.Dispose();
             }
+            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            renderTime.Reset();
         }
         void Resize()
         {
             winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
+                var obb = buffer;
                 graphics.Dispose();
-                buffer.Dispose();
+                
                 winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width , (int)noForm.Size.height );
                 winForm.Location = SDGTr.trI(noForm.Location);
                 buffer = new Bitmap(winForm.Width, winForm.Height);
                 graphics = Graphics.FromImage(buffer);
+                graphics.DrawImageUnscaledAndClipped(obb, new System.Drawing.Rectangle(0, 0, buffer.Width, buffer.Height));
+
                 _backRenderer.graphics = graphics;
+
+                obb.Dispose();
+
             }));
         }
 

@@ -35,6 +35,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Animation.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="CursorEnum.cs" />
     <Compile Include="EllipseLib\Ellipse.cs" />

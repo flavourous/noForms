@@ -20,5 +20,6 @@ namespace NoForms
         void EndRender();
         NoForm noForm { get; set; }
         void Dirty(Rectangle rect);
+        float currentFps { get; }
     }
 }

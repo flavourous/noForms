@@ -15,10 +15,10 @@ namespace NoForms
         static public System.Drawing.RectangleF trF(Rectangle r) { return new System.Drawing.RectangleF(r.left, r.top, r.width, r.height); }
         static public System.Drawing.Color tr(Color c) 
         {
-            int a = (int)Math.Round(c.a * 255);
-            int r = (int)Math.Round(c.r * 255);
-            int g = (int)Math.Round(c.g * 255);
-            int b = (int)Math.Round(c.b * 255);
+            byte a = (byte)Math.Round(c.a * 255);
+            byte r = (byte)Math.Round(c.r * 255);
+            byte g = (byte)Math.Round(c.g * 255);
+            byte b = (byte)Math.Round(c.b * 255);
             return System.Drawing.Color.FromArgb(a, r, g, b);
         }
         static public Point tr(System.Drawing.Point p) { return new Point(p.X, p.Y); }

@@ -13,12 +13,18 @@ namespace Easy
 {
     class Program
     {
+        public static IRender rdr;
         static void Main()
         {
-            //NoForms.Renderers.D2DSwapChain rsc = new NoForms.Renderers.D2DSwapChain();
-            IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
-            IPlatform plt2 = new Win32(new D2DSwapChain(), new WinformsController());
-            var nf = new mnf(plt2, new CreateOptions(true,false));
+            D2DLayered r1 = new D2DLayered();
+            D2DSwapChain r2 = new D2DSwapChain();
+            SDGNormal r3 = new SDGNormal();
+            WinformsController c1 = new WinformsController();
+            IPlatform plt = new Win32(r1, c1);
+            IPlatform plt2 = new Win32(r2, c1);
+            IPlatform plt3 = new WinForms(r3, c1);
+            var nf = new mnf(plt3, new CreateOptions(true,false));
+            rdr = r3;
             nf.window.Run();
         }
     }
@@ -30,7 +36,6 @@ namespace Easy
         Scribble sc;
 
         System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-        System.Threading.Timer st;
         void procq(Object o)
         {
             var cdr = sc.DisplayRectangle;
@@ -56,8 +61,8 @@ namespace Easy
             components.Add(sh);
 
             sc = new Scribble();
-            sc.Location = new Point(300, 300);
-            sc.Size = new Size(500, 500);
+            sc.Location = new Point(100, 100);
+            sc.Size = new Size(500, 300);
 
             UPath pth = new UPath();
             UFigure fig;
@@ -81,12 +86,28 @@ namespace Easy
                                  UHAlign.Right, UVAlign.Bottom, true, 500,200);
             tx.font = new UFont("Arial", 12, false, false);
 
+            var dr = new AnimatedRect() { area = sc.DisplayRectangle };
+            var oleft = dr.area.left;
+            var id = BeginDirty(dr);
+            Rectangle[] ors = new Rectangle[100];
+            int ri = 0;
             sc.draw += (r, b, s) =>
             {
+
                 s.strokeWidth = 1;
-                double ssw = Math.Sin(sw.ElapsedMilliseconds / 1000.0);
-                b.color = new Color(1f, (float)(ssw + 1.0 / 2.0), 0f, 0f);
-                r.DrawPath(pth,b,s);
+                double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0)/2.0;
+                b.color = new Color(1f, (float)ssw, 0f, 0f);
+                //r.DrawPath(pth,b,s);
+
+                if (dr != null)
+                {
+                    dr.area.left = oleft + (float)ssw * 50f;
+                    if (sw.Elapsed.TotalSeconds > 5)
+                    {
+                        EndDirty(id);
+                        dr = null;
+                    }
+                }
 
                 //var ti = (r as NoForms.Renderers.SDGDraw).GetSDGTextInfo(tx);
                 //float ws = 0;
@@ -96,16 +117,39 @@ namespace Easy
                 //    r.DrawRectangle(new Rectangle(ws+sc.Location.X, sc.Location.Y, gr.run.runSize.width, gr.run.runSize.height), b, s);
                 //    ws += gr.run.runSize.width;
                 //}
-                
+
                 r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
-                b.color = new Color(1f, 0f, 0f, 0f);
-                r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
+                b.color = new Color(.5f, 0f, .5f, 0f);
+                r.FillRectangle(sc.DisplayRectangle, b);
+                
+                float h = ((Program.rdr.currentFps)/300f)*tx.height;
+                float x = (float)ssw * (tx.width-5) + sc.Location.X;
+                ors[ri] = new Rectangle(x, sc.Location.Y +  tx.height - h, 5, h);
+                for(int ii=100;ii>=0;ii--)
+                {
+                    int at = (ri+ii) % 100;
+                    b.color = new Color((float)ii/100f, 0f, (float)(ssw + ii/100f)/2f, 0f);
+                    r.FillRectangle(ors[at], b);
+                }
+                ri = (ri+1)%100;
+                //if (ors.Count > 100)
+                //{
+                //    var ns = new Stack<Rectangle>();
+                //    t = 0;
+                //    foreach (var rct in ors)
+                //    {
+                //        ns.Push(rct);
+                //        if (t++ > 100) break;
+                //    }
+                //    ors = ns;
+                //}
+
+                //r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
             };
-            sc.Clicked += p => Size = new Size(Size.width - 10, Size.height-10);
+            sc.Clicked += p => Size = new Size(Size.width + 10, Size.height+10);
             components.Add(sc);
             SizeChanged += mnf_SizeChanged;
-
-            st = new System.Threading.Timer(procq, null, 0, 10);
+           
         }
 
         UBrush bgb = new USolidBrush() { color = new Color(1, 0, 0, 1) };

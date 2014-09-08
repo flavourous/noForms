@@ -62,7 +62,6 @@ namespace NoForms.Renderers
         }
         public void BeginRender()
         {
-            // Make sure it gets layered!
             winHandle = w32.handle;
 
             // dirty it
@@ -75,15 +74,18 @@ namespace NoForms.Renderers
             HandleCreatedStuff();
 
             // Start the watcher
-            dtm = new STimer(o => DirtyLook(), null, 0, 17);
             running = true;
+            DirtyObserver = new Thread(DirtyObs);
+            DirtyObserver.IsBackground = false;
+            DirtyObserver.Start();
+            noForm_LocationChanged(noForm.Location);
         }
 
         void noForm_LocationChanged(Point obj)
         {
             Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), winHandle);
         }
-
+        Thread DirtyObserver;
         public Object lock_dirty = new object(), lock_render = new object();
         bool running = false;
         public void EndRender()
@@ -105,12 +107,22 @@ namespace NoForms.Renderers
             lock (lock_dirty)
                 dirty.Add(rect);
         }
-        STimer dtm;
+        void DirtyObs(Object o)
+        {
+            while (running)
+            {
+                DirtyLook();
+                Thread.Sleep(17);
+            }
+        }
         void DirtyLook()
         {
             Region dc = null;
             lock (lock_dirty)
             {
+                // dirty animated regions...
+                foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
+
                 if (dirty.IsEmpty) return;
                 dc = new Region(dirty);
                 dirty.Reset();
@@ -123,10 +135,12 @@ namespace NoForms.Renderers
             }
         }
 
-
         public NoForm noForm { get; set; }
-        void RenderPass(Region dc)
+        Stopwatch renderTime = new Stopwatch();
+        public float currentFps { get; private set; }
+        void RenderPass(Common.Region dc)
         {
+            renderTime.Start();
             // Resize the form and backbuffer to noForm.Size
             Resize();
 
@@ -158,6 +172,9 @@ namespace NoForms.Renderers
                 }
                 swapchain.Present(0, PresentFlags.None);
             }
+            //System.Threading.Thread.Sleep(1000);
+            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            renderTime.Reset();
         }
         void Resize()
         {

@@ -106,6 +106,25 @@ namespace NoForms
             //...just tell the renderer!
             renderer.Dirty(rect);
         }
+        Dictionary<Guid, AnimatedRect> ars = new Dictionary<Guid, AnimatedRect>();
+        public IEnumerable<AnimatedRect> DirtyAnimated { get { return ars.Values; } }
+        public Guid BeginDirty(AnimatedRect ar)
+        {
+            // Give 10 chances to get a unique key.
+            Guid newKey = Guid.NewGuid();
+            int tries =0;
+            while(ars.ContainsKey(newKey))
+            {
+                newKey = Guid.NewGuid();
+                if(tries++ > 10) throw new ArgumentException("Could not generate another unique guid");
+            }
+            ars[newKey] = ar;
+            return newKey;
+        }
+        public void EndDirty(Guid id)
+        {
+            ars.Remove(id);
+        }
 
         // Keyboard Hooks
         public void KeyUpDown(NoForms.Common.Keys key, NoForms.Common.ButtonState bs)

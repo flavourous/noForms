@@ -130,7 +130,7 @@ namespace NoForms.ComponentBase
         }
 
         public abstract void DrawBase(IDraw renderArgument, Region dirty);
-        public virtual void Dirty(Rectangle rect)
+        public void Dirty(Rectangle rect)
         {
             if(parent != null)
                 parent.Dirty(rect);
