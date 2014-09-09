@@ -127,7 +127,8 @@ namespace NoForms.Renderers
         void DirtyLook()
         {
             Region dc = null;
-            lock (lock_dirty)
+            Size ReqSize;
+            lock(noForm) lock (lock_dirty)
             {
                 // dirty animated regions...
                 foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
@@ -135,12 +136,14 @@ namespace NoForms.Renderers
                 if (dirty.IsEmpty) return;
                 dc = new Region(dirty);
                 dirty.Reset();
+
+                ReqSize = noForm.ReqSize;
             }
 
             lock (lock_render)
             {
                 if (!running) return;
-                if (dc != null) RenderPass(dc);
+                if (dc != null) RenderPass(dc, ReqSize);
             }
         }
 
@@ -149,17 +152,21 @@ namespace NoForms.Renderers
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
         public float currentFps { get; private set; }
-        void RenderPass(Common.Region dc)
+        void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
             // FIXME so much object spam and disposal in this very high frequency function (also inside Resize called belw).  My poor megabytes!
 
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
-            Resize();
+            Resize(ReqSize);
 
             // make size...
-            Win32Util.Size w32Size =new Win32Util.Size((int)noForm.Size.width, (int)noForm.Size.height); 
+            Win32Util.Size w32Size = new Win32Util.Size((int)ReqSize.width, (int)ReqSize.height); 
             Win32Util.SetWindowSize(w32Size, hWnd);
+
+            // Allow noform size to change as requested..like a layout hook (truncating layout passes with the render passes for performance)
+            noForm._DisplayRectangle.Size = noForm._Size = new Size(ReqSize.width, ReqSize.height);
+            noForm.OnSizeChanged(ReqSize);
 
             lock (noForm)
             {
@@ -205,7 +212,7 @@ namespace NoForms.Renderers
 
         }
         public int edgeBufferSize = 128;
-        void Resize()
+        void Resize(Size ReqSize)
         {
             
             // Initialise d2d things
@@ -215,8 +222,8 @@ namespace NoForms.Renderers
                 MipLevels = 1,
                 SampleDescription = new SampleDescription(1, 0),
                 OptionFlags = ResourceOptionFlags.GdiCompatible,
-                Width = (int)noForm.Size.width + edgeBufferSize,
-                Height = (int)noForm.Size.height + edgeBufferSize,
+                Width = (int)ReqSize.width + edgeBufferSize,
+                Height = (int)ReqSize.height + edgeBufferSize,
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.RenderTarget,
                 Format = Format.B8G8R8A8_UNorm
@@ -228,8 +235,8 @@ namespace NoForms.Renderers
                 Back = 1,
                 Top = 0,
                 Left = 0,
-                Right = (int)noForm.Size.width,
-                Bottom = (int)noForm.Size.height
+                Right = (int)ReqSize.width,
+                Bottom = (int)ReqSize.height
             };
 
             //int bef = HashResource(nbb);

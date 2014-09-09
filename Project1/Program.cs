@@ -24,14 +24,12 @@ namespace testapp
         public static void Main()
         {
             Load();
-
             IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
             NoForm nf = rootForm = new MyNoForm(plt, new CreateOptions(true,false));
             nf.window.Title = "Test App";
             nf.Size = new Size(700, 500);
             nf.MinSize = new Size(700, 300);
             nf.window.Run();
-
             Save();
         }
         static void Save()
@@ -120,7 +118,6 @@ namespace testapp
 
         public MyNoForm(IPlatform rm, CreateOptions co) : base(rm,co)
         {
-
             // move and resize
             mh = new mmh(this);
             mh.ZIndex = 1;
@@ -427,7 +424,8 @@ namespace testapp
                 }
         }
         public static NoForms.IComponent iAmDropped = null;
-        public static StoryState iAmDropped_oldParent;
+        public
+            static StoryState iAmDropped_oldParent;
 
         
     }

@@ -142,7 +142,6 @@ namespace NoFormsSDK
                 else textLayoutNeedsUpdate = false;
 
                 // sort out some settings
-                
                 data.wrapped = layout == LayoutStyle.WrappedMultiLine;
                 data.width = PaddedRectangle.width;
                 data.height = PaddedRectangle.height;

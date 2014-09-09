@@ -118,7 +118,10 @@ namespace NoForms.Renderers
         void DirtyLook()
         {
             Region dc = null;
-            lock (lock_dirty)
+            Size ReqSize;
+            // we lock dirty so that we take from and put to the region concurrently OK
+            // we lock noForm so that when ReqSize (size) is being set, we pick up matching ReqSize and Dirty here
+            lock(noForm) lock (lock_dirty) 
             {
                 // dirty animated regions...
                 foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
@@ -126,57 +129,60 @@ namespace NoForms.Renderers
                 if (dirty.IsEmpty) return;
                 dc = new Region(dirty);
                 dirty.Reset();
+
+                ReqSize = noForm.ReqSize;
             }
 
             lock (lock_render)
             {
                 if (!running) return;
-                if (dc != null) RenderPass(dc);
+                if (dc != null) RenderPass(dc, ReqSize);
             }
         }
 
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
         public float currentFps { get; private set; }
-        void RenderPass(Common.Region dc)
+        void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
             // Resize the form and backbuffer to noForm.Size
-            Resize();
+            Resize(ReqSize);
 
-            Win32Util.Size w32Size = new Win32Util.Size((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
+            Win32Util.Size w32Size = new Win32Util.Size((int)ReqSize.width, (int)ReqSize.height);
             Win32Util.SetWindowSize(w32Size, winHandle);
 
+            // Allow noform size to change as requested..like a layout hook (truncating layout passes with the render passes for performance)
+            noForm._DisplayRectangle.Size = noForm._Size = new Size(ReqSize.width, ReqSize.height);
+            noForm.OnSizeChanged(ReqSize);
 
-            lock (noForm)
+            // Do Drawing stuff
+            DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
+            using (Texture2D t2d = new Texture2D(backBuffer.Device, backBuffer.Description))
             {
-                // Do Drawing stuff
-                DrawingSize rtSize = new DrawingSize((int)d2dRenderTarget.Size.Width, (int)d2dRenderTarget.Size.Height);
-                using (Texture2D t2d = new Texture2D(backBuffer.Device, backBuffer.Description))
+                using (Surface1 srf = t2d.QueryInterface<Surface1>())
                 {
-                    using (Surface1 srf = t2d.QueryInterface<Surface1>())
+                    using (RenderTarget trt = new RenderTarget(d2dFactory, srf, new RenderTargetProperties(d2dRenderTarget.PixelFormat)))
                     {
-                        using (RenderTarget trt = new RenderTarget(d2dFactory, srf, new RenderTargetProperties(d2dRenderTarget.PixelFormat)))
-                        {
-                            _backRenderer.renderTarget = trt;
-                            trt.BeginDraw();
-                            noForm.DrawBase(this, dc);
-                            trt.EndDraw();
+                        _backRenderer.renderTarget = trt;
+                        trt.BeginDraw();
+                        noForm.DrawBase(this, dc);
+                        trt.EndDraw();
 
-                            foreach (var rc in dc.AsRectangles())
-                                t2d.Device.CopySubresourceRegion(t2d, 0,
-                                    new ResourceRegion() { Left = (int)rc.left, Right = (int)rc.right, Top = (int)rc.top, Bottom = (int)rc.bottom, Back = 1, Front = 0 }, backBuffer, 0,
-                                    (int)rc.left, (int)rc.top, 0);
-                        }
+                        foreach (var rc in dc.AsRectangles())
+                            t2d.Device.CopySubresourceRegion(t2d, 0,
+                                new ResourceRegion() { Left = (int)rc.left, Right = (int)rc.right, Top = (int)rc.top, Bottom = (int)rc.bottom, Back = 1, Front = 0 }, backBuffer, 0,
+                                (int)rc.left, (int)rc.top, 0);
                     }
                 }
-                swapchain.Present(0, PresentFlags.None);
             }
+            swapchain.Present(0, PresentFlags.None);
+
             //System.Threading.Thread.Sleep(1000);
             currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
-        void Resize()
+        void Resize(Common.Size ReqSize)
         {
             var w = (int)d2dRenderTarget.Size.Width;
             var h = (int)d2dRenderTarget.Size.Height;
@@ -189,7 +195,7 @@ namespace NoForms.Renderers
             surface.Dispose();
             backBuffer.Dispose();
 
-            swapchain.ResizeBuffers(0, (int)noForm.Size.width, (int)noForm.Size.height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
+            swapchain.ResizeBuffers(0, (int)ReqSize.width, (int)ReqSize.height, Format.B8G8R8A8_UNorm, SwapChainFlags.None);
             backBuffer = Texture2D.FromSwapChain<Texture2D>(swapchain, 0);
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();

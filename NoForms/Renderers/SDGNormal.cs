@@ -88,7 +88,8 @@ namespace NoForms.Renderers
         void DirtyLook()
         {
             Common.Region dc = null;
-            lock (lock_dirty)
+            Common.Size ReqSize;
+            lock(noForm) lock (lock_dirty)
             {
                 // dirty animated regions...
                 foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
@@ -96,12 +97,14 @@ namespace NoForms.Renderers
                 if (dirty.IsEmpty) return;
                 dc = new Common.Region(dirty);
                 dirty.Reset();
+
+                ReqSize = noForm.ReqSize;
             }
 
             lock (lock_render)
             {
                 if (!running) return;
-                if (dc != null) RenderPass(dc);
+                if (dc != null) RenderPass(dc, ReqSize);
             }
         }
 
@@ -109,11 +112,15 @@ namespace NoForms.Renderers
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
         public float currentFps { get; private set; }
-        void RenderPass(Common.Region dc)
+        void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
             // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
-            Resize();
+            Resize(ReqSize);
+
+            // Allow noform size to change as requested..like a layout hook (truncating layout passes with the render passes for performance)
+            noForm._DisplayRectangle.Size = noForm._Size = new Common.Size(ReqSize.width, ReqSize.height);
+            noForm.OnSizeChanged(ReqSize);
 
             lock (noForm)
             {
@@ -132,14 +139,14 @@ namespace NoForms.Renderers
             currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
-        void Resize()
+        void Resize(Common.Size ReqSize)
         {
             winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
             {
                 var obb = buffer;
                 graphics.Dispose();
-                
-                winForm.ClientSize = new System.Drawing.Size((int)noForm.Size.width , (int)noForm.Size.height );
+
+                winForm.ClientSize = new System.Drawing.Size((int)ReqSize.width, (int)ReqSize.height);
                 winForm.Location = SDGTr.trI(noForm.Location);
                 buffer = new Bitmap(winForm.Width, winForm.Height);
                 graphics = Graphics.FromImage(buffer);

@@ -65,6 +65,7 @@ namespace NoFormsSDK
                 if (value < 0) _xOffset = 0;
                 else if (value > cw - trimWidth) _xOffset = cw - trimWidth;
                 else _xOffset = value;
+                Dirty(DisplayRectangle);
             }
         }
         float yOffset
@@ -76,6 +77,7 @@ namespace NoFormsSDK
                 if (value < 0) _yOffset = 0;
                 else if (value > ch - trimHeight) _yOffset = ch - trimHeight;
                 else _yOffset = value;
+                Dirty(DisplayRectangle);
             }
         }
         protected float HorizontalScrollbarHeight, VerticalScrollbarWidth;
@@ -395,36 +397,34 @@ namespace NoFormsSDK
             Draw(renderArgument, dirty);
             renderArgument.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
 
-            // Old method...not use, better to keep child logic in Container Superclass.
-            //foreach (IComponent c in components)
-            //{
-            //    if (!c.visible) continue;
-            //    if (c.Scrollable)
-            //    {
-            //        var cdr = c.DisplayRectangle;
-            //        var fdr = new Rectangle(cdr.left - xOffset, cdr.top - yOffset, cdr.width, cdr.height);
-            //        if (!dirty.Intersects(fdr)) continue;
-            //        if (!offset)
-            //        {
-            //            renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
-            //            offset = true;
-            //        }
-            //        c.DrawBase(renderArgument, dirty);
-            //    }
-            //    else
-            //    {
-            //        if (!dirty.Intersects(c.DisplayRectangle)) continue;
-            //        if (offset)
-            //        {
-            //            renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
-            //            offset = false;
-            //        }
-            //        c.DrawBase(renderArgument, dirty);
-            //    }
-            //}
+             //Old method...not use, better to keep child logic in Container Superclass.
+            foreach (IComponent c in components)
+            {
+                if (!c.visible) continue;
+                if (c.Scrollable)
+                {
+                    var cdr = c.DisplayRectangle;
+                    var fdr = new Rectangle(cdr.left - xOffset, cdr.top - yOffset, cdr.width, cdr.height);
+                    if (!dirty.Intersects(fdr)) continue;
+                    if (!offset)
+                    {
+                        renderArgument.uDraw.SetRenderOffset(new Point(-xOffset, -yOffset));
+                        offset = true;
+                    }
+                    c.DrawBase(renderArgument, dirty);
+                }
+                else
+                {
+                    if (!dirty.Intersects(c.DisplayRectangle)) continue;
+                    if (offset)
+                    {
+                        renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
+                        offset = false;
+                    }
+                    c.DrawBase(renderArgument, dirty);
+                }
+            }
             
-            // JUST use 2 internal containers!! ugh FIXME
-
             renderArgument.uDraw.PopAxisAlignedClip();
             if (offset) renderArgument.uDraw.SetRenderOffset(new Point(0, 0));
 
@@ -432,7 +432,6 @@ namespace NoFormsSDK
             float hgap = HorizontalScrollbarVisible ? HorizontalScrollbarHeight : 0;
             float vgap = VerticalScrollbarVisible ? VerticalScrollbarWidth : 0;
             renderArgument.uDraw.FillRectangle(new Rectangle(Location.X + Size.width - vgap, Location.Y+ Size.height - hgap, vgap, hgap), background);
-
         }
         public Thickness InnerPadding = new Thickness(0, 0, 0, 0);
         

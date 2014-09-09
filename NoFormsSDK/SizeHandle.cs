@@ -105,8 +105,8 @@ namespace NoFormsSDK
                     }
                 }
 
-                float neww = controlled.Size.width + dx;
-                float newh = controlled.Size.height + dy;
+                float neww = controlled.ReqSize.width + dx;
+                float newh = controlled.ReqSize.height + dy;
 
                 if (neww > controlled.MaxSize.width)
                 {
@@ -129,8 +129,8 @@ namespace NoFormsSDK
                     newh = controlled.MinSize.height;
                 }
 
-                float newx = (ResizeMode & Direction.WEST) == Direction.WEST ? controlled.Location.X - (neww - controlled.Size.width) : controlled.Location.X;
-                float newy = (ResizeMode & Direction.NORTH) == Direction.NORTH ? controlled.Location.Y - (newh - controlled.Size.height) : controlled.Location.Y;
+                float newx = (ResizeMode & Direction.WEST) == Direction.WEST ? controlled.Location.X - (neww - controlled.ReqSize.width) : controlled.Location.X;
+                float newy = (ResizeMode & Direction.NORTH) == Direction.NORTH ? controlled.Location.Y - (newh - controlled.ReqSize.height) : controlled.Location.Y;
 
                 controlled.Location = new Point((int)newx, (int)newy);
                 controlled.Size = new Size((int)neww, (int)newh);

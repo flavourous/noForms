@@ -41,19 +41,15 @@ namespace NoForms
                 LocationChanged(_Location);
             }
         }
-        Size _Size = new Size(200, 300);
+        internal Size _Size = new Size(200, 300);
         /// <summary>
         /// This mirrors the size propterty at 0,0
         /// </summary>
-        private Rectangle _DisplayRectangle = new Rectangle();
+        internal Rectangle _DisplayRectangle = new Rectangle();
         public Rectangle DisplayRectangle
         {
             get { return _DisplayRectangle; }
-            set
-            {
-                _DisplayRectangle.Size = value.Size;
-                _Size = DisplayRectangle.Size;
-            }
+            set { Size = value.Size; }
         }
         public Size Size
         {
@@ -62,17 +58,22 @@ namespace NoForms
             {
                 lock (this)
                 {
-                    _Size = new Size(
+                    ReqSize = new Size(
                         Math.Max(Math.Min(value.width, MaxSize.width), MinSize.width),
                         Math.Max(Math.Min(value.height, MaxSize.height), MinSize.height)
                         );
-                    bool isDirty = !_Size.Equals(_DisplayRectangle.Size);
-                    _DisplayRectangle.Size = new Size(Size.width, Size.height);
-                    SizeChanged(_Size);
-                    if (isDirty) Dirty(DisplayRectangle);
+                    if (ReqSize.Equals(_DisplayRectangle.Size)) return;
+                    Dirty(new Rectangle(_DisplayRectangle.Location, ReqSize));
                 }
             }
         }
+        Size _ReqSize = new Size(200, 300);
+        public Size ReqSize 
+        { 
+            get { return _ReqSize; }
+            private set { _ReqSize = value; }
+        }
+        internal void OnSizeChanged(Size sz) { SizeChanged(sz); } 
         public event Action<Size> SizeChanged = delegate { };
         public event Action<Point> LocationChanged = delegate { };
         public Size MinSize = new Size(50, 50);

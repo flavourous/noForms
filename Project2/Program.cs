@@ -23,8 +23,8 @@ namespace Easy
             IPlatform plt = new Win32(r1, c1);
             IPlatform plt2 = new Win32(r2, c1);
             IPlatform plt3 = new WinForms(r3, c1);
-            var nf = new mnf(plt3, new CreateOptions(true,false));
-            rdr = r3;
+            var nf = new mnf(plt, new CreateOptions(true,false));
+            rdr = r1;
             nf.window.Run();
         }
     }
