@@ -48,6 +48,7 @@
     <Compile Include="ComponetBase\Component.cs" />
     <Compile Include="Common\IComponent_Managers.cs" />
     <Compile Include="Controllers\WinForms.cs" />
+    <Compile Include="Renderers\Common\DirtyObserver.cs" />
     <Compile Include="Renderers\UDraw Impliementations\SDGDraw.cs" />
     <Compile Include="Renderers\UDraw Impliementations\D2DDraw.cs" />
     <Compile Include="Common\IComponent_Util.cs" />

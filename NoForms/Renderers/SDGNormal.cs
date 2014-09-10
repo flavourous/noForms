@@ -18,6 +18,9 @@ namespace NoForms.Renderers
         Graphics graphics;
         Bitmap buffer;
 
+        DirtyObserver dobs;
+        public void Dirty(Common.Rectangle dr) { dobs.Dirty(dr); }
+
         public void Init(IWFWin wf, NoForm root)
         {
             noForm = root;
@@ -33,24 +36,22 @@ namespace NoForms.Renderers
                 // Init uDraw and assign IRenderElement parts
                 _backRenderer = new SDG_RenderElements(graphics);
                 _uDraw = new SDGDraw(_backRenderer);
-
             }
 
+            // Create the observer
+            dobs = new DirtyObserver(noForm, RenderPass);
         }
 
         public void BeginRender()
         {
-            // dirty it
-            Dirty(noForm.DisplayRectangle);
-
             // hook move!
             noForm.LocationChanged += noForm_LocationChanged;
 
             // Start the watcher
-            running = true;
-            DirtyObserver = new Thread(DirtyObs);
-            DirtyObserver.IsBackground = false;
-            DirtyObserver.Start();
+            dobs.Dirty(noForm.DisplayRectangle);
+            dobs.running = true;
+            dobs.StartObserving();
+
             noForm_LocationChanged(noForm.Location);
         }
 
@@ -59,52 +60,13 @@ namespace NoForms.Renderers
             winForm.Location = new System.Drawing.Point((int)noForm.Location.X, (int)noForm.Location.Y);
         }
 
-        public Object lock_dirty = new object(), lock_render = new object();
-        bool running = false;
         public void EndRender()
         {
-            lock (lock_render)
+            lock (dobs.lock_render)
             {
                 // Free unmanaged stuff
                 noForm.LocationChanged -= noForm_LocationChanged;
-                running = false;
-            }
-        }
-        Common.Region dirty = new Common.Region();
-        public void Dirty(Common.Rectangle rect)
-        {
-            lock (lock_dirty)
-                dirty.Add(rect);
-        }
-        Thread DirtyObserver;
-        void DirtyObs(Object o)
-        {
-            while (running)
-            {
-                DirtyLook();
-                Thread.Sleep(17);
-            }
-        }
-        void DirtyLook()
-        {
-            Common.Region dc = null;
-            Common.Size ReqSize;
-            lock(noForm) lock (lock_dirty)
-            {
-                // dirty animated regions...
-                foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
-
-                if (dirty.IsEmpty) return;
-                dc = new Common.Region(dirty);
-                dirty.Reset();
-
-                ReqSize = noForm.ReqSize;
-            }
-
-            lock (lock_render)
-            {
-                if (!running) return;
-                if (dc != null) RenderPass(dc, ReqSize);
+                dobs.running = false;
             }
         }
 

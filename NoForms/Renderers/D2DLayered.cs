@@ -13,6 +13,7 @@ using NoForms.Windowing;
 
 namespace NoForms.Renderers
 {
+    
     public class D2DLayered : IRender<IW32Win>, IDraw
     {
         #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
@@ -26,6 +27,9 @@ namespace NoForms.Renderers
         RenderTarget d2dRenderTarget;
         IntPtr someDC;
         IW32Win w32;
+
+        DirtyObserver dobs;
+        public void Dirty(Common.Rectangle dr) { dobs.Dirty(dr); }
 
         public D2DLayered()
         {
@@ -62,6 +66,8 @@ namespace NoForms.Renderers
                 _backRenderer = new D2D_RenderElements(d2dRenderTarget);
                 _uDraw = new D2DDraw(_backRenderer);
 
+                // Create the observer
+                 dobs = new DirtyObserver(noForm, RenderPass);
             }
         }
 
@@ -74,17 +80,14 @@ namespace NoForms.Renderers
             var wl = Win32Util.GetWindowLong(hWnd, Win32Util.GWL_EXSTYLE);
             var ret = Win32Util.SetWindowLong(hWnd, Win32Util.GWL_EXSTYLE, wl | Win32Util.WS_EX_LAYERED);
 
-            // dirty it
-            Dirty(noForm.DisplayRectangle);
-
             // hook move!
             noForm.LocationChanged += noForm_LocationChanged;
 
             // Start the watcher
-            running = true;
-            DirtyObserver = new Thread(DirtyObs);
-            DirtyObserver.IsBackground = false;
-            DirtyObserver.Start();
+            dobs.Dirty(noForm.DisplayRectangle);
+            dobs.running = true;
+            dobs.StartObserving();
+            
             noForm_LocationChanged(noForm.Location);
         }
 
@@ -93,57 +96,18 @@ namespace NoForms.Renderers
             Win32Util.SetWindowLocation(new Win32Util.Point((int)noForm.Location.X, (int)noForm.Location.Y), hWnd);
         }
        
-        public Object lock_dirty = new object(), lock_render = new object();
-        bool running = false;
         public void EndRender()
         {
-            lock (lock_render)
+            lock (dobs.lock_render)
             {
                 // Free unmanaged stuff
                 noForm.LocationChanged -= noForm_LocationChanged;
-                running = false;
+                dobs.running = false;
                 scbTrans.Dispose();
                 d2dRenderTarget.Dispose();
                 surface.Dispose();
                 renderView.Dispose();
                 backBuffer.Dispose();
-            }
-        }
-        Region dirty = new Region();
-        public void Dirty(Common.Rectangle rect)
-        {
-            lock(lock_dirty)
-                dirty.Add(rect);
-        }
-        Thread DirtyObserver;
-        void DirtyObs(Object o)
-        {
-            while (running)
-            {
-                DirtyLook();
-                Thread.Sleep(17);
-            }
-        }
-        void DirtyLook()
-        {
-            Region dc = null;
-            Size ReqSize;
-            lock(noForm) lock (lock_dirty)
-            {
-                // dirty animated regions...
-                foreach (var adr in noForm.DirtyAnimated) dirty.Add(adr.area);
-
-                if (dirty.IsEmpty) return;
-                dc = new Region(dirty);
-                dirty.Reset();
-
-                ReqSize = noForm.ReqSize;
-            }
-
-            lock (lock_render)
-            {
-                if (!running) return;
-                if (dc != null) RenderPass(dc, ReqSize);
             }
         }
 
@@ -253,30 +217,6 @@ namespace NoForms.Renderers
             renderView = new RenderTargetView(device, backBuffer);
             surface = backBuffer.QueryInterface<Surface1>();
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
-        }
-        int HashResource(Texture2D tx)
-        {
-            var ds = tx.Description;
-
-            ds.Usage = ResourceUsage.Staging;
-            ds.OptionFlags = ResourceOptionFlags.None;
-            ds.BindFlags = BindFlags.None;
-            ds.CpuAccessFlags = CpuAccessFlags.Read;
-
-            int hashy = 31;
-            using (Texture2D ttx = new Texture2D(tx.Device, ds))
-            {
-                tx.Device.CopyResource(tx, ttx);
-                DataStream dStream;
-                ttx.Map(0, MapMode.Read, SharpDX.Direct3D10.MapFlags.None, out dStream);
-                unchecked
-                {
-                    while (dStream.RemainingLength > 0)
-                        hashy = hashy * 17 + dStream.ReadByte().GetHashCode();
-                }
-            }
-
-            return hashy;
         }
         public void Dispose()
         {
