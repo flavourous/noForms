@@ -5,16 +5,17 @@ using System.Collections.Generic;
 
 namespace NoForms.Common
 {
+    public enum WindowBorderStyle { Sizable, Fixed, NoBorder };
     public delegate void NoFormsAction();
-    public class CreateOptions
+    public class WindowCreateOptions
     {
-        public CreateOptions(bool showInTaskbar, bool borderedWindow)
+        public WindowCreateOptions(bool showInTaskbar, WindowBorderStyle windowBorderStyle)
         {
             this.showInTaskbar = showInTaskbar;
-            this.borderedWindow = borderedWindow;
+            this.windowBorderStyle = windowBorderStyle;
         }
         public bool showInTaskbar { get; private set; }
-        public bool borderedWindow { get; private set; }
+        public WindowBorderStyle windowBorderStyle { get; private set; }
     }
 
     [Flags]

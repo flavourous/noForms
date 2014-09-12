@@ -27,8 +27,8 @@ namespace testapp
         public static void Main()
         {
             Load();
-            IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
-            NoForm nf = rootForm = new MyNoForm(plt, new CreateOptions(true,false));
+            IPlatform plt = new Win32(new D2DLayered(), new WinformsController(), new WindowCreateOptions(true, WindowBorderStyle.NoBorder));
+            NoForm nf = rootForm = new MyNoForm(plt);
             nf.window.Title = "Test App";
             nf.Size = new Size(700, 500);
             nf.MinSize = new Size(700, 300);
@@ -119,7 +119,7 @@ namespace testapp
         Button collectGC;
         Scribble maximise, minimise, restore;
 
-        public MyNoForm(IPlatform rm, CreateOptions co) : base(rm,co)
+        public MyNoForm(IPlatform rm) : base(rm)
         {
             // move and resize
             mh = new mmh(this);
@@ -183,7 +183,7 @@ namespace testapp
 
             SizeChanged += new Action<Size>(MyNoForm_OnSizeChanged);
 
-            IPlatform dl = new Win32(new D2DLayered(), new WinformsController());
+            IPlatform dl = new Win32(new D2DLayered(), new WinformsController(), new WindowCreateOptions(false, WindowBorderStyle.NoBorder));
             cbProject = new ComboBox(dl);
             cbProject.dropDirection = ComboBoxDirection.LeastSpace;
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);
@@ -250,10 +250,10 @@ namespace testapp
 
         void newProject_Clicked(Point loc)
         {
-            IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
+            IPlatform plt = new Win32(new D2DLayered(), new WinformsController(), new WindowCreateOptions(false, WindowBorderStyle.NoBorder));
 
             Project pref = new Project();
-            var editDlg = new ProjectEditDialog(pref, plt, new CreateOptions(false,false));
+            var editDlg = new ProjectEditDialog(pref, plt);
             
             editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
@@ -341,13 +341,13 @@ namespace testapp
         void editProject_Clicked(Point loc)
         {
             Project pref = null;
-            IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
+            IPlatform plt = new Win32(new D2DLayered(), new WinformsController(), new WindowCreateOptions(false, WindowBorderStyle.NoBorder));
 
             foreach(var pr in Program.Projects) 
                 if(pr.name == cbProject.selectedText)
                     pref = pr;
 
-            var editDlg = new ProjectEditDialog(pref, plt, new CreateOptions(false,false));
+            var editDlg = new ProjectEditDialog(pref, plt);
             editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
@@ -525,8 +525,8 @@ namespace testapp
             Story ns = new Story("","", state, Program.selectedProject.name);
             Program.Stories.Add(ns);
 
-            IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
-            var editDlg = new StoryEditDialog(ns, plt, new CreateOptions(false,false));
+            IPlatform plt = new Win32(new D2DLayered(), new WinformsController(), new WindowCreateOptions(false, WindowBorderStyle.NoBorder));
+            var editDlg = new StoryEditDialog(ns, plt);
             editDlg.MinSize = editDlg.Size = new Size(400, 300);
             var pl = Program.rootForm.Location;
             var ps = Program.rootForm.Size;
@@ -767,8 +767,8 @@ namespace testapp
                     dragtime = maybeDrag = false;
                     if(state == StoryState.none)
                         state = os;
-                    IPlatform plt = new Win32(new D2DLayered(), new WinformsController());
-                    var editDlg = new StoryEditDialog(this, plt, new CreateOptions(false,false));
+                    IPlatform plt = new Win32(new D2DLayered(), new WinformsController(), new WindowCreateOptions(false, WindowBorderStyle.NoBorder));
+                    var editDlg = new StoryEditDialog(this, plt);
                     editDlg.MinSize=editDlg.Size = new Size(400, 300);
                     var pl = Program.rootForm.Location;
                     var ps = Program.rootForm.Size;
@@ -805,7 +805,7 @@ namespace testapp
 
         Story refStory;
 
-        public StoryEditDialog(Story sedthis, IPlatform rn, CreateOptions co) : base(rn,co)
+        public StoryEditDialog(Story sedthis, IPlatform rn) : base(rn)
         {
             // hold ref to stroy
             refStory = sedthis;
@@ -954,7 +954,7 @@ namespace testapp
 
         Project refProject;
 
-        public ProjectEditDialog(Project pedthis, IPlatform rn, CreateOptions co) : base(rn,co)
+        public ProjectEditDialog(Project pedthis, IPlatform rn) : base(rn)
         {
             // hold ref to stroy
             refProject = pedthis;

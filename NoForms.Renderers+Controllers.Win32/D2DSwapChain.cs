@@ -35,6 +35,9 @@ namespace NoForms.Renderers.Win32
             noForm = root;
             noForm.renderer = this;
             this.w32 = w32;
+
+            // Create the observer
+            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);
         }
         void HandleCreatedStuff()
         {
@@ -61,8 +64,6 @@ namespace NoForms.Renderers.Win32
             _backRenderer = new D2D_RenderElements(d2dRenderTarget);
             _uDraw = new D2DDraw(_backRenderer);
 
-            // Create the observer
-            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);
         }
         public void BeginRender()
         {

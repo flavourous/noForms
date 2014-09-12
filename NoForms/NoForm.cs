@@ -96,10 +96,10 @@ namespace NoForms
         /// encapsulates options that for whatever reason can only be set
         /// once.
         /// </param>
-        public NoForm(IPlatform plat, CreateOptions createOptions)
+        public NoForm(IPlatform plat)
         {
             _components = new IComponent_Collection(this);
-            plat.Init(this, createOptions);
+            plat.Init(this);
             renderer.RenderSizeChanged += RecieveSizeChange;
         }
         

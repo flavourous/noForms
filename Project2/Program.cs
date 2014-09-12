@@ -25,11 +25,12 @@ namespace Easy
             D2DSwapChain r2 = new D2DSwapChain();
             SDGNormal r3 = new SDGNormal();
             WinformsController c1 = new WinformsController();
-            IPlatform plt = new Win32(r1, c1);
-            IPlatform plt2 = new Win32(r2, c1);
-            IPlatform plt3 = new WinForms(r3, c1);
-            var nf = new mnf(plt2, new CreateOptions(true,false));
-            rdr = r2;
+            var wco = new WindowCreateOptions(true, WindowBorderStyle.NoBorder);
+            IPlatform plt = new Win32(r1, c1, wco);
+            IPlatform plt2 = new Win32(r2, c1, wco);
+            IPlatform plt3 = new WinForms(r3, c1, wco);
+            var nf = new mnf(plt);
+            rdr = r1;
             nf.window.Run();
         }
     }
@@ -48,7 +49,7 @@ namespace Easy
             Dirty(cdr);
         }
 
-        public mnf(IPlatform rn, CreateOptions co) : base(rn,co)
+        public mnf(IPlatform rn) : base(rn)
         {
             window.Title = "Test App";
             Size = new Size(1150, 600);
@@ -157,7 +158,7 @@ namespace Easy
            
         }
 
-        UBrush bgb = new USolidBrush() { color = new Color(1, 0, 0, 1) };
+        UBrush bgb = new USolidBrush() { color = new Color(.5f, 0, 0, 1) };
         public override void Draw(IDraw rt, Region dirty)
         {
             base.Draw(rt, dirty);

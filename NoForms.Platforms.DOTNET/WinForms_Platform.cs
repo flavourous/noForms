@@ -10,8 +10,22 @@ namespace NoForms.Platforms.DotNet
     {
         protected class WFBase : Form
         {
-            public WFBase()
+            public WFBase(WindowCreateOptions co)
             {
+                ShowInTaskbar = co.showInTaskbar;
+                switch (co.windowBorderStyle)
+                {
+                    default:
+                    case WindowBorderStyle.Sizable:
+                        FormBorderStyle = FormBorderStyle.Sizable;
+                        break;
+                    case WindowBorderStyle.Fixed:
+                        FormBorderStyle = FormBorderStyle.FixedDialog;
+                        break;
+                    case WindowBorderStyle.NoBorder:
+                        FormBorderStyle = FormBorderStyle.None;
+                        break;
+                }
                 SetStyle(System.Windows.Forms.ControlStyles.UserMouse, true);
                 SetStyle(System.Windows.Forms.ControlStyles.UserPaint, true);
             }
@@ -20,11 +34,10 @@ namespace NoForms.Platforms.DotNet
 
         }
 
-        protected WFBase winForm = new WFBase();
-        protected void ProcessCreateOptions(CreateOptions co)
+        protected WFBase winForm;
+        protected void ProcessCreateOptions(WindowCreateOptions co)
         {
-            winForm.ShowInTaskbar = co.showInTaskbar;
-            winForm.FormBorderStyle = co.borderedWindow ? FormBorderStyle.Sizable : FormBorderStyle.None;
+            winForm = new WFBase(co);
         }
 
         public void Run()
@@ -118,12 +131,13 @@ namespace NoForms.Platforms.DotNet
 
         IRender<IWFWin> renderer;
         IController<IWFWin> controller;
-        public WinForms(IRender<IWFWin> renderer, IController<IWFWin> controller)
+        public WinForms(IRender<IWFWin> renderer, IController<IWFWin> controller, WindowCreateOptions co)
         {
+            ProcessCreateOptions(co);
             this.renderer = renderer;
             this.controller = controller;
         }
-        void IPlatform.Init(NoForm toDisplay, CreateOptions co)
+        void IPlatform.Init(NoForm toDisplay)
         {
             // do the form
             renderer.Init(this, toDisplay);
@@ -131,7 +145,6 @@ namespace NoForms.Platforms.DotNet
 
             winForm.Shown += (o, e) => renderer.BeginRender();
             winForm.FormClosing += (o, e) => renderer.EndRender();
-            ProcessCreateOptions(co);
             toDisplay.window = this;
         }
 

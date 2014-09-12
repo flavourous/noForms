@@ -8,7 +8,7 @@ namespace NoForms
     // FIXME createoptions really makes more sense for IWindow (or platform equivilaaantss...)
     public interface IPlatform
     {
-        void Init(NoForm toDisplay, CreateOptions co);
+        void Init(NoForm toDisplay);
     }
     // FIXME different windowing systems are going to have different capabilities, some will be wildly different eg xbox/android.  How to cope?
     //       probable dirty solution: unify with approximate or null implimentations...NotImplimentedException may be a bit harsh...compiler warnings would be better.

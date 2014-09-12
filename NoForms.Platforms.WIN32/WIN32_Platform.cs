@@ -13,20 +13,20 @@ namespace NoForms.Platforms.Win32
     {
         IRender<IW32Win> renderer;
         IController<IWFWin> controller;
-        public Win32(IRender<IW32Win> renderer, IController<IWFWin> controller)
+        public Win32(IRender<IW32Win> renderer, IController<IWFWin> controller, WindowCreateOptions co)
         {
+            ProcessCreateOptions(co);
             this.renderer = renderer;
             this.controller = controller;
         }
 
-        void IPlatform.Init(NoForm toDisplay, CreateOptions co)
+        void IPlatform.Init(NoForm toDisplay)
         {
             // do the form
             renderer.Init(this, toDisplay);
             controller.Init(this, toDisplay);
             winForm.Shown += (o, e) => renderer.BeginRender();
             winForm.FormClosing += (o, e) => renderer.EndRender();
-            ProcessCreateOptions(co);
             toDisplay.window = this;
         }
 

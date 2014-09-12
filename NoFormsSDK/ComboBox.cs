@@ -21,7 +21,7 @@ namespace NoFormsSDK
         NoForm ddf;
         void recreateddf()
         {
-            ddf = new NoForm(dropPlatform, new CreateOptions(false, false));
+            ddf = new NoForm(dropPlatform);
             ddf.components.Add(lb);
         }
         public ComboBox(IPlatform dropPlatform = null)
