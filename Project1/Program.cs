@@ -8,8 +8,11 @@ using System.IO;
 using NoForms.Renderers;
 using NoFormsSDK;
 using NoForms.Common;
-using NoForms.Controllers;
-using NoForms.Windowing;
+
+// Implimentations
+using NoForms.Platforms.Win32;
+using NoForms.Renderers.Win32;
+using NoForms.Controllers.DotNet;
 
 namespace testapp
 {
@@ -180,7 +183,7 @@ namespace testapp
 
             SizeChanged += new Action<Size>(MyNoForm_OnSizeChanged);
 
-            IPlatform dl = new NoForms.Windowing.Win32(new D2DLayered(), new WinformsController());
+            IPlatform dl = new Win32(new D2DLayered(), new WinformsController());
             cbProject = new ComboBox(dl);
             cbProject.dropDirection = ComboBoxDirection.LeastSpace;
             cbProject.selectionChanged += new Action<int>(cbProject_selectionChanged);

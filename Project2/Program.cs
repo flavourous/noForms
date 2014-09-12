@@ -2,12 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NoForms.Controllers;
 using NoForms;
 using NoForms.Renderers;
 using NoFormsSDK;
 using NoForms.Common;
-using NoForms.Windowing;
+
+// Implimentations
+using NoForms.Platforms.Win32;
+using NoForms.Platforms.DotNet;
+using NoForms.Renderers.DotNet;
+using NoForms.Renderers.Win32;
+using NoForms.Controllers.DotNet;
 
 namespace Easy
 {
@@ -23,8 +28,8 @@ namespace Easy
             IPlatform plt = new Win32(r1, c1);
             IPlatform plt2 = new Win32(r2, c1);
             IPlatform plt3 = new WinForms(r3, c1);
-            var nf = new mnf(plt, new CreateOptions(true,false));
-            rdr = r1;
+            var nf = new mnf(plt2, new CreateOptions(true,false));
+            rdr = r2;
             nf.window.Run();
         }
     }

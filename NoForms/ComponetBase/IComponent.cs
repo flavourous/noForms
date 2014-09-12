@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Windows.Forms;
-using SharpDX.Direct2D1;
 using NoForms.Common;
 
 namespace NoForms

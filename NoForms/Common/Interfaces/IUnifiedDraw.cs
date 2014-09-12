@@ -39,24 +39,5 @@ namespace NoForms.Renderers
     /// Blank interface, the backing to renderes are these only.
     /// </summary>
     public interface IRenderElements { } // Mainly used because graphics/rendertarget can change instance Facout drawing implimentors needing to know. eg resize.
-    public class D2D_RenderElements : IRenderElements
-    {
-        public D2D_RenderElements(SharpDX.Direct2D1.RenderTarget rt)
-        {
-            renderTarget = rt;
-        }
-        public SharpDX.Direct2D1.RenderTarget renderTarget { get; internal set; }
-    }
-
-    public class SDG_RenderElements : IRenderElements
-    {
-        public SDG_RenderElements(System.Drawing.Graphics gr)
-        {
-            graphics = gr;
-        } 
-        public System.Drawing.Graphics graphics { get; internal set; }
-    }
-    public class OGL2D_RenderElements : IRenderElements
-    {
-    }
+ 
 }

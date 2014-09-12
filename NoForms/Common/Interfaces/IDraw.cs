@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Windows.Forms;
 using NoForms.Common;
-using SharpDX.Direct2D1;
 
 namespace NoForms
 {

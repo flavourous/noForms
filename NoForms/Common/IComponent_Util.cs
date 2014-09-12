@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using SysRect = System.Drawing.Rectangle;
 using NoForms.Common;
 
 namespace NoForms

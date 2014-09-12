@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Windows.Forms;
-using SharpDX.Direct2D1;
 using NoForms.Common;
 
 namespace NoForms
@@ -21,5 +19,6 @@ namespace NoForms
         NoForm noForm { get; set; }
         void Dirty(Rectangle rect);
         float currentFps { get; }
+        event Action<Size> RenderSizeChanged;
     }
 }

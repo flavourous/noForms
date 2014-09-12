@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Windows.Forms;
-using SysRect = System.Drawing.Rectangle;
 using NoForms.Common;
 
 namespace NoForms.ComponentBase

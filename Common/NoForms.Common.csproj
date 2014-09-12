@@ -38,6 +38,7 @@
     <Compile Include="Animation.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="CursorEnum.cs" />
+    <Compile Include="DirtyObserver.cs" />
     <Compile Include="EllipseLib\Ellipse.cs" />
     <Compile Include="GlyphRunLib\GlyphRun.cs" />
     <Compile Include="KeysEnum.cs" />

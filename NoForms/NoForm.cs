@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Windows.Forms;
 using NoForms.ComponentBase;
 using NoForms.Renderers;
 using NoForms.Common;
@@ -73,7 +72,11 @@ namespace NoForms
             get { return _ReqSize; }
             private set { _ReqSize = value; }
         }
-        internal void OnSizeChanged(Size sz) { SizeChanged(sz); } 
+        void RecieveSizeChange(Size sz)
+        {
+            _DisplayRectangle.Size = _Size = new Common.Size(ReqSize.width, ReqSize.height);
+            SizeChanged(sz);
+        }
         public event Action<Size> SizeChanged = delegate { };
         public event Action<Point> LocationChanged = delegate { };
         public Size MinSize = new Size(50, 50);
@@ -97,7 +100,10 @@ namespace NoForms
         {
             _components = new IComponent_Collection(this);
             plat.Init(this, createOptions);
+            renderer.RenderSizeChanged += RecieveSizeChange;
         }
+        
+
         /// <summary>
         /// called on by children, to let us know drawing needs doing...
         /// </summary>

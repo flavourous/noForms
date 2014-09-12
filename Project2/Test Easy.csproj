@@ -54,6 +54,22 @@
       <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
       <Name>NoForms.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NoForms.Platforms.DOTNET\NoForms.Platforms.DotNet.csproj">
+      <Project>{8feee775-cdb8-42db-a589-824f799e2321}</Project>
+      <Name>NoForms.Platforms.DotNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NoForms.Platforms.WIN32\NoForms.Platforms.Win32.csproj">
+      <Project>{336d599d-c09b-42d5-a820-a0778f559526}</Project>
+      <Name>NoForms.Platforms.Win32</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NoForms.Renderers+Controllers.DotNet\NoForms.Renderers+Controllers.DotNet.csproj">
+      <Project>{a390c6ca-dbc2-4bc4-be52-d113434f59e1}</Project>
+      <Name>NoForms.Renderers+Controllers.DotNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NoForms.Renderers+Controllers.Win32\NoForms.Renderers+Controllers.Win32.csproj">
+      <Project>{59316107-45a5-4064-b180-4d61dfa9792f}</Project>
+      <Name>NoForms.Renderers+Controllers.Win32</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NoFormsSDK\NoFormsSDK.csproj">
       <Project>{b4545332-c870-4e26-8f5c-ead5ae49c8b8}</Project>
       <Name>NoFormsSDK</Name>

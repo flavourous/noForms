@@ -38,52 +38,22 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Common\IComponent_Collection.cs" />
     <Compile Include="Common\Interfaces\IController.cs" />
     <Compile Include="Common\Interfaces\IDraw.cs" />
-    <Compile Include="Common\Interfaces\IWindow.cs" />
-    <Compile Include="Common\IComponent_Collection.cs" />
     <Compile Include="Common\Interfaces\IRender.cs" />
+    <Compile Include="Common\Interfaces\IUnifiedDraw.cs" />
+    <Compile Include="Common\Interfaces\IWindow.cs" />
+    <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
     <Compile Include="ComponetBase\Container.cs" />
     <Compile Include="ComponetBase\IComponent.cs" />
     <Compile Include="ComponetBase\Component.cs" />
     <Compile Include="Common\IComponent_Managers.cs" />
-    <Compile Include="Controllers\WinForms.cs" />
-    <Compile Include="Renderers\Common\DirtyObserver.cs" />
-    <Compile Include="Renderers\UDraw Impliementations\SDGDraw.cs" />
-    <Compile Include="Renderers\UDraw Impliementations\D2DDraw.cs" />
     <Compile Include="Common\IComponent_Util.cs" />
-    <Compile Include="Windowing\WinForms.cs" />
-    <Compile Include="Common\Native_Converters.cs" />
-    <Compile Include="Renderers\SDGNormal.cs" />
-    <Compile Include="Renderers\D2DSwapChain.cs" />
-    <Compile Include="Renderers\D2DLayered.cs" />
     <Compile Include="NoForm.cs" />
-    <Compile Include="Common\Win32.cs" />
-    <Compile Include="Common\Interfaces\IUnifiedDraw.cs" />
-    <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Signed-net20\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct2D1">
-      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct2D1.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D10">
-      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct3D10.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D9">
-      <HintPath>..\SharpDX\Signed-net20\SharpDX.Direct3D9.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.DXGI">
-      <HintPath>..\SharpDX\Signed-net20\SharpDX.DXGI.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

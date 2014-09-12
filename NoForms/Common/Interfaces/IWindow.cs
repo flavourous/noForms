@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using NoForms.Common;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace NoForms
 {
+    // FIXME createoptions really makes more sense for IWindow (or platform equivilaaantss...)
     public interface IPlatform
     {
         void Init(NoForm toDisplay, CreateOptions co);
@@ -23,7 +22,7 @@ namespace NoForms
         bool Restore();
         String Title { get; set; }
         bool showIcon { get; set; }
-        Icon Icon { get; set; }
+        UBitmap[] Icon { get; set; }
         bool BringToFront();
         NoForms.Common.Cursors Cursor { get; set; }
         bool CaptureMouse { get; set; }
