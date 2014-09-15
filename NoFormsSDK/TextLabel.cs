@@ -16,7 +16,7 @@ namespace NoFormsSDK
         public bool autosizeX = false, autosizeY = false;
         public UText textData = new UText("", UHAlign.Center, UVAlign.Middle, true, 0, 0)
         {
-            font = new UFont("Arial Black", 15f, false, false),
+            font = new UFont("Arial Black", 12f, false, false),
         };
 
         public TextLabel() : base() 

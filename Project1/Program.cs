@@ -752,6 +752,10 @@ namespace testapp
             }
             base.MouseMove(location, inComponent,amClipped);
         }
+        public override string ToString()
+        {
+            return storyTitle;
+        }
         public bool dragtime = false;
         Point lloc;
         DateTime dtLastClick = DateTime.Now.AddDays(-1);

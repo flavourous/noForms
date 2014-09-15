@@ -466,7 +466,7 @@ namespace NoFormsSDK
             foreach (IComponent c in components)
             {
                 if (c.visible && c.Scrollable)
-                    c.MouseUpDown(location, mb, bs,  c.DisplayRectangle.Contains(location - scrollOffset),
+                    c.MouseUpDown(location+scrollOffset, mb, bs,  c.DisplayRectangle.Contains(location + scrollOffset),
                         amClipped ? true : ! clipDr.Contains(location));
                 else if(!c.Scrollable)
                     c.MouseUpDown(location, mb, bs,  c.DisplayRectangle.Contains(location),
