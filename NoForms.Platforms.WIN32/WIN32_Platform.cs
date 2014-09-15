@@ -11,23 +11,24 @@ namespace NoForms.Platforms.Win32
 
     public class Win32 : WinBase, IPlatform, IW32Win, IWFWin
     {
-        IRender<IW32Win> renderer;
-        IController<IWFWin> controller;
+        Action<NoForm> hookAction;
         public Win32(IRender<IW32Win> renderer, IController<IWFWin> controller, WindowCreateOptions co)
         {
             ProcessCreateOptions(co);
-            this.renderer = renderer;
-            this.controller = controller;
+            hookAction = nf =>
+            {
+                renderer.Init(this, nf);
+                controller.Init(this, nf);
+                winForm.Shown += (o, e) => renderer.BeginRender();
+                winForm.FormClosing += (o, e) => renderer.EndRender();
+                nf.window = this;
+            };
         }
 
         void IPlatform.Init(NoForm toDisplay)
         {
             // do the form
-            renderer.Init(this, toDisplay);
-            controller.Init(this, toDisplay);
-            winForm.Shown += (o, e) => renderer.BeginRender();
-            winForm.FormClosing += (o, e) => renderer.EndRender();
-            toDisplay.window = this;
+            hookAction(toDisplay);
         }
 
         public IntPtr handle

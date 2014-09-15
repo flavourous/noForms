@@ -9,6 +9,7 @@ namespace NoForms.Common
         static public System.Drawing.PointF trF(Point p) { return new System.Drawing.PointF(p.X, p.Y); }
         static public System.Drawing.Point trI(Point p) { return new System.Drawing.Point((int)p.X, (int)p.Y); }
         static public System.Drawing.RectangleF trF(Rectangle r) { return new System.Drawing.RectangleF(r.left, r.top, r.width, r.height); }
+        static public System.Drawing.Rectangle trI(Rectangle r) { return new System.Drawing.Rectangle((int)r.left, (int)r.top, (int)r.width, (int)r.height); }
         static public System.Drawing.Color tr(Color c)
         {
             byte a = (byte)Math.Round(c.a * 255);

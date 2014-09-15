@@ -176,8 +176,6 @@ namespace NoForms
         public void DrawBase(IDraw rt, Region dirty)
         {
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle, false);
-            //foreach(var ddr in dirty.AsRectangles())
-            //    rt.uDraw.FillRectangle(ddr, trans);
             Draw(rt, dirty);
 
             // Now we need to draw our childrens....

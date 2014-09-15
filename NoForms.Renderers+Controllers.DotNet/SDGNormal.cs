@@ -76,6 +76,7 @@ namespace NoForms.Renderers.DotNet
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
         public float currentFps { get; private set; }
+        SolidBrush blackBack = new SolidBrush(System.Drawing.Color.FromArgb(255, 0, 0, 0));
         void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
@@ -87,6 +88,12 @@ namespace NoForms.Renderers.DotNet
 
             lock (noForm)
             {
+                foreach (var dr in dc.AsRectangles())
+                {
+                    var sdr = SDGTr.trF(dr);
+                    graphics.FillRectangle(blackBack, sdr);
+                }
+
                 // Do Drawing stuff
                 noForm.DrawBase(this, dc);
 
