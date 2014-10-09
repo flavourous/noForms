@@ -19,7 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms.Platforms.Win32", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms.Renderers+Controllers.DotNet", "NoForms.Renderers+Controllers.DotNet\NoForms.Renderers+Controllers.DotNet.csproj", "{A390C6CA-DBC2-4BC4-BE52-D113434F59E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms.Renderers+Controllers.Win32", "NoForms.Renderers+Controllers.Win32\NoForms.Renderers+Controllers.Win32.csproj", "{59316107-45A5-4064-B180-4D61DFA9792F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms.Renderers+Controllers.SharpDX", "NoForms.Renderers+Controllers.DirectX\NoForms.Renderers+Controllers.SharpDX.csproj", "{59316107-45A5-4064-B180-4D61DFA9792F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoForms.Renderers+Controllers.OpenTK", "NoForms.Renderers+Controllers.OpenTK\NoForms.Renderers+Controllers.OpenTK.csproj", "{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +125,16 @@ Global
 		{59316107-45A5-4064-B180-4D61DFA9792F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{59316107-45A5-4064-B180-4D61DFA9792F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{59316107-45A5-4064-B180-4D61DFA9792F}.Release|x86.ActiveCfg = Release|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{5420D61F-E864-4AA6-AA45-5F8B2F5E66DE}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

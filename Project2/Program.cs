@@ -11,8 +11,9 @@ using NoForms.Common;
 using NoForms.Platforms.Win32;
 using NoForms.Platforms.DotNet;
 using NoForms.Renderers.DotNet;
-using NoForms.Renderers.Win32;
+using NoForms.Renderers.SharpDX;
 using NoForms.Controllers.DotNet;
+using NoForms.Renderers.OpenTK;
 
 namespace Easy
 {
@@ -24,13 +25,15 @@ namespace Easy
             D2DLayered r1 = new D2DLayered();
             D2DSwapChain r2 = new D2DSwapChain();
             SDGNormal r3 = new SDGNormal();
+            OTKNormal r4 = new OTKNormal(); 
             WinformsController c1 = new WinformsController();
             var wco = new WindowCreateOptions(true, WindowBorderStyle.NoBorder);
-            IPlatform plt = new Win32(r1, c1, wco);
+            IPlatform plt1 = new Win32(r1, c1, wco);
             IPlatform plt2 = new Win32(r2, c1, wco);
             IPlatform plt3 = new WinForms(r3, c1, wco);
-            var nf = new mnf(plt2);
-            rdr = r2;
+            IPlatform plt4 = new Win32(r4, c1, wco);
+            var nf = new mnf(plt4);
+            rdr = r4;
             nf.window.Run();
         }
     }
@@ -99,7 +102,6 @@ namespace Easy
             int ri = 0;
             sc.draw += (r, b, s) =>
             {
-
                 s.strokeWidth = 1;
                 double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0)/2.0;
                 b.color = new Color(1f, (float)ssw, 0f, 0f);
@@ -108,7 +110,7 @@ namespace Easy
                 if (dr != null)
                 {
                     dr.area.left = oleft + (float)ssw * 50f;
-                    if (sw.Elapsed.TotalSeconds > 5)
+                    if (sw.Elapsed.TotalSeconds > 50)
                     {
                         EndDirty(id);
                         dr = null;

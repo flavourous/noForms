@@ -62,13 +62,17 @@
       <Project>{336d599d-c09b-42d5-a820-a0778f559526}</Project>
       <Name>NoForms.Platforms.Win32</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NoForms.Renderers+Controllers.DirectX\NoForms.Renderers+Controllers.SharpDX.csproj">
+      <Project>{59316107-45a5-4064-b180-4d61dfa9792f}</Project>
+      <Name>NoForms.Renderers+Controllers.SharpDX</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NoForms.Renderers+Controllers.DotNet\NoForms.Renderers+Controllers.DotNet.csproj">
       <Project>{a390c6ca-dbc2-4bc4-be52-d113434f59e1}</Project>
       <Name>NoForms.Renderers+Controllers.DotNet</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NoForms.Renderers+Controllers.Win32\NoForms.Renderers+Controllers.Win32.csproj">
-      <Project>{59316107-45a5-4064-b180-4d61dfa9792f}</Project>
-      <Name>NoForms.Renderers+Controllers.Win32</Name>
+    <ProjectReference Include="..\NoForms.Renderers+Controllers.OpenTK\NoForms.Renderers+Controllers.OpenTK.csproj">
+      <Project>{5420d61f-e864-4aa6-aa45-5f8b2f5e66de}</Project>
+      <Name>NoForms.Renderers+Controllers.OpenTK</Name>
     </ProjectReference>
     <ProjectReference Include="..\NoFormsSDK\NoFormsSDK.csproj">
       <Project>{b4545332-c870-4e26-8f5c-ead5ae49c8b8}</Project>
@@ -78,6 +82,9 @@
       <Project>{4CD83A41-3030-45B4-9D85-2017560D9568}</Project>
       <Name>NoForms</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

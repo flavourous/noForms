@@ -11,7 +11,7 @@ using NoForms.Common;
 
 // Implimentations
 using NoForms.Platforms.Win32;
-using NoForms.Renderers.Win32;
+using NoForms.Renderers.SharpDX;
 using NoForms.Controllers.DotNet;
 
 namespace testapp

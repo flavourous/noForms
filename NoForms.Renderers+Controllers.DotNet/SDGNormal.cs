@@ -25,8 +25,6 @@ namespace NoForms.Renderers.DotNet
         {
             noForm = root;
             noForm.renderer = this;
-            lock (noForm)
-            {
                 winForm = wf.form;
 
                 // Create buffer
@@ -36,7 +34,6 @@ namespace NoForms.Renderers.DotNet
                 // Init uDraw and assign IRenderElement parts
                 _backRenderer = new SDG_RenderElements(graphics);
                 _uDraw = new SDGDraw(_backRenderer);
-            }
 
             // Create the observer
             dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);
@@ -80,14 +77,12 @@ namespace NoForms.Renderers.DotNet
         void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
-            // Resize the form and backbuffer to noForm.Size, and fire the noForms sizechanged
+            // Resize the backbuffer to noForm.Size, and fire the noForms sizechanged
             Resize(ReqSize);
 
             // Allow noform size to change as requested..like a layout hook (truncating layout passes with the render passes for performance)
             RenderSizeChanged(ReqSize);
 
-            lock (noForm)
-            {
                 foreach (var dr in dc.AsRectangles())
                 {
                     var sdr = SDGTr.trF(dr);
@@ -97,6 +92,13 @@ namespace NoForms.Renderers.DotNet
                 // Do Drawing stuff
                 noForm.DrawBase(this, dc);
 
+                //res
+                winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
+                {
+                    winForm.ClientSize = new System.Drawing.Size((int)ReqSize.width, (int)ReqSize.height);
+                    winForm.Location = SDGTr.trI(noForm.Location);
+                }));
+
                 // flush buffer to window
                 var winGr = winForm.CreateGraphics();
                 foreach (var dr in dc.AsRectangles())
@@ -105,28 +107,24 @@ namespace NoForms.Renderers.DotNet
                     winGr.DrawImage(buffer, sdr, sdr, GraphicsUnit.Pixel);
                 }
                 winGr.Dispose();
-            }
             currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
         void Resize(Common.Size ReqSize)
         {
-            winForm.Invoke(new System.Windows.Forms.MethodInvoker(() =>
-            {
-                var obb = buffer;
-                graphics.Dispose();
 
-                winForm.ClientSize = new System.Drawing.Size((int)ReqSize.width, (int)ReqSize.height);
-                winForm.Location = SDGTr.trI(noForm.Location);
-                buffer = new Bitmap(winForm.Width, winForm.Height);
-                graphics = Graphics.FromImage(buffer);
-                graphics.DrawImageUnscaledAndClipped(obb, new System.Drawing.Rectangle(0, 0, buffer.Width, buffer.Height));
+            var obb = buffer;
+            graphics.Dispose();
 
-                _backRenderer.graphics = graphics;
 
-                obb.Dispose();
+            buffer = new Bitmap((int)ReqSize.width, (int)ReqSize.height);
+            graphics = Graphics.FromImage(buffer);
+            graphics.DrawImageUnscaledAndClipped(obb, new System.Drawing.Rectangle(0, 0, buffer.Width, buffer.Height));
 
-            }));
+            _backRenderer.graphics = graphics;
+
+            obb.Dispose();
+
         }
 
         #endregion

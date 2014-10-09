@@ -22,11 +22,11 @@ namespace NoForms.Common
             ref_rsh = rsh;
         }
 
-        public void StartObserving()
+        public void StartObserving(VoidAction init = null)
         {
             dthread = new Thread(DirtyObs);
             dthread.IsBackground = false;
-            dthread.Start();
+            dthread.Start(init ?? delegate { });
         }
 
         Region dirty = new Region();
@@ -40,6 +40,7 @@ namespace NoForms.Common
         Thread dthread;
         void DirtyObs(Object o)
         {
+            (o as VoidAction)();
             while (running)
             {
                 DirtyLook();

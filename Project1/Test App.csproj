@@ -53,13 +53,13 @@
       <Project>{336d599d-c09b-42d5-a820-a0778f559526}</Project>
       <Name>NoForms.Platforms.Win32</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NoForms.Renderers+Controllers.DirectX\NoForms.Renderers+Controllers.SharpDX.csproj">
+      <Project>{59316107-45a5-4064-b180-4d61dfa9792f}</Project>
+      <Name>NoForms.Renderers+Controllers.SharpDX</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NoForms.Renderers+Controllers.DotNet\NoForms.Renderers+Controllers.DotNet.csproj">
       <Project>{a390c6ca-dbc2-4bc4-be52-d113434f59e1}</Project>
       <Name>NoForms.Renderers+Controllers.DotNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\NoForms.Renderers+Controllers.Win32\NoForms.Renderers+Controllers.Win32.csproj">
-      <Project>{59316107-45a5-4064-b180-4d61dfa9792f}</Project>
-      <Name>NoForms.Renderers+Controllers.Win32</Name>
     </ProjectReference>
     <ProjectReference Include="..\NoFormsSDK\NoFormsSDK.csproj">
       <Project>{b4545332-c870-4e26-8f5c-ead5ae49c8b8}</Project>

@@ -4,43 +4,44 @@ using System.Text;
 using SharpDX.DirectWrite;
 using SharpDX.Direct2D1;
 using NoForms.Common;
+using SharpDXLib = SharpDX;
 
-namespace NoForms.Renderers.Win32
+namespace NoForms.Renderers.SharpDX
 {
-    public class D2D_RenderElements : IRenderElements
+    public class SharpDX_RenderElements : IRenderElements
     {
-        public D2D_RenderElements(SharpDX.Direct2D1.RenderTarget rt)
+        public SharpDX_RenderElements(SharpDXLib.Direct2D1.RenderTarget rt)
         {
             renderTarget = rt;
         }
-        public SharpDX.Direct2D1.RenderTarget renderTarget { get; internal set; }
+        public SharpDXLib.Direct2D1.RenderTarget renderTarget { get; internal set; }
     }
     class D2DDraw : IUnifiedDraw
     {
         // FIXME this should go somewere in the d2d renderelements...
-        private static SharpDX.DirectWrite.Factory _dwFact;
-        public static SharpDX.DirectWrite.Factory dwFact
+        private static SharpDXLib.DirectWrite.Factory _dwFact;
+        public static SharpDXLib.DirectWrite.Factory dwFact
         {
             get
             {
                 if (_dwFact == null)
-                    _dwFact = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared);
+                    _dwFact = new SharpDXLib.DirectWrite.Factory(SharpDXLib.DirectWrite.FactoryType.Shared);
                 return _dwFact;
             }
         }
-        private static SharpDX.WIC.ImagingFactory _wicFact;
-        public static SharpDX.WIC.ImagingFactory wicFact
+        private static SharpDXLib.WIC.ImagingFactory _wicFact;
+        public static SharpDXLib.WIC.ImagingFactory wicFact
         {
             get
             {
                 if (_wicFact == null)
-                    _wicFact = new SharpDX.WIC.ImagingFactory();
+                    _wicFact = new SharpDXLib.WIC.ImagingFactory();
                 return _wicFact;
             }
         }
 
-        D2D_RenderElements realRenderer;
-        public D2DDraw(D2D_RenderElements els)
+        SharpDX_RenderElements realRenderer;
+        public D2DDraw(SharpDX_RenderElements els)
         {
             realRenderer = els;
         }
@@ -57,7 +58,7 @@ namespace NoForms.Renderers.Win32
         public void SetRenderOffset(Point offset)
         {
             var rtt = realRenderer.renderTarget.Transform;
-            rtt = new SharpDX.Matrix3x2(rtt.M11, rtt.M12, rtt.M21, rtt.M22, offset.X, offset.Y);
+            rtt = new SharpDXLib.Matrix3x2(rtt.M11, rtt.M12, rtt.M21, rtt.M22, offset.X, offset.Y);
             realRenderer.renderTarget.Transform = rtt;
         }
         public void FillPath(UPath path, UBrush brush)
@@ -144,7 +145,7 @@ namespace NoForms.Renderers.Win32
         public UTextHitInfo HitPoint(Point hitPoint, UText text)
         {
             var textLayout = CreateTextElements(text).textLayout;
-            SharpDX.Bool trailing, inside;
+            SharpDXLib.Bool trailing, inside;
             var htm = textLayout.HitTestPoint(hitPoint.X, hitPoint.Y, out trailing, out inside);
             return new UTextHitInfo()
             {
@@ -200,7 +201,7 @@ namespace NoForms.Renderers.Win32
         // FIXME how to avoid switching on type, and allowing mixing of UBrush etc between renderes at runtime?  Factory method on specific class wouldnt work...
         Brush CreateBrush(UBrush b)
         {
-            return b.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewBrush(b))) as Brush;
+            return b.Retreive<SharpDX_RenderElements>(new NoCacheDelegate(() => CreateNewBrush(b))) as Brush;
         }
         Brush CreateNewBrush(UBrush b)
         {
@@ -238,7 +239,7 @@ namespace NoForms.Renderers.Win32
 
         Bitmap CreateBitmap(UBitmap b)
         {
-            return b.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewBitmap(b))) as Bitmap;
+            return b.Retreive<SharpDX_RenderElements>(new NoCacheDelegate(() => CreateNewBitmap(b))) as Bitmap;
         }
         Bitmap CreateNewBitmap(UBitmap b)
         {
@@ -250,7 +251,7 @@ namespace NoForms.Renderers.Win32
                 bm = new System.Drawing.Bitmap(ms);
             }
             else bm = new System.Drawing.Bitmap(b.bitmapFile);
-            SharpDX.WIC.Bitmap wbm = new SharpDX.WIC.Bitmap(wicFact, bm, SharpDX.WIC.BitmapAlphaChannelOption.UseAlpha);
+            SharpDXLib.WIC.Bitmap wbm = new SharpDXLib.WIC.Bitmap(wicFact, bm, SharpDXLib.WIC.BitmapAlphaChannelOption.UseAlpha);
             var bmd =  Bitmap.FromWicBitmap(realRenderer.renderTarget, wbm);
             realRenderer.renderTarget.Disposed += new EventHandler<EventArgs>((o, e) => b.Invalidate());
             return bmd;
@@ -268,7 +269,7 @@ namespace NoForms.Renderers.Win32
 
         StrokeStyle CreateStroke(UStroke s)
         {
-            return s.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewStroke(s))) as StrokeStyle;
+            return s.Retreive<SharpDX_RenderElements>(new NoCacheDelegate(() => CreateNewStroke(s))) as StrokeStyle;
         }
         StrokeStyle CreateNewStroke(UStroke s)
         {
@@ -327,7 +328,7 @@ namespace NoForms.Renderers.Win32
 
         Geometry CreatePath(UPath p)
         {
-            return p.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewGeometry(p))) as Geometry;
+            return p.Retreive<SharpDX_RenderElements>(new NoCacheDelegate(() => CreateNewGeometry(p))) as Geometry;
         }
         Geometry CreateNewGeometry(UPath p)
         {
@@ -384,7 +385,7 @@ namespace NoForms.Renderers.Win32
 
         public D2D_TextElements CreateTextElements(UText t)
         {
-            return t.Retreive<D2D_RenderElements>(new NoCacheDelegate(() => CreateNewTextElements(t))) as D2D_TextElements;
+            return t.Retreive<SharpDX_RenderElements>(new NoCacheDelegate(() => CreateNewTextElements(t))) as D2D_TextElements;
         }
         public D2D_TextElements CreateNewTextElements(UText t)
         {
@@ -474,7 +475,7 @@ namespace NoForms.Renderers.Win32
             textLayout.Dispose();
         }
     }
-    public class ClientTextEffect : SharpDX.ComObject
+    public class ClientTextEffect : SharpDXLib.ComObject
     {
         public Brush fgBrush;
         public Brush bgBrush;
@@ -489,7 +490,7 @@ namespace NoForms.Renderers.Win32
             this.defaultEffect = defaultEffect;
         }
 
-        public override SharpDX.Result DrawGlyphRun(object clientDrawingContext, float baselineOriginX, float baselineOriginY, MeasuringMode measuringMode, GlyphRun glyphRun, GlyphRunDescription glyphRunDescription, SharpDX.ComObject clientDrawingEffect)
+        public override SharpDXLib.Result DrawGlyphRun(object clientDrawingContext, float baselineOriginX, float baselineOriginY, MeasuringMode measuringMode, GlyphRun glyphRun, GlyphRunDescription glyphRunDescription, SharpDXLib.ComObject clientDrawingEffect)
         {
             var cce = (ClientTextEffect)clientDrawingEffect;
             var args = (Object[])clientDrawingContext;
@@ -501,7 +502,7 @@ namespace NoForms.Renderers.Win32
             var fgb = cce == null ? defaultEffect.fgBrush : cce.fgBrush;
             rt.DrawGlyphRun(D2DTr.tr(origin), glyphRun, fgb, MeasuringMode.Natural);
 
-            return SharpDX.Result.Ok;
+            return SharpDXLib.Result.Ok;
         }
     }
 }

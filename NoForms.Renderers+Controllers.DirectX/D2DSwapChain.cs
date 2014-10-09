@@ -9,14 +9,15 @@ using SharpDX.Direct2D1;
 using SharpDX;
 using NoForms.Common;
 using NoForms.Platforms.Win32;
+using SharpDXLib = SharpDX;
 
-namespace NoForms.Renderers.Win32
+namespace NoForms.Renderers.SharpDX
 {
     public class D2DSwapChain : IRender<IW32Win>, IDraw
     {
-        SharpDX.Direct3D10.Device1 device;
-        SharpDX.Direct2D1.Factory d2dFactory = new SharpDX.Direct2D1.Factory();
-        SharpDX.DXGI.Factory dxgiFactory = new SharpDX.DXGI.Factory();
+        SharpDXLib.Direct3D10.Device1 device;
+        SharpDXLib.Direct2D1.Factory d2dFactory = new SharpDXLib.Direct2D1.Factory();
+        SharpDXLib.DXGI.Factory dxgiFactory = new SharpDXLib.DXGI.Factory();
 
         SwapChain swapchain;
         Texture2D backBuffer;
@@ -52,7 +53,7 @@ namespace NoForms.Renderers.Win32
                 SwapEffect = SwapEffect.Sequential,
                 Usage = Usage.RenderTargetOutput
             };
-            SharpDX.Direct3D10.Device1.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, swapchainDescription, out device, out swapchain);
+            SharpDXLib.Direct3D10.Device1.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, swapchainDescription, out device, out swapchain);
 
             // Initialise d2d things
             backBuffer = Texture2D.FromSwapChain<Texture2D>(swapchain, 0);
@@ -61,7 +62,7 @@ namespace NoForms.Renderers.Win32
             d2dRenderTarget = new RenderTarget(d2dFactory, surface, new RenderTargetProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)));
 
             // Init uDraw and assign IRenderElement parts
-            _backRenderer = new D2D_RenderElements(d2dRenderTarget);
+            _backRenderer = new SharpDX_RenderElements(d2dRenderTarget);
             _uDraw = new D2DDraw(_backRenderer);
 
         }
@@ -173,7 +174,7 @@ namespace NoForms.Renderers.Win32
         {
             get { return _uDraw; }
         }
-        D2D_RenderElements _backRenderer;
+        SharpDX_RenderElements _backRenderer;
         public IRenderElements backRenderer
         {
             get { return _backRenderer; }

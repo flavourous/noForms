@@ -9,15 +9,16 @@ using SharpDX;
 using NoForms.Common;
 using NoForms.Renderers;
 using NoForms.Platforms.Win32;
+using SharpDXLib = SharpDX;
 
-namespace NoForms.Renderers.Win32
+namespace NoForms.Renderers.SharpDX
 {
     public class D2DLayered : IRender<IW32Win>, IDraw
     {
         #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
-        SharpDX.Direct3D10.Device1 device;
-        SharpDX.Direct2D1.Factory d2dFactory = new SharpDX.Direct2D1.Factory();
-        SharpDX.DXGI.Factory dxgiFactory = new SharpDX.DXGI.Factory();
+        SharpDXLib.Direct3D10.Device1 device;
+        SharpDXLib.Direct2D1.Factory d2dFactory = new SharpDXLib.Direct2D1.Factory();
+        SharpDXLib.DXGI.Factory dxgiFactory = new SharpDXLib.DXGI.Factory();
 
         Texture2D backBuffer;
         RenderTargetView renderView;
@@ -31,7 +32,7 @@ namespace NoForms.Renderers.Win32
 
         public D2DLayered()
         {
-            device = new SharpDX.Direct3D10.Device1(DriverType.Hardware, DeviceCreationFlags.BgraSupport, SharpDX.Direct3D10.FeatureLevel.Level_10_1);
+            device = new SharpDXLib.Direct3D10.Device1(DriverType.Hardware, DeviceCreationFlags.BgraSupport, SharpDXLib.Direct3D10.FeatureLevel.Level_10_1);
             someDC = Win32Util.GetDC(IntPtr.Zero); // not sure what this exactly does... root dc perhaps...
         }
         public void Init(IW32Win w32, NoForm root)
@@ -61,7 +62,7 @@ namespace NoForms.Renderers.Win32
                 scbTrans = new SolidColorBrush(d2dRenderTarget, new Color4(1f, 0f, 1f, 0f)); // set buffer area to transparent
 
                 // Init uDraw and assign IRenderElement parts
-                _backRenderer = new D2D_RenderElements(d2dRenderTarget);
+                _backRenderer = new SharpDX_RenderElements(d2dRenderTarget);
                 _uDraw = new D2DDraw(_backRenderer);
 
                 // Create the observer
@@ -229,7 +230,7 @@ namespace NoForms.Renderers.Win32
         {
             get { return _uDraw; }
         }
-        D2D_RenderElements _backRenderer;
+        SharpDX_RenderElements _backRenderer;
         public IRenderElements backRenderer
         {
             get { return _backRenderer; }
