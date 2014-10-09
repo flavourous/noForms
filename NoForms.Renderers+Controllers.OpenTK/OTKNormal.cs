@@ -45,8 +45,7 @@ namespace NoForms.Renderers.OpenTK
                 // get context running...
                 glContext = new GraphicsContext(GraphicsMode.Default, winfo);
                 (glContext as IGraphicsContextInternal).LoadAll(); // makes current i think. or constructor does.
-                
-                glContext.SwapInterval = 0; // vsync
+                glContext.SwapInterval = 0; // vsync OFF BURN IT! (FIXME)
 
                 // saveem
                 _backRenderer = new OpenTK_RenderElements(glContext);
@@ -127,8 +126,6 @@ namespace NoForms.Renderers.OpenTK
 
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
-
-
             
             
             // Texture mapping...
@@ -193,13 +190,13 @@ namespace NoForms.Renderers.OpenTK
             GL.Disable(EnableCap.Blend); // we just want to emplace.
 
             GL.Begin(PrimitiveType.Quads);
-            GL.TexCoord2(0f, 0f);
-            GL.Vertex2(0.0, 0.0);
-            GL.TexCoord2(1f, 0f);
-            GL.Vertex2(w, 0.0);
-            GL.TexCoord2(1f, 1f);
-            GL.Vertex2(w, h);
             GL.TexCoord2(0f, 1f);
+            GL.Vertex2(0.0, 0.0);
+            GL.TexCoord2(1f, 1f);
+            GL.Vertex2(w, 0.0);
+            GL.TexCoord2(1f, 0f);
+            GL.Vertex2(w, h);
+            GL.TexCoord2(0f, 0f);
             GL.Vertex2(0.0, h);
             GL.End();
             

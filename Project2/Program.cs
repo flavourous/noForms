@@ -105,7 +105,7 @@ namespace Easy
                 s.strokeWidth = 1;
                 double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0)/2.0;
                 b.color = new Color(1f, (float)ssw, 0f, 0f);
-                //r.DrawPath(pth,b,s);
+                r.DrawPath(pth,b,s);
 
                 if (dr != null)
                 {
