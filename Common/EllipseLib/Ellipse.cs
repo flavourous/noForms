@@ -3,6 +3,84 @@ using System.Collections.Generic;
 
 namespace EllipseLib
 {
+    // Because fuck that slow shit.
+    public static class EasyEllipse
+    {
+        public struct EasyEllipseInput { public float t1, t2, rotation, rx, ry, start_x, start_y, pps; }
+        public static IEnumerable<System.Drawing.PointF> Generate(EasyEllipseInput eei)
+        {
+            float tf;
+            float rt1 = (eei.t1/180f)*(float)Math.PI;
+            float rt2 = (eei.t2/180f)*(float)Math.PI;
+            float rot = (float)Math.PI*(eei.rotation/180f);
+            float dr = 0f;//will be set
+
+            // init point get offset to start
+            float r = getr(rt1, rot, eei.rx, eei.ry);
+            float of_x = eei.start_x - gcx(r,rt1);
+            float of_y = eei.start_y - gcy(r,rt1);
+
+            for (float f = rt1; f <= rt2; f += dr)
+            {
+                r = getr(f, rot, eei.rx, eei.ry);
+                yield return new System.Drawing.PointF(gcx(r, f) + of_x, gcy(r, f) + of_y);
+
+                // find dr
+                float s = (float)Math.Sin(f); float c = (float)Math.Cos(f);
+                float x_now = c * eei.rx; float y_now = s * eei.ry;
+                float radius_now = (float)Math.Sqrt(Math.Pow(x_now, 2) + Math.Pow(y_now, 2));
+
+                // work out the length of arc: arc = r*theta (for a circle... with this small arc we should be ok)
+                // we want theta = arc/r... assume the radius at now+inc is roughly the same, these are small angle increments
+                dr = (eei.pps / radius_now);
+                if (f != rt2 && f + dr > rt2) f = rt2 - dr;
+            }
+        }
+        static float getr(float th, float rot, float rx, float ry)
+        {
+            var c_th = Math.Cos(th);
+            var s_th = Math.Sin(th);
+            var c_rot = Math.Cos(rot);
+            var s_rot = Math.Sin(rot);
+
+            var t1 = Math.Pow(c_th*c_rot - s_th*s_rot,2);
+            var t2 = Math.Pow(c_th*s_rot + s_th*c_rot,2);
+
+            return (float)Math.Pow(t1 / rx + t2 / ry, -0.5);
+        }
+        static float gcx(float r, float th) { return r * (float)Math.Cos(th); }
+        static float gcy(float r, float th) { return r * (float)Math.Sin(th); }
+
+    }
+
+    static class EllipseUtil
+    {
+        public static double[] GetThetas(double t1, double dt, double minarcdrop, double rx, double ry)
+        {
+            double rx2=rx*rx;
+            double ry2=ry*ry;
+
+            List<double> tts = new List<double>();
+            tts.Add(t1);
+            tts.Add(t1+dt);
+            for (int i = 0; i < tts.Count - 1; i++)
+            {
+                //do we need one inbetween i and i+1?
+                double r1 = Math.Sqrt(rx2 * Math.Pow(Math.Cos(tts[i]), 2) + ry2 * Math.Pow(Math.Sin(tts[i]), 2));
+                double r2 = Math.Sqrt(rx2 * Math.Pow(Math.Cos(tts[i+1]), 2) + ry2 * Math.Pow(Math.Sin(tts[i+1]), 2));
+                double dr = r1 - r2 * Math.Cos(tts[i+1] - tts[i]);
+                if (dr > minarcdrop)
+                {
+                    tts.Insert(i + 1, (tts[i] + tts[i + 1]) / 2);
+                    i--; // back one, we can done single pass here.
+                }
+            }
+
+            return tts.ToArray();
+        }
+        
+    }
+
     /// <summary>
     /// For solving the offset of the elipse centre, given
     /// the elipse rectangle Size and rotation, and two points on it.
@@ -330,54 +408,33 @@ namespace EllipseLib
                 throw new NotImplementedException();
         }
 
-        public static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, out System.Drawing.PointF[] pointys)
+        public static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, float pps, out System.Drawing.PointF[] pointys)
         {
             List<System.Drawing.PointF> pts = new List<System.Drawing.PointF>();
-            SampleArc(ei, eo, big, clockwise, (x, y) => pts.Add(new System.Drawing.PointF((float)x, (float)y)));
+            SampleArc(ei, eo, big, clockwise, pps, (x, y) => pts.Add(new System.Drawing.PointF((float)x, (float)y)));
             pointys = pts.ToArray();
         }
 
         delegate void Assignor(double x, double y);
-        static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, Assignor ass)
+        static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise,float pps, Assignor ass)
         {
             int usl; double t1, dt; String dummy;
             EllipseLib.Ellipse.FindArc(ei, eo, big, clockwise, out usl, out t1, out dt, out dummy);
             var us = eo[usl];
 
-            double moved = 0;
-            double theta_inc = 0, theta_now = t1;
             double s_rot = Math.Sin(-(ei.theta * Math.PI) / 180.0);
             double c_rot = Math.Cos(-(ei.theta * Math.PI) / 180.0);
-            do
+            double rt1 = t1 * Math.PI / 180.0;
+            double rdt = dt * Math.PI / 180.0;
+
+            foreach(double theta_now in EllipseUtil.GetThetas(rt1,rdt,1, ei.rx,ei.ry))
             {
-                double s = Math.Sin((theta_now * Math.PI) / 180.0);
-                double c = Math.Cos((theta_now * Math.PI) / 180.0);
+                double s = Math.Sin(theta_now );
+                double c = Math.Cos(theta_now );
                 double x_now = c * us.rx;
                 double y_now = s * us.ry;
-                double radius_now = Math.Sqrt(Math.Pow(x_now, 2) + Math.Pow(y_now, 2));
-
-                // work out the length of arc: arc = r*theta (for a circle... with this small arc we should be ok)
-                // we want theta = arc/r... assume the radius at now+inc is roughly the same, these are small angle increments
-                theta_inc = (5 / radius_now) * Math.Sign(dt);
-
-                // add current point (rotated about origin then moved) then increment.
                 ass(x_now * c_rot - y_now * s_rot + us.X, x_now * s_rot + y_now * c_rot + us.Y);
-                //ass(x_now + us.X, y_now + us.Y);
-
-                //inc
-                if (dt == 0 || dt - moved - theta_inc == 0 || Math.Sign(dt - moved) != Math.Sign(dt - moved - theta_inc))
-                {
-                    //we're ending pls
-                    moved = dt;
-                    theta_now = t1 + dt;
-                }
-                else
-                {
-                    // move along
-                    theta_now += theta_inc;
-                    moved += theta_inc;
-                }
-            } while (moved != dt);
+            }
         }
 
         static bool ArcTry(double t1, double t2, double angle, out bool? clockwise, out bool? large)

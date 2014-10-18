@@ -353,17 +353,17 @@ namespace NoForms.Renderers.SharpDX
 
         void AppendGeometry(GeometrySink sink, UGeometryBase geo)
         {
-            if (geo is UArc)
+            if (geo is UEasyArc)
             {
-                UArc arc = geo as UArc;
-                sink.AddArc(new ArcSegment()
-                {
-                    SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
-                    RotationAngle = -arc.rotation,
-                    ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
-                    Point = D2DTr.tr(arc.endPoint),
-                    Size = D2DTr.tr(arc.arcSize)
-                });
+                //UArc arc = geo as UArc;
+                //sink.AddArc(new ArcSegment()
+                //{
+                //    SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
+                //    RotationAngle = -arc.rotation,
+                //    ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
+                //    Point = D2DTr.tr(arc.endPoint),
+                //    Size = D2DTr.tr(arc.arcSize)
+                //});
             }
             else if (geo is ULine)
             {

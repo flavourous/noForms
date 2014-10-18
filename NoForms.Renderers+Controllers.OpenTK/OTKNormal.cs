@@ -45,7 +45,7 @@ namespace NoForms.Renderers.OpenTK
                 // get context running...
                 glContext = new GraphicsContext(GraphicsMode.Default, winfo);
                 (glContext as IGraphicsContextInternal).LoadAll(); // makes current i think. or constructor does.
-                glContext.SwapInterval = 0; // vsync OFF BURN IT! (FIXME)
+                glContext.SwapInterval = 0; // vsync off, manage self.
 
                 // saveem
                 _backRenderer = new OpenTK_RenderElements(glContext);

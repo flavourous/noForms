@@ -325,32 +325,32 @@ namespace NoForms.Renderers.DotNet
         //       D2D interface...could subclass... would check if(ICreateStuff is D2DCreator) as d2dcreator else Icreatestuff=new d2dcreator...
         void AppendGeometry(ref GraphicsPath path, UGeometryBase geo, NoForms.Common.Point start) // ref GraphicsPath will allow us to recreate it if we want with new.
         {
-            if (geo is UArc)
+            if (geo is UEasyArc)
             {
-                UArc arc = geo as UArc;
-                var elInput = new EllipseLib.Ellipse_Input(start.X, start.Y,arc.endPoint.X, arc.endPoint.Y, arc.arcSize.width, arc.arcSize.height, arc.rotation);
-                var elSolution = new List<EllipseLib.Ellipse_Output>(EllipseLib.Ellipse.Get_X0Y0(elInput)).ToArray();
-                PointF[] pts; 
-                EllipseLib.Ellipse.SampleArc(elInput, elSolution, arc.reflex, arc.sweepClockwise, out pts);
+                //UArc arc = geo as UArc;
+                //var elInput = new EllipseLib.Ellipse_Input(start.X, start.Y,arc.endPoint.X, arc.endPoint.Y, arc.arcSize.width, arc.arcSize.height, arc.rotation);
+                //var elSolution = new List<EllipseLib.Ellipse_Output>(EllipseLib.Ellipse.Get_X0Y0(elInput)).ToArray();
+                //PointF[] pts; 
+                //EllipseLib.Ellipse.SampleArc(elInput, elSolution, arc.reflex, arc.sweepClockwise, out pts);
 
-                // clone the data
-                List<PointF> opts = new List<PointF>(path.PointCount > 0 ? path.PathPoints : new PointF[0]);
-                List<byte> otyps = new List<byte>(path.PointCount > 0 ? path.PathTypes : new byte[0]);
+                //// clone the data
+                //List<PointF> opts = new List<PointF>(path.PointCount > 0 ? path.PathPoints : new PointF[0]);
+                //List<byte> otyps = new List<byte>(path.PointCount > 0 ? path.PathTypes : new byte[0]);
 
-                // do the types
-                if (otyps.Count == 0 || otyps[otyps.Count - 1] != (byte)PathPointType.Start)
-                {
-                    otyps.Add((byte)PathPointType.Start);
-                    opts.Add(SDGTr.trF(start));
-                }
-                for (int i = 0; i < pts.Length; i++)
-                    otyps.Add((byte)PathPointType.Line); // try to interpolate a bit?
+                //// do the types
+                //if (otyps.Count == 0 || otyps[otyps.Count - 1] != (byte)PathPointType.Start)
+                //{
+                //    otyps.Add((byte)PathPointType.Start);
+                //    opts.Add(SDGTr.trF(start));
+                //}
+                //for (int i = 0; i < pts.Length; i++)
+                //    otyps.Add((byte)PathPointType.Line); // try to interpolate a bit?
 
-                // append new data
-                opts.AddRange(pts);
+                //// append new data
+                //opts.AddRange(pts);
 
-                // Replace the path via reference
-                path = new GraphicsPath(opts.ToArray(), otyps.ToArray(), path.FillMode);
+                //// Replace the path via reference
+                //path = new GraphicsPath(opts.ToArray(), otyps.ToArray(), path.FillMode);
                 
             }
             else if (geo is ULine)

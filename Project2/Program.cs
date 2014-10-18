@@ -73,17 +73,17 @@ namespace Easy
             sc.Location = new Point(100, 100);
             sc.Size = new Size(500, 300);
 
-            UPath pth = new UPath();
+            UPath pth = new UPath(), easypth = new UPath();
             UFigure fig;
 
             for (float i = 0; i < 100; i += 10)
             {
-                fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
-                fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 50), true, true, i));
+                fig = new UFigure(new Point(sc.Location.X + 200, sc.Location.Y + 200), false, true);
+                fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i));
+                easypth.figures.Add(fig);
+                fig = new UFigure(new Point(sc.Location.X + 100, sc.Location.Y+100), false, true);
+                fig.geoElements.Add(new UArc(sc.Location + new Point(160, 160), new Size(100, 50), true, true, i));
                 pth.figures.Add(fig);
-                //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
-                //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), true, true, i));
-                //pth.figures.Add(fig);
                 //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
                 //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), false, false, i));
                 //pth.figures.Add(fig);
@@ -100,12 +100,55 @@ namespace Easy
             var id = BeginDirty(dr);
             Rectangle[] ors = new Rectangle[100];
             int ri = 0;
+
+
+            UPath pp = new UPath();
+            var ff = new UFigure(new Point(10, 10), false, false);
+            ff.geoElements.Add(new ULine(new Point(30, 10)));
+            ff.geoElements.Add(new ULine(new Point(60, 20)));
+            ff.geoElements.Add(new ULine(new Point(20, 50)));
+            pp.figures.Add(ff);
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            // n-1 * x = n?
+            // x=(n-1)/n;
+
+            // ((x1 + x2)/2 + x3/2) * n-1/n = (x1+x2+x3)/3
+
+            float avgmseasy=0f, avgmshard=0f;
+            float n = 0f;
+
+            long lastms = 0;
+            long msinterval = 1000;
+
             sc.draw += (r, b, s) =>
             {
+                r.DrawPath(pp, b, s);
                 s.strokeWidth = 1;
                 double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0)/2.0;
                 b.color = new Color(1f, (float)ssw, 0f, 0f);
+
+                var t1 = sw.ElapsedMilliseconds;
                 r.DrawPath(pth,b,s);
+                var t2 = sw.ElapsedMilliseconds;
+                r.DrawPath(easypth, b, s);
+                var t3 = sw.ElapsedMilliseconds;
+
+                n+=1f;
+                var dthard = t2 - t1;
+                var dteasy = t3 - t2;
+
+                avgmshard += dthard;
+                avgmseasy += dteasy;
+
+                if (sw.ElapsedMilliseconds - lastms > msinterval)
+                {
+                    lastms = sw.ElapsedMilliseconds;
+                    Console.WriteLine("Avg performance: {0:F2} easy vs {1:F2} hard", avgmseasy/n, avgmshard/n);
+                    avgmshard = avgmseasy = n = 0f;
+                }
+                
 
                 if (dr != null)
                 {
@@ -126,10 +169,12 @@ namespace Easy
                 //    ws += gr.run.runSize.width;
                 //}
 
-                r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
-                b.color = new Color(.5f, 0f, .5f, 0f);
+                //r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
+                b.color = new Color(.1f, 0f, 0f, 0f);
                 r.FillRectangle(sc.DisplayRectangle, b);
                 
+                
+
                 float h = ((Program.rdr.currentFps)/300f)*tx.height;
                 float x = (float)ssw * (tx.width-5) + sc.Location.X;
                 ors[ri] = new Rectangle(x, sc.Location.Y +  tx.height - h, 5, h);
@@ -160,11 +205,18 @@ namespace Easy
            
         }
 
+        ULinearGradientBrush lg = new ULinearGradientBrush()
+        {
+            point1 = new Point(20, 20),
+            point2 = new Point(300, 700),
+            color1 = new Color(1, 1, 0, 0),
+            color2 = new Color(1, 0, 1, 0)
+        };
         UBrush bgb = new USolidBrush() { color = new Color(.5f, 0, 0, 1) };
         public override void Draw(IDraw rt, Region dirty)
         {
             base.Draw(rt, dirty);
-            rt.uDraw.FillRectangle(DisplayRectangle, bgb);
+            rt.uDraw.FillRectangle(DisplayRectangle, lg);
         }
 
         void mnf_SizeChanged(Size sz)

@@ -538,7 +538,7 @@ namespace NoForms.Common
         {
             lock (validationLock)
             {
-                if (!storedValid || ExtraCheck(extraInval) || storedType != typeof(RetreiverType))
+                if (true || !storedValid || !ExtraCheck(extraInval) || storedType != typeof(RetreiverType))
                 {
                     Dispose();
                     storedObject = noCacheAction();
@@ -675,7 +675,31 @@ namespace NoForms.Common
         bool _open;
         public bool open { get { return _open; } set { _open = value; collectionChanged(); } }
     }
-    public abstract class UGeometryBase { }
+    public abstract class UGeometryBase : ObjStore { }
+    public class UEasyArc : UGeometryBase
+    {
+        public UEasyArc(float startAngle, float endAngle, Size arcSize, bool reflex, bool clockwise, float rotation)
+        {
+            this.reflex = reflex;
+            this.sweepClockwise = clockwise;
+            this.startAngle = startAngle;
+            this.endAngle = endAngle;
+            this.arcSize = arcSize;
+            this.rotation = rotation;
+        }
+        public float _rotation;
+        public float rotation { get { return _rotation; } private set { _rotation = value; Invalidate(); } }
+        public bool _sweepClockwise;
+        public bool sweepClockwise { get { return _sweepClockwise; } private set { _sweepClockwise = value; Invalidate(); } }
+        public bool _reflex;
+        public bool reflex { get { return _reflex; } private set { _reflex = value; Invalidate(); } }
+        public float _startAngle;
+        public float startAngle { get { return _startAngle; } private set { _startAngle = value; Invalidate(); } }
+        public float _endAngle;
+        public float endAngle { get { return _endAngle; } private set { _endAngle = value; Invalidate(); } }
+        public Size _arcSize;
+        public Size arcSize { get { return _arcSize; } private set { _arcSize = value; Invalidate(); } }
+    }
     public class UArc : UGeometryBase
     {
         public UArc(Point endPoint, Size arcSize, bool reflex, bool clockwise, float rotation)
@@ -686,11 +710,16 @@ namespace NoForms.Common
             this.arcSize = arcSize;
             this.rotation = rotation;
         }
-        public float rotation { get; private set; }
-        public bool sweepClockwise { get; private set; }
-        public bool reflex { get; private set; }
-        public Point endPoint { get; private set; }
-        public Size arcSize { get; private set; }
+        public float _rotation;
+        public float  rotation {get { return _rotation;} private set { _rotation = value; Invalidate();}}
+        public bool _sweepClockwise;
+        public bool  sweepClockwise {get { return _sweepClockwise;} private set { _sweepClockwise = value; Invalidate();}}
+        public bool _reflex;
+        public bool  reflex {get { return _reflex;} private set { _reflex = value; Invalidate();}}
+        public Point _endPoint;
+        public Point  endPoint {get { return _endPoint;} private set { _endPoint = value; Invalidate();}}
+        public Size _arcSize;
+        public Size  arcSize {get { return _arcSize;} private set { _arcSize = value; Invalidate();}}
     }
     public class ULine : UGeometryBase
     {
@@ -698,7 +727,8 @@ namespace NoForms.Common
         {
             this.endPoint = endPoint;
         }
-        public Point endPoint { get; private set; }
+        public Point _endPoint;
+        public Point  endPoint {get { return _endPoint;} private set { _endPoint = value; Invalidate();}}
     }
     public class UBeizer : UGeometryBase
     {
@@ -708,9 +738,12 @@ namespace NoForms.Common
             this.controlPoint2 = controlPoint2;
             this.endPoint = endPoint;
         }
-        public Point endPoint { get; private set; }
-        public Point controlPoint1 { get; private set; }
-        public Point controlPoint2 { get; private set; }
+        public Point _endPoint;
+        public Point  endPoint {get { return _endPoint;} private set { _endPoint = value; Invalidate();}}
+        public Point _controlPoint1;
+        public Point  controlPoint1 {get { return _controlPoint1;} private set { _controlPoint1 = value; Invalidate();}}
+        public Point _controlPoint2;
+        public Point  controlPoint2 {get { return _controlPoint2;} private set { _controlPoint2 = value; Invalidate();}}
     }
 
     public enum StrokeCaps { flat, round, triangle };
