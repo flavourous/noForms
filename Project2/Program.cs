@@ -76,7 +76,7 @@ namespace Easy
             UPath pth = new UPath(), easypth = new UPath();
             UFigure fig;
 
-            for (float i = 0; i < 100; i += 10)
+            for (float i = 0; i < 10; i += 10)
             {
                 fig = new UFigure(new Point(sc.Location.X + 200, sc.Location.Y + 200), false, true);
                 fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i));

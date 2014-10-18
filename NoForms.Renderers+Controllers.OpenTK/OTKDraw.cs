@@ -79,7 +79,6 @@ namespace NoForms.Renderers.OpenTK
             {
                 System.Drawing.PointF[] pts = new System.Drawing.PointF[0];
                 var lst = start;
-                float pixelsPerSegment = 10f;
 
                 if (g is UArc)
                 {
@@ -88,7 +87,7 @@ namespace NoForms.Renderers.OpenTK
                     {
                         var elInput = new EllipseLib.Ellipse_Input(lst.X, lst.Y, arc.endPoint.X, arc.endPoint.Y, arc.arcSize.width, arc.arcSize.height, arc.rotation);
                         var elSolution = new List<EllipseLib.Ellipse_Output>(EllipseLib.Ellipse.Get_X0Y0(elInput)).ToArray();
-                        EllipseLib.Ellipse.SampleArc(elInput, elSolution, arc.reflex, arc.sweepClockwise,pixelsPerSegment, out pts);
+                        EllipseLib.Ellipse.SampleArc(elInput, elSolution, arc.reflex, arc.sweepClockwise, arc.resolution, out pts);
                         return new disParr(pts);
                     }) as disParr).pts;
                 }
@@ -106,7 +105,7 @@ namespace NoForms.Renderers.OpenTK
                                                     ry = arc.arcSize.height,
                                                     t1 = arc.startAngle,
                                                     t2 = arc.endAngle,
-                                                    pps = pixelsPerSegment
+                                                    pps = arc.resolution
                                                 })).ToArray());
                         }) as disParr).pts;
                 }

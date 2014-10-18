@@ -676,33 +676,33 @@ namespace NoForms.Common
         public bool open { get { return _open; } set { _open = value; collectionChanged(); } }
     }
     public abstract class UGeometryBase : ObjStore { }
-    public class UEasyArc : UGeometryBase
+    public class UEasyArc : UArcBase
     {
         public UEasyArc(float startAngle, float endAngle, Size arcSize, bool reflex, bool clockwise, float rotation)
         {
-            this.reflex = reflex;
-            this.sweepClockwise = clockwise;
             this.startAngle = startAngle;
             this.endAngle = endAngle;
             this.arcSize = arcSize;
             this.rotation = rotation;
         }
-        public float _rotation;
-        public float rotation { get { return _rotation; } private set { _rotation = value; Invalidate(); } }
-        public bool _sweepClockwise;
-        public bool sweepClockwise { get { return _sweepClockwise; } private set { _sweepClockwise = value; Invalidate(); } }
-        public bool _reflex;
-        public bool reflex { get { return _reflex; } private set { _reflex = value; Invalidate(); } }
-        public float _startAngle;
+        float _startAngle;
         public float startAngle { get { return _startAngle; } private set { _startAngle = value; Invalidate(); } }
-        public float _endAngle;
+        float _endAngle;
         public float endAngle { get { return _endAngle; } private set { _endAngle = value; Invalidate(); } }
-        public Size _arcSize;
-        public Size arcSize { get { return _arcSize; } private set { _arcSize = value; Invalidate(); } }
+
     }
-    public class UArc : UGeometryBase
+    public abstract class UArcBase : UGeometryBase
     {
-        public UArc(Point endPoint, Size arcSize, bool reflex, bool clockwise, float rotation)
+        float _rotation;
+        public float rotation { get { return _rotation; } protected set { _rotation = value; Invalidate(); } }
+        Size _arcSize;
+        public Size arcSize { get { return _arcSize; } protected set { _arcSize = value; Invalidate(); } }
+        float _resolution = 1;
+        public float resolution { get { return _resolution; } private set { _resolution = value; Invalidate(); } }
+    }
+    public class UArc : UArcBase
+    {
+        public UArc(Point endPoint, Size arcSize, bool reflex, bool clockwise, float rotation, float resolution)
         {
             this.reflex = reflex;
             this.sweepClockwise = clockwise;
@@ -710,16 +710,12 @@ namespace NoForms.Common
             this.arcSize = arcSize;
             this.rotation = rotation;
         }
-        public float _rotation;
-        public float  rotation {get { return _rotation;} private set { _rotation = value; Invalidate();}}
-        public bool _sweepClockwise;
+        bool _sweepClockwise;
         public bool  sweepClockwise {get { return _sweepClockwise;} private set { _sweepClockwise = value; Invalidate();}}
-        public bool _reflex;
+        bool _reflex;
         public bool  reflex {get { return _reflex;} private set { _reflex = value; Invalidate();}}
-        public Point _endPoint;
+        Point _endPoint;
         public Point  endPoint {get { return _endPoint;} private set { _endPoint = value; Invalidate();}}
-        public Size _arcSize;
-        public Size  arcSize {get { return _arcSize;} private set { _arcSize = value; Invalidate();}}
     }
     public class ULine : UGeometryBase
     {

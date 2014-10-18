@@ -20,6 +20,8 @@ namespace EllipseLib
             float of_x = eei.start_x - gcx(r,rt1);
             float of_y = eei.start_y - gcy(r,rt1);
 
+
+            foreach(double 
             for (float f = rt1; f <= rt2; f += dr)
             {
                 r = getr(f, rot, eei.rx, eei.ry);
@@ -57,28 +59,29 @@ namespace EllipseLib
     {
         public static double[] GetThetas(double t1, double dt, double minarcdrop, double rx, double ry)
         {
-            double rx2=rx*rx;
-            double ry2=ry*ry;
-
             List<double> tts = new List<double>();
             tts.Add(t1);
             tts.Add(t1+dt);
+            double it0, it1;
             for (int i = 0; i < tts.Count - 1; i++)
             {
+                it0 = tts[i]; it1 = tts[i + 1];
                 //do we need one inbetween i and i+1?
-                double r1 = Math.Sqrt(rx2 * Math.Pow(Math.Cos(tts[i]), 2) + ry2 * Math.Pow(Math.Sin(tts[i]), 2));
-                double r2 = Math.Sqrt(rx2 * Math.Pow(Math.Cos(tts[i+1]), 2) + ry2 * Math.Pow(Math.Sin(tts[i+1]), 2));
-                double dr = r1 - r2 * Math.Cos(tts[i+1] - tts[i]);
-                if (dr > minarcdrop)
+                double r1 = Math.Sqrt(Math.Pow(rx*Math.Cos(it0), 2) + Math.Pow(ry*Math.Sin(it0), 2));
+                double r2 = Math.Sqrt(Math.Pow(rx*Math.Cos(it1), 2) + Math.Pow(ry*Math.Sin(it1), 2));
+                double dr = r1 - r2 * Math.Cos(it1-it0);
+                if (Math.Abs(dr) > minarcdrop) // FIXME shouldnt need abs here....?
                 {
-                    tts.Insert(i + 1, (tts[i] + tts[i + 1]) / 2);
+                    tts.Insert(i+1, (tts[i] + tts[i + 1]) / 2);
                     i--; // back one, we can done single pass here.
                 }
             }
 
             return tts.ToArray();
         }
+
         
+
     }
 
     /// <summary>
@@ -408,15 +411,15 @@ namespace EllipseLib
                 throw new NotImplementedException();
         }
 
-        public static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, float pps, out System.Drawing.PointF[] pointys)
+        public static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, double resolution, out System.Drawing.PointF[] pointys)
         {
             List<System.Drawing.PointF> pts = new List<System.Drawing.PointF>();
-            SampleArc(ei, eo, big, clockwise, pps, (x, y) => pts.Add(new System.Drawing.PointF((float)x, (float)y)));
+            SampleArc(ei, eo, big, clockwise,resolution, (x, y) => pts.Add(new System.Drawing.PointF((float)x, (float)y)));
             pointys = pts.ToArray();
         }
 
         delegate void Assignor(double x, double y);
-        static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise,float pps, Assignor ass)
+        static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, double resolution, Assignor ass)
         {
             int usl; double t1, dt; String dummy;
             EllipseLib.Ellipse.FindArc(ei, eo, big, clockwise, out usl, out t1, out dt, out dummy);
@@ -427,7 +430,7 @@ namespace EllipseLib
             double rt1 = t1 * Math.PI / 180.0;
             double rdt = dt * Math.PI / 180.0;
 
-            foreach(double theta_now in EllipseUtil.GetThetas(rt1,rdt,1, ei.rx,ei.ry))
+            foreach(double theta_now in EllipseUtil.GetThetas(rt1,rdt,resolution, ei.rx,ei.ry))
             {
                 double s = Math.Sin(theta_now );
                 double c = Math.Cos(theta_now );
