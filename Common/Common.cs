@@ -478,15 +478,15 @@ namespace NoForms.Common
     public class UStyleRange : IObservable
     {
         int _start;
-        public int start { get { return _start; } set { _start = value; collectionChanged(); } }
+        public int start { get { return _start; } set { _start = value; changed(); } }
         int _length;
-        public int length { get { return _length; } set { _length = value; collectionChanged(); } }
+        public int length { get { return _length; } set { _length = value; changed(); } }
         UFont? _fontOverride;
-        public UFont? fontOverride { get { return _fontOverride; } set { _fontOverride = value; collectionChanged(); } }
+        public UFont? fontOverride { get { return _fontOverride; } set { _fontOverride = value; changed(); } }
         UBrush _fgOverride;
-        public UBrush fgOverride { get { return _fgOverride; } set { _fgOverride = value; collectionChanged(); } }
+        public UBrush fgOverride { get { return _fgOverride; } set { _fgOverride = value; changed(); } }
         UBrush _bgOverride;
-        public UBrush bgOverride { get { return _bgOverride; } set { _bgOverride = value; collectionChanged(); } }
+        public UBrush bgOverride { get { return _bgOverride; } set { _bgOverride = value; changed(); } }
 
         public UStyleRange(int start, int length, UFont? font, UBrush foreground, UBrush background)
         {
@@ -502,24 +502,26 @@ namespace NoForms.Common
             _bgOverride = cloneFrom.bgOverride;
             _fgOverride = cloneFrom.fgOverride;
         }
-        public event VoidAction collectionChanged;
+        public event VoidAction changed;
     }
     // Cached base object for drawing objects
     public class DDis : IDisposable { public void Dispose() { } }
     public delegate IDisposable NoCacheDelegate();
-    public abstract class ObjStore : IDisposable
+    public abstract class ObjStore : IDisposable, IObservable
     {
         Type storedType = null; // nothing stored to begin with
         bool storedValid = false;
         IDisposable storedObject = new DDis(); // nothing stored...
         Object validationLock = new Object(); // FIXME actually, it's up to framework not to destroy the Retrieved value until it's done with.
         public event NoFormsAction invalidated = delegate { };
+        public event VoidAction changed = delegate { };
         public void Invalidate()
         {
             lock (validationLock)
             {
                 storedValid = false;
                 invalidated();
+                changed();
             }
         }
         Object[] myExtraInvals = new object[0];
@@ -552,6 +554,8 @@ namespace NoForms.Common
         {
             storedObject.Dispose();
         }
+
+
     }
 
     // Text options
@@ -607,7 +611,7 @@ namespace NoForms.Common
             this.wrapped = isWrapped;
             this.width = width;
             this.height = height;
-            _styleRanges.collectionChanged += new VoidAction(_styleRanges_collectionChanged);
+            _styleRanges.changed += new VoidAction(_styleRanges_collectionChanged);
         }
     }
 
@@ -653,12 +657,12 @@ namespace NoForms.Common
         public ObsCollection<UFigure> figures { get { return _figures; } }
         public UPath()
         {
-            _figures.collectionChanged += new VoidAction(Invalidate);
+            _figures.changed += new VoidAction(Invalidate);
         }
     }
     public class UFigure : IObservable
     {
-        public event VoidAction collectionChanged = delegate { };
+        public event VoidAction changed = delegate { };
         ObsCollection<UGeometryBase> _geoElements = new ObsCollection<UGeometryBase>();
         public ObsCollection<UGeometryBase> geoElements { get { return _geoElements; } }
         public UFigure(Point start, bool amIFilled, bool amIOpen)
@@ -666,31 +670,38 @@ namespace NoForms.Common
             _startPoint = start;
             _filled = amIFilled;
             _open = amIOpen;
-            _geoElements.collectionChanged += new VoidAction(collectionChanged);
+            _geoElements.changed += new VoidAction(changed);
         }
         Point _startPoint;
-        public Point startPoint { get { return _startPoint; } set { _startPoint = value; collectionChanged(); } }
+        public Point startPoint { get { return _startPoint; } set { _startPoint = value; changed(); } }
         bool _filled;
-        public bool filled { get { return _filled; } set { _filled = value; collectionChanged(); } }
+        public bool filled { get { return _filled; } set { _filled = value; changed(); } }
         bool _open;
-        public bool open { get { return _open; } set { _open = value; collectionChanged(); } }
+        public bool open { get { return _open; } set { _open = value; changed(); } }
     }
     public abstract class UGeometryBase : ObjStore { }
-    public class UEasyArc : UArcBase
+    public class disParr : IDisposable
     {
-        public UEasyArc(float startAngle, float endAngle, Size arcSize, bool reflex, bool clockwise, float rotation)
-        {
-            this.startAngle = startAngle;
-            this.endAngle = endAngle;
-            this.arcSize = arcSize;
-            this.rotation = rotation;
-        }
-        float _startAngle;
-        public float startAngle { get { return _startAngle; } private set { _startAngle = value; Invalidate(); } }
-        float _endAngle;
-        public float endAngle { get { return _endAngle; } private set { _endAngle = value; Invalidate(); } }
-
+        public disParr(System.Drawing.PointF[] pts) { this.pts = pts; }
+        public System.Drawing.PointF[] pts;
+        public void Dispose() { }
     }
+    //public class UEasyArc : UArcBase
+    //{
+    //    public UEasyArc(float startAngle, float endAngle, Size arcSize, bool reflex, bool clockwise, float rotation, float resolution)
+    //    {
+    //        this.startAngle = startAngle;
+    //        this.endAngle = endAngle;
+    //        this.arcSize = arcSize;
+    //        this.rotation = rotation;
+    //        this.resolution = resolution;
+    //    }
+    //    float _startAngle;
+    //    public float startAngle { get { return _startAngle; } private set { _startAngle = value; Invalidate(); } }
+    //    float _endAngle;
+    //    public float endAngle { get { return _endAngle; } private set { _endAngle = value; Invalidate(); } }
+
+    //}
     public abstract class UArcBase : UGeometryBase
     {
         float _rotation;
@@ -698,7 +709,7 @@ namespace NoForms.Common
         Size _arcSize;
         public Size arcSize { get { return _arcSize; } protected set { _arcSize = value; Invalidate(); } }
         float _resolution = 1;
-        public float resolution { get { return _resolution; } private set { _resolution = value; Invalidate(); } }
+        public float resolution { get { return _resolution; } protected set { _resolution = value; Invalidate(); } }
     }
     public class UArc : UArcBase
     {
@@ -709,6 +720,7 @@ namespace NoForms.Common
             this.endPoint = endPoint;
             this.arcSize = arcSize;
             this.rotation = rotation;
+            this.resolution = resolution;
         }
         bool _sweepClockwise;
         public bool  sweepClockwise {get { return _sweepClockwise;} private set { _sweepClockwise = value; Invalidate();}}

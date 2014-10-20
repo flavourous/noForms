@@ -32,8 +32,8 @@ namespace Easy
             IPlatform plt2 = new Win32(r2, c1, wco);
             IPlatform plt3 = new WinForms(r3, c1, wco);
             IPlatform plt4 = new Win32(r4, c1, wco);
-            var nf = new mnf(plt4);
-            rdr = r4;
+            var nf = new mnf(plt2);
+            rdr = r2;
             nf.window.Run();
         }
     }
@@ -76,13 +76,13 @@ namespace Easy
             UPath pth = new UPath(), easypth = new UPath();
             UFigure fig;
 
-            for (float i = 0; i < 10; i += 10)
+            for (float i = 0; i < 100; i += 1)
             {
                 fig = new UFigure(new Point(sc.Location.X + 200, sc.Location.Y + 200), false, true);
-                fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i));
+                //fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i, 1));
                 easypth.figures.Add(fig);
                 fig = new UFigure(new Point(sc.Location.X + 100, sc.Location.Y+100), false, true);
-                fig.geoElements.Add(new UArc(sc.Location + new Point(160, 160), new Size(100, 50), true, true, i));
+                fig.geoElements.Add(new UArc(sc.Location + new Point(160, 160), new Size(100, 50), true, true, i, 1));
                 pth.figures.Add(fig);
                 //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
                 //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), false, false, i));

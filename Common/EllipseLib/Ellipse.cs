@@ -6,59 +6,80 @@ namespace EllipseLib
     // Because fuck that slow shit.
     public static class EasyEllipse
     {
-        public struct EasyEllipseInput { public float t1, t2, rotation, rx, ry, start_x, start_y, pps; }
+        public class EECOut : IDisposable
+        {
+            public float x, y; public bool clockwise, reflex;
+            public void Dispose() { }
+        }
+        public struct EasyEllipseInput { public float t1, t2, rotation, rx, ry, start_x, start_y, resolution; }
         public static IEnumerable<System.Drawing.PointF> Generate(EasyEllipseInput eei)
         {
-            float tf;
             float rt1 = (eei.t1/180f)*(float)Math.PI;
             float rt2 = (eei.t2/180f)*(float)Math.PI;
             float rot = (float)Math.PI*(eei.rotation/180f);
-            float dr = 0f;//will be set
+            float cr = (float)Math.Cos(rot);
+            float sr = (float)Math.Sin(rot);
 
             // init point get offset to start
-            float r = getr(rt1, rot, eei.rx, eei.ry);
-            float of_x = eei.start_x - gcx(r,rt1);
-            float of_y = eei.start_y - gcy(r,rt1);
+            float x, y;
+            getpoint(rt1, cr, sr, eei.rx, eei.ry, out x, out y);
+            float of_x = eei.start_x - x; 
+            float of_y = eei.start_y - y; 
 
-
-            foreach(double 
-            for (float f = rt1; f <= rt2; f += dr)
+            foreach(double sd in EllipseUtil.GetThetas(rt1,rt2,eei.resolution, eei.rx, eei.ry))
             {
-                r = getr(f, rot, eei.rx, eei.ry);
-                yield return new System.Drawing.PointF(gcx(r, f) + of_x, gcy(r, f) + of_y);
-
-                // find dr
-                float s = (float)Math.Sin(f); float c = (float)Math.Cos(f);
-                float x_now = c * eei.rx; float y_now = s * eei.ry;
-                float radius_now = (float)Math.Sqrt(Math.Pow(x_now, 2) + Math.Pow(y_now, 2));
-
-                // work out the length of arc: arc = r*theta (for a circle... with this small arc we should be ok)
-                // we want theta = arc/r... assume the radius at now+inc is roughly the same, these are small angle increments
-                dr = (eei.pps / radius_now);
-                if (f != rt2 && f + dr > rt2) f = rt2 - dr;
+                float fsd = (float)sd;
+                getpoint(rt1, cr, sr, eei.rx, eei.ry, out x, out y);
+                yield return new System.Drawing.PointF(x + of_x, y + of_y);
             }
         }
-        static float getr(float th, float rot, float rx, float ry)
+        static void getpoint(float rt1, float crot, float srot, float rx, float ry, out float x, out float y)
         {
-            var c_th = Math.Cos(th);
-            var s_th = Math.Sin(th);
-            var c_rot = Math.Cos(rot);
-            var s_rot = Math.Sin(rot);
-
-            var t1 = Math.Pow(c_th*c_rot - s_th*s_rot,2);
-            var t2 = Math.Pow(c_th*s_rot + s_th*c_rot,2);
-
-            return (float)Math.Pow(t1 / rx + t2 / ry, -0.5);
+            float ct = (float)Math.Cos(rt1);
+            float st = (float)Math.Sin(rt1);
+            
+            float r1 = rx * ct + ry * st; // get radiaus on nonrotated ellipse at rt1
+            float x1 = r1 * ct; float y1 = r1 * st; // get x,y of that
+            rotate(x1, y1, crot, srot, out x, out y);
         }
-        static float gcx(float r, float th) { return r * (float)Math.Cos(th); }
-        static float gcy(float r, float th) { return r * (float)Math.Sin(th); }
+        static void rotate(float inx, float iny, float ct, float st, out float x, out float y)
+        {
+            x = inx * ct - iny * st;
+            y = inx * st + iny * ct;
+        }
 
+        public static EECOut ConvertEndPoint(EasyEllipseInput eei)
+        {
+            float rt1 = (eei.t1 / 180f) * (float)Math.PI;
+            float rt2 = (eei.t2 / 180f) * (float)Math.PI;
+            float rot = (float)Math.PI * (eei.rotation / 180f);
+            float cr = (float)Math.Cos(rot);
+            float sr = (float)Math.Sin(rot);
+
+            //get point 1
+            float x1, y1;
+            getpoint(rt1, cr, sr, eei.rx, eei.ry, out x1, out y1);
+
+            // get point 2
+            float x2, y2;
+            getpoint(rt2, cr, sr, eei.rx, eei.ry, out x2, out y2);
+
+            // the end point is desired start, minus our start, plus our end.
+            return new EECOut()
+            {
+                x = eei.start_x - x1 + x2,
+                y = eei.start_y - y1 + y2,
+                reflex = Math.Abs(eei.t2 - eei.t1) > 180f,
+                clockwise = true
+            };
+        }
     }
 
     static class EllipseUtil
     {
         public static double[] GetThetas(double t1, double dt, double minarcdrop, double rx, double ry)
         {
+            // FIXME reimpliment using LinkedList<>, because the inserts are order N here....
             List<double> tts = new List<double>();
             tts.Add(t1);
             tts.Add(t1+dt);

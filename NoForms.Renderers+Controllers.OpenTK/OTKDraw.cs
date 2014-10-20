@@ -56,12 +56,7 @@ namespace NoForms.Renderers.OpenTK
             }
         }
 
-        class disParr : IDisposable
-        {
-            public disParr(System.Drawing.PointF[] pts) { this.pts = pts; }
-            public System.Drawing.PointF[] pts;
-            public void Dispose() { }
-        }
+        
         void PlotGeoElement(ref Point start, UGeometryBase g, UBrush b)
         {
             if (g is ULine)
@@ -75,7 +70,7 @@ namespace NoForms.Renderers.OpenTK
             else if (g is UBeizer)
             {
             }
-            else if (g is UArc || g is UEasyArc)
+            else if (g is UArcBase)
             {
                 System.Drawing.PointF[] pts = new System.Drawing.PointF[0];
                 var lst = start;
@@ -91,24 +86,24 @@ namespace NoForms.Renderers.OpenTK
                         return new disParr(pts);
                     }) as disParr).pts;
                 }
-                else if (g is UEasyArc)
-                {
-                    var arc = g as UEasyArc;
-                    pts = (g.Retreive<OTKDraw>(() =>
-                        {
-                            return new disParr(new List<System.Drawing.PointF>(EllipseLib.EasyEllipse.Generate(new EllipseLib.EasyEllipse.EasyEllipseInput()
-                                                {
-                                                    rotation = arc.rotation,
-                                                    start_x = lst.X,
-                                                    start_y = lst.Y,
-                                                    rx = arc.arcSize.width,
-                                                    ry = arc.arcSize.height,
-                                                    t1 = arc.startAngle,
-                                                    t2 = arc.endAngle,
-                                                    pps = arc.resolution
-                                                })).ToArray());
-                        }) as disParr).pts;
-                }
+                //else if (g is UEasyArc)
+                //{
+                //    var arc = g as UEasyArc;
+                //    pts = (g.Retreive<OTKDraw>(() =>
+                //        {
+                //            return new disParr(new List<System.Drawing.PointF>(EllipseLib.EasyEllipse.Generate(new EllipseLib.EasyEllipse.EasyEllipseInput()
+                //                                {
+                //                                    rotation = arc.rotation,
+                //                                    start_x = lst.X,
+                //                                    start_y = lst.Y,
+                //                                    rx = arc.arcSize.width,
+                //                                    ry = arc.arcSize.height,
+                //                                    t1 = arc.startAngle,
+                //                                    t2 = arc.endAngle,
+                //                                    resolution = arc.resolution
+                //                                })).ToArray());
+                //        }) as disParr).pts;
+                //}
 
                 Point? sp = null;
                 foreach (var p in pts)

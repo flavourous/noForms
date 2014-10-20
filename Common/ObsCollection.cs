@@ -7,15 +7,15 @@ namespace NoForms.Common
     public delegate void VoidAction();
     public interface IObservable
     {
-        event VoidAction collectionChanged;
+        event VoidAction changed;
     }
     public class ObsCollection<T> : System.Collections.ObjectModel.Collection<T>, IObservable
     {
-        public event VoidAction collectionChanged;
+        public event VoidAction changed;
         void OnCollectionChanged() 
         {
-            if(collectionChanged != null)
-                collectionChanged();
+            if(changed != null)
+                changed();
         }
         protected override void ClearItems()
         {
@@ -26,7 +26,7 @@ namespace NoForms.Common
         {
             base.InsertItem(index, item);
             if(item is IObservable)
-                (item as IObservable).collectionChanged += OnCollectionChanged;
+                (item as IObservable).changed += OnCollectionChanged;
             OnCollectionChanged();
         }
         protected override void RemoveItem(int index)
@@ -39,7 +39,7 @@ namespace NoForms.Common
             base.SetItem(index, item);
             OnCollectionChanged();
             if (item is IObservable)
-                (item as IObservable).collectionChanged += OnCollectionChanged;
+                (item as IObservable).changed += OnCollectionChanged;
         } 
     }
 }

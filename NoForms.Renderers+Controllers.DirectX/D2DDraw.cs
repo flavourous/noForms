@@ -334,6 +334,8 @@ namespace NoForms.Renderers.SharpDX
         {
             var pg = new PathGeometry(realRenderer.renderTarget.Factory);
             var gs = pg.Open();
+
+            SharpDXLib.DrawingPointF tangent = new SharpDXLib.DrawingPointF();
             foreach (var f in p.figures)
             {
                 gs.BeginFigure(D2DTr.tr(f.startPoint), f.filled ? FigureBegin.Filled : FigureBegin.Hollow);
@@ -353,18 +355,46 @@ namespace NoForms.Renderers.SharpDX
 
         void AppendGeometry(GeometrySink sink, UGeometryBase geo)
         {
-            if (geo is UEasyArc)
+            if (geo is UArc)
             {
-                //UArc arc = geo as UArc;
-                //sink.AddArc(new ArcSegment()
-                //{
-                //    SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
-                //    RotationAngle = -arc.rotation,
-                //    ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
-                //    Point = D2DTr.tr(arc.endPoint),
-                //    Size = D2DTr.tr(arc.arcSize)
-                //});
+                UArc arc = geo as UArc;
+                sink.AddArc(new ArcSegment()
+                {
+                    SweepDirection = arc.sweepClockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
+                    RotationAngle = -arc.rotation,
+                    ArcSize = arc.reflex ? ArcSize.Large : ArcSize.Small,
+                    Point = D2DTr.tr(arc.endPoint),
+                    Size = D2DTr.tr(arc.arcSize)
+                });
             }
+            //else if (geo is UEasyArc)
+            //{
+            //    UEasyArc arc = geo as UEasyArc;
+            //    var eco = geo.Retreive<D2DDraw>(() =>
+            //        {
+            //            var cp = gcpt();
+            //            return EllipseLib.EasyEllipse.ConvertEndPoint(new EllipseLib.EasyEllipse.EasyEllipseInput()
+            //            {
+            //                resolution = arc.resolution,
+            //                t1 = arc.startAngle,
+            //                t2 = arc.endAngle,
+            //                rx = arc.arcSize.width,
+            //                ry = arc.arcSize.height,
+            //                rotation = arc.rotation,
+            //                start_x = cp.X,
+            //                start_y = cp.Y
+            //            });
+            //        }) as EllipseLib.EasyEllipse.EECOut;
+
+            //    sink.AddArc(new ArcSegment()
+            //    {
+            //        SweepDirection = eco.clockwise ? SweepDirection.Clockwise : SweepDirection.CounterClockwise,
+            //        RotationAngle = -arc.rotation,
+            //        ArcSize = eco.reflex ? ArcSize.Large : ArcSize.Small,
+            //        Point = new SharpDXLib.DrawingPointF(eco.x, eco.y),
+            //        Size = D2DTr.tr(arc.arcSize)
+            //    });
+            //}
             else if (geo is ULine)
             {
                 ULine line = geo as ULine;
