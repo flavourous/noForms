@@ -708,19 +708,18 @@ namespace NoForms.Common
         public float rotation { get { return _rotation; } protected set { _rotation = value; Invalidate(); } }
         Size _arcSize;
         public Size arcSize { get { return _arcSize; } protected set { _arcSize = value; Invalidate(); } }
-        float _resolution = 1;
-        public float resolution { get { return _resolution; } protected set { _resolution = value; Invalidate(); } }
+        float _resolution = 0.1f;
+        public float resolution { get { return _resolution; } set { _resolution = value; Invalidate(); } }
     }
     public class UArc : UArcBase
     {
-        public UArc(Point endPoint, Size arcSize, bool reflex, bool clockwise, float rotation, float resolution)
+        public UArc(Point endPoint, Size arcSize, bool reflex, bool clockwise, float rotation)
         {
             this.reflex = reflex;
             this.sweepClockwise = clockwise;
             this.endPoint = endPoint;
             this.arcSize = arcSize;
             this.rotation = rotation;
-            this.resolution = resolution;
         }
         bool _sweepClockwise;
         public bool  sweepClockwise {get { return _sweepClockwise;} private set { _sweepClockwise = value; Invalidate();}}
@@ -746,11 +745,13 @@ namespace NoForms.Common
             this.controlPoint2 = controlPoint2;
             this.endPoint = endPoint;
         }
-        public Point _endPoint;
+        float _resolution = 3f;
+        public float resolution { get { return _resolution; } set { _resolution = value; Invalidate(); } }
+        Point _endPoint;
         public Point  endPoint {get { return _endPoint;} private set { _endPoint = value; Invalidate();}}
-        public Point _controlPoint1;
+        Point _controlPoint1;
         public Point  controlPoint1 {get { return _controlPoint1;} private set { _controlPoint1 = value; Invalidate();}}
-        public Point _controlPoint2;
+        Point _controlPoint2;
         public Point  controlPoint2 {get { return _controlPoint2;} private set { _controlPoint2 = value; Invalidate();}}
     }
 

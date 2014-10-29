@@ -1,7 +1,9 @@
 ﻿using System;
+using sdf = System.Drawing.PointF;
+using System.Diagnostics;
 using System.Collections.Generic;
 
-namespace EllipseLib
+namespace GeometryLib
 {
     // Because fuck that slow shit.
     public static class EasyEllipse
@@ -38,6 +40,7 @@ namespace EllipseLib
             float ct = (float)Math.Cos(rt1);
             float st = (float)Math.Sin(rt1);
             
+            // FIXME wrong?
             float r1 = rx * ct + ry * st; // get radiaus on nonrotated ellipse at rt1
             float x1 = r1 * ct; float y1 = r1 * st; // get x,y of that
             rotate(x1, y1, crot, srot, out x, out y);
@@ -75,34 +78,157 @@ namespace EllipseLib
         }
     }
 
-    static class EllipseUtil
+    public static class EllipseUtil
     {
-        public static double[] GetThetas(double t1, double dt, double minarcdrop, double rx, double ry)
+        public static IEnumerable<sdf> GetEllipse(double rx, double ry, double maxarcdrop)
         {
-            // FIXME reimpliment using LinkedList<>, because the inserts are order N here....
-            List<double> tts = new List<double>();
-            tts.Add(t1);
-            tts.Add(t1+dt);
-            double it0, it1;
-            for (int i = 0; i < tts.Count - 1; i++)
+            // FIXES SOME FIXME - this is how you get radius on an ellipse at some angle - do math sometimes dave instead of guessing!
+            foreach (double t in GetThetas(-180,180,maxarcdrop,rx,ry))
             {
-                it0 = tts[i]; it1 = tts[i + 1];
-                //do we need one inbetween i and i+1?
-                double r1 = Math.Sqrt(Math.Pow(rx*Math.Cos(it0), 2) + Math.Pow(ry*Math.Sin(it0), 2));
-                double r2 = Math.Sqrt(Math.Pow(rx*Math.Cos(it1), 2) + Math.Pow(ry*Math.Sin(it1), 2));
-                double dr = r1 - r2 * Math.Cos(it1-it0);
-                if (Math.Abs(dr) > minarcdrop) // FIXME shouldnt need abs here....?
-                {
-                    tts.Insert(i+1, (tts[i] + tts[i + 1]) / 2);
-                    i--; // back one, we can done single pass here.
-                }
-            }
+                // get trig
+                var ct = Math.Cos(t);
+                var st = Math.Sin(t);
+                var rx2 = rx*rx;
+                var ry2 = ry*ry;
+                var ct2 = ct*ct;
+                var st2 = st*st;
 
-            return tts.ToArray();
+                sdf pt = new sdf();
+
+                // Solve for x
+                // x*tan(t) = y
+                // x^2cos^2(t)/rx^2 + x^2sin^2(t)/ry^2 = cos^2(t)
+                // x^2(cos^2(t)/rx^2 + sin^2(t)/ry^2) = cos^2(t)
+                // x =  +- cos(t)/sqrt(cos^2(t)/rx^2 + sin^2(t)/ry^2)
+                // x = cos(t)/sqrt(cos^2(t)/rx^2 + sin^2(t)/ry^2)
+                pt.X = (float) (ct / Math.Sqrt(ct2 / rx2 + st2 / ry2));
+
+                // Solve for y (tan is nasty)
+                // x = y/tan(t)
+                // y^2cos^2(t)/rx^2 + y^2sin^2(t)/ry^2 = sin^2(t)
+                // y^2 = sin^2(t)/(cos^2(t)/rx^2 + sin^2(t)/ry^2)
+                // y = +- sin(t)/sqrt(cos^2(t)/rx^2 + sin^2(t)/ry^2)
+                // y = sin(t)/sqrt(cos^2(t)/rx^2 + sin^2(t)/ry^2)
+                pt.Y = (float) (st / Math.Sqrt(ct2 / rx2 + st2 / ry2));
+
+                yield return pt;
+            }
         }
 
-        
+        public static double[] GetThetas(double t1, double dt, double maxarcdrop, double rx, double ry)
+        {
+            // init 
+            LinkedList<double> tht = new LinkedList<double>();
+            double t2 = t1 + dt;
+            tht.AddLast(t1);
+            if (dt > 0) tht.AddLast(t2);
+            else tht.AddFirst(t2);
 
+            // Bisect points on curve.
+            //  begin at first, look at next, add after head if step is too short.
+            //  if added, remain at head, else, goto head.next. 
+            //  finish when head is last (no next!)
+            var head = tht.First;
+            while (!Object.ReferenceEquals(head, tht.Last))
+            {
+                double tmid = (head.Value + head.Next.Value) / 2.0;
+                double dropv = drop(rx, ry, head.Value, head.Next.Value, tmid);
+                if (dropv > maxarcdrop)
+                    tht.AddAfter(head, tmid);
+                else head = head.Next;
+            }
+
+            // output
+            tht.RemoveFirst(); // got a start point...
+            var pc = tht.Count;
+            var ret = new double[pc];
+            tht.CopyTo(ret, 0);
+            return ret;
+        }
+        static double drop(double rx, double ry, double t1, double t2, double tmid)
+        {
+            // assume circle but:
+            double r = Math.Sqrt(rx * rx + ry * ry);
+            double ct1 = Math.Cos(t1), st1 = Math.Sin(t1);
+            double ct2 = Math.Cos(t2), st2 = Math.Sin(t2);
+            double _cord = Math.Sqrt(Math.Pow(ct2 - ct1, 2) + Math.Pow(st2 - st1, 2));
+            double _arc = (t2 - t1);
+            return r*(_arc - _cord)/2.0;
+        }
+        static double drop_oldmod(double rx, double ry, double t1, double t2, double tmid)
+        {
+            Debug.Assert(t2 > t1);
+
+            double ct1 = Math.Cos(t1), st1 = Math.Sin(t1);
+            double ct2 = Math.Cos(t2), st2 = Math.Sin(t2);
+            double ctm = Math.Cos(tmid), stm = Math.Sin(tmid);
+
+            // get r1 r2
+            double r1 = Math.Sqrt(Math.Pow(rx * ct1, 2) + Math.Pow(ry * st1, 2));
+            double r2 = Math.Sqrt(Math.Pow(rx * ct2, 2) + Math.Pow(ry * st2, 2));
+            double rm = Math.Sqrt(Math.Pow(rx * ctm, 2) + Math.Pow(ry * stm, 2));
+
+            // Get the coord length between t1 and t2 on the ellipse
+            double x1 = r1 * ct1, y1 = r1 * st1, x2 = r2 * ct2, y2 = r2 * st2;
+            double cord = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
+
+            // get the distance of x1,y1 to xm,ym, and then from x2,y2
+            double xm = rm * ctm, ym = rm * stm;
+            double tl1 = Math.Sqrt(Math.Pow(xm - x1, 2) + Math.Pow(ym - y1, 2));
+            double tl2 = Math.Sqrt(Math.Pow(x2 - xm, 2) + Math.Pow(y2 - ym, 2));
+
+            // subtract em, devide by 2
+            return (tl1 + tl2 - cord)/2;
+
+            //     x
+            //    / \
+            // tl1   tl2
+            //  /     \
+            // /       \
+            //x---cord---x
+        }
+        static double drop_old(double rx, double ry, double t1, double t2, double tmid)
+        {
+            double ct1 = Math.Cos(t1), st1 = Math.Sin(t1);
+            double ct2 = Math.Cos(t2), st2 = Math.Sin(t2);
+            double ctm = Math.Cos(tmid), stm = Math.Sin(tmid);
+
+            // get r1 r2
+            double r1 = Math.Sqrt(Math.Pow(rx * ct1, 2) + Math.Pow(ry * st1, 2));
+            double r2 = Math.Sqrt(Math.Pow(rx * ct2, 2) + Math.Pow(ry * st2, 2));
+            double rm = Math.Sqrt(Math.Pow(rx * ctm, 2) + Math.Pow(ry * stm, 2));
+
+            // Get the coord between t1 and t2 on the ellipse
+            double c, d, x1 = r1 * ct1, y1 = r1 * st1, x2 = r2 * ct2, y2 = r2 * st2;
+            getLine(x1,y1,x2,y2, out c, out d);
+
+            // Get the vector of rmid
+            double cr, dr, xr = rm*ctm, yr = rm*stm;
+            getLine(0, 0, xr, yr, out cr, out dr);
+
+            // Get the crossing point
+            double x, y;
+            getCross(c, d, cr, dr, out x, out y);
+
+            // return the distance of crossing point to where rmid is on ellipse
+            double dx = xr - x, dy = yr - y;
+            double ret = Math.Sqrt(dx * dx + dy * dy);
+            return ret;
+        }
+        static void getLine(double x1, double y1, double x2, double y2, out double c, out double dydx)
+        {
+            dydx = (y2 - y1) / (x2 - x1);
+            // y = dydx x + c ... c = y-dydx x;
+            c = y1 - dydx * x1;
+        }
+        static void getCross(double c1, double d1, double c2, double d2, out double x, out double y)
+        {
+            // find the x
+            // d1*x+c1=d2*x+c2
+            // x = (c1-c2)/(d2-d1)
+            x = (c1 - c2) / (d2 - d1);
+            y = d1 * x + c1; // or the other one...
+        }
     }
 
     /// <summary>
@@ -204,7 +330,7 @@ namespace EllipseLib
 
             double s = Math.Sin(Math.PI * input.theta / 180);
             double c = Math.Cos(Math.PI * input.theta / 180);
-
+                
             double dx = x1 - x2;
             double dy = y1 - y2;
             double dxy = x1 * y1 - x2 * y2;
@@ -443,7 +569,7 @@ namespace EllipseLib
         static void SampleArc(Ellipse_Input ei, Ellipse_Output[] eo, bool big, bool clockwise, double resolution, Assignor ass)
         {
             int usl; double t1, dt; String dummy;
-            EllipseLib.Ellipse.FindArc(ei, eo, big, clockwise, out usl, out t1, out dt, out dummy);
+            GeometryLib.Ellipse.FindArc(ei, eo, big, clockwise, out usl, out t1, out dt, out dummy);
             var us = eo[usl];
 
             double s_rot = Math.Sin(-(ei.theta * Math.PI) / 180.0);

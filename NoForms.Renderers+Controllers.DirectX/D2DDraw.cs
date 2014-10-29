@@ -335,7 +335,6 @@ namespace NoForms.Renderers.SharpDX
             var pg = new PathGeometry(realRenderer.renderTarget.Factory);
             var gs = pg.Open();
 
-            SharpDXLib.DrawingPointF tangent = new SharpDXLib.DrawingPointF();
             foreach (var f in p.figures)
             {
                 gs.BeginFigure(D2DTr.tr(f.startPoint), f.filled ? FigureBegin.Filled : FigureBegin.Hollow);

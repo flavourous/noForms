@@ -333,9 +333,9 @@ namespace NoForms.Renderers.DotNet
                     UArc arc = geo as UArc;
                     pts = (geo.Retreive<SDGDraw>(() =>
                     {
-                        var elInput = new EllipseLib.Ellipse_Input(start.X, start.Y, arc.endPoint.X, arc.endPoint.Y, arc.arcSize.width, arc.arcSize.height, arc.rotation);
-                        var elSolution = new List<EllipseLib.Ellipse_Output>(EllipseLib.Ellipse.Get_X0Y0(elInput)).ToArray();
-                        EllipseLib.Ellipse.SampleArc(elInput, elSolution, arc.reflex, arc.sweepClockwise, arc.resolution, out pts);
+                        var elInput = new GeometryLib.Ellipse_Input(start.X, start.Y, arc.endPoint.X, arc.endPoint.Y, arc.arcSize.width, arc.arcSize.height, arc.rotation);
+                        var elSolution = new List<GeometryLib.Ellipse_Output>(GeometryLib.Ellipse.Get_X0Y0(elInput)).ToArray();
+                        GeometryLib.Ellipse.SampleArc(elInput, elSolution, arc.reflex, arc.sweepClockwise, arc.resolution, out pts);
                         return new disParr(pts);
                     }) as disParr).pts;
                 }

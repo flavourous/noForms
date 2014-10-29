@@ -76,13 +76,18 @@ namespace Easy
             UPath pth = new UPath(), easypth = new UPath();
             UFigure fig;
 
-            for (float i = 0; i < 100; i += 1)
+            for (float i = 0; i < 100; i += 100)
             {
-                fig = new UFigure(new Point(sc.Location.X + 200, sc.Location.Y + 200), false, true);
-                //fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i, 1));
+                var p1 = sc.Location + new Point(200, 200);
+                fig = new UFigure(sc.Location, false, true);
+                //fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i));
+                fig.geoElements.Add(new UBeizer(sc.Location + new Point(20, -20), sc.Location + new Point(60, 30), sc.Location + new Point(100, 0)));
                 easypth.figures.Add(fig);
-                fig = new UFigure(new Point(sc.Location.X + 100, sc.Location.Y+100), false, true);
-                fig.geoElements.Add(new UArc(sc.Location + new Point(160, 160), new Size(100, 50), true, true, i, 1));
+                fig = new UFigure(p1, true, true);
+                fig.geoElements.Add(new UArc(p1 += new Point(0, 50), new Size(200, 50), true, true, i));
+                fig.geoElements.Add(new UArc(p1 += new Point(0, 50), new Size(150, 50), true, false, i));
+                fig.geoElements.Add(new UArc(p1 += new Point(0, 50), new Size(100, 50), true, true, i));
+                fig.geoElements.Add(new UArc(p1 += new Point(0, 50), new Size(50, 50), true, false, i));
                 pth.figures.Add(fig);
                 //fig = new UFigure(new Point(sc.Location.X + 0, sc.Location.Y), false, true);
                 //fig.geoElements.Add(new UArc(sc.Location + new Point(60, 60), new Size(100, 100), false, false, i));
@@ -116,39 +121,22 @@ namespace Easy
 
             // ((x1 + x2)/2 + x3/2) * n-1/n = (x1+x2+x3)/3
 
-            float avgmseasy=0f, avgmshard=0f;
-            float n = 0f;
-
-            long lastms = 0;
-            long msinterval = 1000;
 
             sc.draw += (r, b, s) =>
             {
-                r.DrawPath(pp, b, s);
+                //r.DrawPath(pp, b, s);
                 s.strokeWidth = 1;
-                double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0)/2.0;
-                b.color = new Color(1f, (float)ssw, 0f, 0f);
-
-                var t1 = sw.ElapsedMilliseconds;
-                r.DrawPath(pth,b,s);
-                var t2 = sw.ElapsedMilliseconds;
-                r.DrawPath(easypth, b, s);
-                var t3 = sw.ElapsedMilliseconds;
-
-                n+=1f;
-                var dthard = t2 - t1;
-                var dteasy = t3 - t2;
-
-                avgmshard += dthard;
-                avgmseasy += dteasy;
-
-                if (sw.ElapsedMilliseconds - lastms > msinterval)
-                {
-                    lastms = sw.ElapsedMilliseconds;
-                    Console.WriteLine("Avg performance: {0:F2} easy vs {1:F2} hard", avgmseasy/n, avgmshard/n);
-                    avgmshard = avgmseasy = n = 0f;
-                }
                 
+
+                //foreach (var f in pth.figures)
+                //    foreach (UArc a in f.geoElements)
+                //        a.resolution = 0.01f + (float)ssw * 0.1f;
+
+                double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0) / 2.0;
+                //b.color = new Color(1f, (float)ssw, 0f, 0f);
+                r.DrawPath(easypth, b, s);
+                r.FillPath(pth, lg2);
+                return;
 
                 if (dr != null)
                 {
@@ -204,7 +192,13 @@ namespace Easy
             SizeChanged += mnf_SizeChanged;
            
         }
-
+        ULinearGradientBrush lg2 = new ULinearGradientBrush()
+        {
+            point1 = new Point(200, 300),
+            point2 = new Point(100, 600),
+            color1 = new Color(1, 1, 1, 0),
+            color2 = new Color(1, 0, 1, 1)
+        };
         ULinearGradientBrush lg = new ULinearGradientBrush()
         {
             point1 = new Point(20, 20),

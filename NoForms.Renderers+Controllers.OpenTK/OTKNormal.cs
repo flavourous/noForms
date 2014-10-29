@@ -47,15 +47,15 @@ namespace NoForms.Renderers.OpenTK
                 (glContext as IGraphicsContextInternal).LoadAll(); // makes current i think. or constructor does.
                 glContext.SwapInterval = 0; // vsync off, manage self.
 
-                // saveem
-                _backRenderer = new OpenTK_RenderElements(glContext);
-                _uDraw = new OTKDraw();
-
                 // generate buffers
-                FBO_Draw = GL.Ext.GenFramebuffer();
-                FBO_Window = GL.Ext.GenFramebuffer();
-                T2D_Draw = GL.GenTexture();
-                T2D_Window = GL.GenTexture();
+                int FBO_Draw = GL.Ext.GenFramebuffer();
+                int FBO_Window = GL.Ext.GenFramebuffer();
+                int T2D_Draw = GL.GenTexture();
+                int T2D_Window = GL.GenTexture();
+
+                // saveem
+                _backRenderer = new OpenTK_RenderElements(glContext, FBO_Draw, FBO_Window, T2D_Draw, T2D_Window);
+                _uDraw = new OTKDraw(_backRenderer);
             });
 
             noForm_LocationChanged(noForm.Location);
@@ -78,7 +78,7 @@ namespace NoForms.Renderers.OpenTK
             // Allow noform size to change as requested..like a layout hook (truncating layout passes with the render passes for performance)
             RenderSizeChanged(ReqSize);
 
-            foreach (var tex in new int[] { T2D_Draw, T2D_Window })
+            foreach (var tex in new int[] { _backRenderer.T2D_Draw, _backRenderer.T2D_Window })
             {
                 GL.BindTexture(TextureTarget.Texture2D, tex); // bind to texture, set things,
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, (int)w, (int)h, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
@@ -90,8 +90,8 @@ namespace NoForms.Renderers.OpenTK
             }
 
             // bind to framebuffer, and bind its output to the texture
-            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, FBO_Draw);
-            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, T2D_Draw, 0);
+            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, _backRenderer.FBO_Draw);
+            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, _backRenderer.T2D_Draw, 0);
 
             // Alpha...
             GL.Enable(EnableCap.Blend);
@@ -108,11 +108,13 @@ namespace NoForms.Renderers.OpenTK
 
             // draw on fbo
             GL.ClearBuffer(ClearBuffer.Color, 0, new float[] { 0, 0, 0, 0 }); // fixme does this do anything? :/
+            uDraw.PushAxisAlignedClip(new Rectangle(new Point(0,0),ReqSize), true);
             noForm.DrawBase(this, dc);
+            uDraw.PopAxisAlignedClip();
             
             // Intermediate render to window buffer...
-            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, FBO_Window);
-            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, T2D_Window, 0);
+            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, _backRenderer.FBO_Window);
+            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, _backRenderer.T2D_Window, 0);
 
             // Alpha...
             GL.Enable(EnableCap.Blend);
@@ -143,7 +145,7 @@ namespace NoForms.Renderers.OpenTK
             //GL.Clear(ClearBufferMask.ColorBufferBit);
 
             // Draw the Color Texture - only parts of it!!
-            GL.BindTexture(TextureTarget.Texture2D, T2D_Draw);
+            GL.BindTexture(TextureTarget.Texture2D, _backRenderer.T2D_Draw);
             GL.Color4(1f, 1f, 1f, 1f);
             GL.Disable(EnableCap.Blend); // we just want to emplace.
             GL.Begin(PrimitiveType.Quads);
@@ -185,7 +187,7 @@ namespace NoForms.Renderers.OpenTK
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
 
-            GL.BindTexture(TextureTarget.Texture2D, T2D_Window);
+            GL.BindTexture(TextureTarget.Texture2D, _backRenderer.T2D_Window);
             GL.Color4(1f, 1f, 1f, 1f);
             GL.Disable(EnableCap.Blend); // we just want to emplace.
 
@@ -208,8 +210,6 @@ namespace NoForms.Renderers.OpenTK
             currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
-
-        int FBO_Draw, T2D_Draw, FBO_Window, T2D_Window;
     
         public void EndRender()
         {
