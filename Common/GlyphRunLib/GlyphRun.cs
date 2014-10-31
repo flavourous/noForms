@@ -5,13 +5,13 @@ using NoForms.Common;
 
 namespace GlyphRunLib
 {
-    public class GlyphRun<FontClass>
+    public class GlyphRunGenerator<FontClass>
     {
-        public delegate Size MeasureFnc(String txt, FontClass font);
+        public delegate Size MeasureFnc(UText txt, FontClass font);
         public delegate FontClass FntTranslate(UFont font);
         MeasureFnc MeasureString;
         FntTranslate Translate;
-        public GlyphRun(MeasureFnc measurer, FntTranslate fontTranslator)
+        public GlyphRunGenerator(MeasureFnc measurer, FntTranslate fontTranslator)
         {
             MeasureString = measurer;
             Translate = fontTranslator;
@@ -21,7 +21,7 @@ namespace GlyphRunLib
         class TR { public BreakType type; public int location; public String content; public UStyleRange[] styley = new UStyleRange[2]; }
         static String[] wordBreak = new String[] { " " };
         static String[] lineBreak = new String[] { "\r\n", "\n" }; //order is important
-        IEnumerable<SDGGlyphRun> GetGlyphRuns(UText text)
+        IEnumerable<UGlyphRun> GetGlyphRuns(UText text)
         {
             // concecutive wordbreaks are one glyphrun, while concecutive linebreaks are individual glpyhruns
             List<TR> breaks = new List<TR>();
@@ -87,11 +87,11 @@ namespace GlyphRunLib
                 yield return BuildGlyphRun(cpos, text.text.Length - cpos, cstyle, text, BreakType.none);
         }
 
-        SDGGlyphRun BuildGlyphRun(int start, int length, UStyleRange currentStyle, UText text, BreakType bt)
+        UGlyphRun BuildGlyphRun(int start, int length, UStyleRange currentStyle, UText text, BreakType bt)
         {
             FontClass useFont = Translate(currentStyle == null ? text.font : currentStyle.fontOverride ?? text.font);
 
-            var gr = new SDGGlyphRun()
+            var gr = new UGlyphRun()
             {
                 startPosition = start,
                 runLength = length,
@@ -169,23 +169,23 @@ namespace GlyphRunLib
 
         }
 
-        public class SDGTextInfo
+        public class UTextGlyphingInfo
         {
             public Size minSize;
-            public List<SDGGlyphRunLayoutInfo> glyphRuns = new List<SDGGlyphRunLayoutInfo>();
+            public List<UGlyphRunLayoutInfo> glyphRuns = new List<UGlyphRunLayoutInfo>();
             public List<int> lineLengths = new List<int>();
             public List<int> newLineLengths = new List<int>();
             public List<Size> lineSizes = new List<Size>();
         }
 
-        public class SDGGlyphRunLayoutInfo
+        public class UGlyphRunLayoutInfo
         {
-            public SDGGlyphRun run;
+            public UGlyphRun run;
             public Point location;
             public int lineNumber;
         }
 
-        public class SDGGlyphRun
+        public class UGlyphRun
         {
             public int startPosition;
             public int runLength;
@@ -197,17 +197,17 @@ namespace GlyphRunLib
         }
 
         // FIXME Cache!! (most importantly)
-        public SDGTextInfo GetSDGTextInfo(UText text)
+        public UTextGlyphingInfo GetTextInfo(UText text)
         {
             // gotta do a line or end before we can decide the char tops (baseline aligned, presumably...)
             float currX = 0, currY = 0, maxGlyphHeight = 0;
             int lglst = 0; // last glyphrun line start
             int lastWordBreak = -1; // last wordbreaking glyph on the current line
             int currLine = 0;
-            SDGTextInfo ret = new SDGTextInfo();
+            UTextGlyphingInfo ret = new UTextGlyphingInfo();
 
             // begin on assumption we're top left align..then correct after
-            SDGGlyphRun lastGr = null;
+            UGlyphRun lastGr = null;
             foreach (var gr in GetGlyphRuns(text))
             {
                 // tracking max height for the line baselineing
@@ -218,7 +218,7 @@ namespace GlyphRunLib
                 if (gr.breakingType == BreakType.line)
                 {//LineBreaking
                     // add the glyphrun, resolve info for the line, and begin on new line!
-                    ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
+                    ret.glyphRuns.Add(new UGlyphRunLayoutInfo()
                     {
                         lineNumber = currLine,
                         location = new Point(currX, 0), // dunno about y position yet
@@ -260,7 +260,7 @@ namespace GlyphRunLib
 
                     // Is this glyphrun a wordbreak? who cares, next iteration will take care via #1. 
                     // Not wordbreak? no prev worbreak? who cares, carry on.
-                    ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
+                    ret.glyphRuns.Add(new UGlyphRunLayoutInfo()
                     {
                         lineNumber = currLine,
                         location = new Point(currX, 0), // dunno about y position yet
@@ -278,7 +278,7 @@ namespace GlyphRunLib
                 else
                 {// Buisness as Normal
                     // add glyphrun, increment currX
-                    ret.glyphRuns.Add(new SDGGlyphRunLayoutInfo()
+                    ret.glyphRuns.Add(new UGlyphRunLayoutInfo()
                     {
                         lineNumber = currLine,
                         location = new Point(currX, 0),
@@ -357,7 +357,11 @@ namespace GlyphRunLib
             }
         }
 
-        public UTextHitInfo HitPoint(SDGTextInfo ti, Point hitPoint)
+        // WARNING this all assumes that char rects and lines are "tightly packed", except  differing font sizes
+        //         on same line, which get "baselined".  Is this what really happens?  What about line,word and char spacing adjustments?
+        //         dirty way would be to adjust char rects, but does SDG do that? (does it even support that?)
+        // Text Measuring - isText tells you if you actually hit a part of the string...
+        public UTextHitInfo HitPoint(UTextGlyphingInfo ti, Point hitPoint)
         {
             int charPos = 0;
 
@@ -414,7 +418,7 @@ namespace GlyphRunLib
 
             return new UTextHitInfo(charPos, leading, isText);
         }
-        public NoForms.Common.Point HitText(SDGTextInfo ti, int pos, bool trailing)
+        public NoForms.Common.Point HitText(UTextGlyphingInfo ti, int pos, bool trailing)
         {
             // Find the hit glyphrun
             int g, cc = 0;
@@ -434,7 +438,7 @@ namespace GlyphRunLib
             // Get any y-offset of hit char in the glyph and return
             return ti.glyphRuns[g].location + new NoForms.Common.Point(cx, ti.glyphRuns[g].run.runSize.height - ti.glyphRuns[g].run.charSizes[i].height);
         }
-        public IEnumerable<NoForms.Common.Rectangle> HitTextRange(SDGTextInfo ti, int start, int length, NoForms.Common.Point offset)
+        public IEnumerable<NoForms.Common.Rectangle> HitTextRange(UTextGlyphingInfo ti, int start, int length, NoForms.Common.Point offset)
         {
             int cc = 0;
             foreach (var glyph in ti.glyphRuns)

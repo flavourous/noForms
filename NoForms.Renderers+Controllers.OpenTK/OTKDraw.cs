@@ -1,4 +1,6 @@
 ﻿using System;
+using sdg = System.Drawing;
+using GlyphRunLib;
 using System.Collections.Generic;
 using System.Text;
 using NoForms.Common;
@@ -418,29 +420,106 @@ namespace NoForms.Renderers.OpenTK
             }
         }
 
-        public void DrawText(UText textObject, Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
+        class GLTextStore<T> : IDisposable
         {
-            throw new NotImplementedException();
+            // Cached from gettextinfo
+            public GlyphRunGenerator<T>.UTextGlyphingInfo tinfo = null;
+
+            // Cached when any hit,measure or draw method fires.
+            public sdg.Graphics sbb_context = null;
+            public sdg.Bitmap softbitbuf = null;
+
+            // Cached when DrawText is called (the software bitmap also gets enlarged to correct size...FIXME keep that? :/)
+            public int texture_for_blitting = -1; // i.e. not created yet
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public UTextHitInfo HitPoint(Point hitPoint, UText text)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Point HitText(int pos, bool trailing, UText text)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<Rectangle> HitTextRange(int start, int length, Point offset, UText text)
-        {
-            throw new NotImplementedException();
-        }
+        // Generator for glyphruns and related text info
+        GlyphRunGenerator<System.Drawing.Font> glyphRunner = new GlyphRunGenerator<System.Drawing.Font>(
+            (s, f) => // Measure Text
+            {
+                SDGTr.tr(realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic));
+            },
+            uf => // Create Implimentation Font
+            {
+                Translate(uf);
+            }
+            );
 
         public UTextInfo GetTextInfo(UText text)
         {
-            throw new NotImplementedException();
+            var datastore = GetTextData(text);
+            // ...which we will fill as necessary.
+            var ti = datastore.tinfo ?? (datastore.tinfo = glyphRunner.GetTextInfo(text));
+
+            return new UTextInfo()
+            {
+                minSize = ti.minSize,
+                lineLengths = ti.lineLengths.ToArray(),
+                lineNewLineLength = ti.newLineLengths.ToArray(),
+                numLines = ti.lineLengths.Count
+            };
         }
+        GLTextStore<sdg.Font> GetTextData(UText text)
+        {
+            // On NoCache, just return an uninitialised dude...
+            return text.Retreive<OTKDraw>(() => new GLTextStore<sdg.Font>()) as GLTextStore<sdg.Font>;
+        }
+
+        public void DrawText(UText textObject, NoForms.Common.Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
+        {
+            GLTextStore<sdg.Font> GLds  = GetTextData(textObject);
+            var tl = GLds.tinfo;
+
+            float l=float.MaxValue, t=float.MaxValue, b=float.MinValue, r=float.MinValue;
+            // Calculate the render rectangle
+            foreach (var gr in tl.glyphRuns)
+            {
+                var p1 = gr.location;
+                var p2 = new Point(p1.Y + gr.run.runSize.width, p1.Y+gr.run.runSize.height);
+                if (p1.X < l) l = p1.X;
+                if (p1.Y < t) t = p1.Y;
+                if (p2.X > r) r = p2.X;
+                if (p2.Y > b) b = p2.Y;
+            }
+
+            // we have the textinfo data, do we need to gen the text texture?
+            
+            foreach (var glyphrun in tl.glyphRuns)
+            {
+                var style = glyphrun.run.drawStyle;
+                UFont font = style != null ? (style.fontOverride ?? textObject.font) : textObject.font;
+                FontStyle fs = (font.bold ? FontStyle.Bold : 0) | (font.italic ? FontStyle.Italic : 0);
+                var sdgFont = Translate(font);
+                UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
+                if (style != null && style.bgOverride != null)
+                    FillRectangle(new NoForms.Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
+                realRenderer.graphics.DrawString(glyphrun.run.content, sdgFont, CreateBrush(brsh), SDGTr.trF(location + glyphrun.location), StringFormat.GenericTypographic);
+            }
+        }
+
+        public UTextHitInfo HitPoint(NoForms.Common.Point hitPoint, UText text)
+        {
+            var ti = GetTextData(text);
+            return glyphRunner.HitPoint(ti.tinfo, hitPoint);
+        }
+
+        public NoForms.Common.Point HitText(int pos, bool trailing, UText text)
+        {
+            var ti = GetTextData(text);
+            return glyphRunner.HitText(ti.tinfo, pos, trailing);
+        }
+
+        public IEnumerable<NoForms.Common.Rectangle> HitTextRange(int start, int length, NoForms.Common.Point offset, UText text)
+        {
+            var ti = GetTextData(text);
+            return glyphRunner.HitTextRange(ti.tinfo, start, length, offset);
+        }
+
+
     }
 }

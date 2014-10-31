@@ -26,11 +26,11 @@ namespace NoForms.Renderers.DotNet
     public class SDGDraw : IUnifiedDraw
     {
         SDG_RenderElements realRenderer;
-        GlyphRun<Font> glyphRunner;
+        GlyphRunGenerator<Font> glyphRunner;
         public SDGDraw(SDG_RenderElements els)
         {
             realRenderer = els;
-            glyphRunner = new GlyphRun<Font>(
+            glyphRunner = new GlyphRunGenerator<Font>(
                 (s, f) => SDGTr.tr(realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic)), // measurer
                 uf => Translate(uf) // font translator (from ufont to the template)
             );
@@ -109,9 +109,10 @@ namespace NoForms.Renderers.DotNet
             var rr = ShapeHelpers.RoundedRectangle(rect, radX, radY);
             realRenderer.graphics.FillPath(CreateBrush(brush), rr);
         }
+
         public void DrawText(UText textObject, NoForms.Common.Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
         {
-            var tl = glyphRunner.GetSDGTextInfo(textObject);
+            var tl = glyphRunner.GetTextInfo(textObject);
 
             foreach (var glyphrun in tl.glyphRuns)
             {
@@ -126,35 +127,32 @@ namespace NoForms.Renderers.DotNet
             }
         }
 
-        // WARNING this all assumes that char rects and lines are "tightly packed", except  differing font sizes
-        //         on same line, which get "baselined".  Is this what really happens?  What about line,word and char spacing adjustments?
-        //         dirty way would be to adjust char rects, but does SDG do that? (does it even support that?)
-        // Text Measuring - isText tells you if you actually hit a part of the string...
+        
         public UTextHitInfo HitPoint(NoForms.Common.Point hitPoint, UText text)
         {
             // Grab a ref to the sdgtextinfo
-            var ti = glyphRunner.GetSDGTextInfo(text);
+            var ti = glyphRunner.GetTextInfo(text);
             return glyphRunner.HitPoint(ti, hitPoint);
         }
 
         public NoForms.Common.Point HitText(int pos, bool trailing, UText text)
         {
             // Grab a ref to the sdgtextinfo
-            var ti = glyphRunner.GetSDGTextInfo(text);
+            var ti = glyphRunner.GetTextInfo(text);
             return glyphRunner.HitText(ti, pos, trailing);
         }
 
         public IEnumerable<NoForms.Common.Rectangle> HitTextRange(int start, int length, NoForms.Common.Point offset, UText text)
         {
             // Grab a ref to the sdgtextinfo
-            var ti = glyphRunner.GetSDGTextInfo(text);
+            var ti = glyphRunner.GetTextInfo(text);
             return glyphRunner.HitTextRange(ti, start, length, offset);
         }
 
         // FIXME Cache!
         public UTextInfo GetTextInfo(UText text)
         {
-            var sti = glyphRunner.GetSDGTextInfo(text);
+            var sti = glyphRunner.GetTextInfo(text);
             return new UTextInfo()
             {
                 minSize = sti.minSize,
