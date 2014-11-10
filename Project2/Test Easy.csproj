@@ -40,6 +40,9 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="OpenTK">
+      <HintPath>..\OpenTK\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX">
       <HintPath>..\SharpDX\Signed-net20\SharpDX.dll</HintPath>
     </Reference>

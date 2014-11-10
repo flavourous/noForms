@@ -9,6 +9,40 @@ using OpenTK.Graphics.OpenGL;
 
 namespace NoForms.Renderers.OpenTK
 {
+    // Interleave in this order
+    public enum ArrayData { Vertex = 1, Color = 2, Texture = 4 }; // FIXME normals etc, if we ever use em
+    // struct for either a vertex buffer or an array not buffered
+    public class RenderBufferSection
+    {
+        public readonly float[] SoftwareBuffer;
+        public int HardwareBuffer;
+        public int HardwareBufferLen;
+        public readonly PrimitiveType RenderAs;
+        public readonly ArrayData BufferedData;
+
+        //private RenderBufferSection() { }
+
+        // Create NonBuffered Object
+        public RenderBufferSection(float[] VTBuffer, PrimitiveType renderAs, ArrayData buffered)
+        {
+            BufferedData = buffered;
+            RenderAs = renderAs;
+            SoftwareBuffer = VTBuffer;
+            HardwareBuffer = 0;
+            HardwareBufferLen = 0;
+        }
+
+        // Create reference to VBO
+        public RenderBufferSection(int vbo, int vboLen, PrimitiveType renderAs, ArrayData buffered)
+        {
+            BufferedData = buffered;
+            RenderAs = renderAs;
+            SoftwareBuffer = null;
+            HardwareBuffer = vbo;
+            HardwareBufferLen = vboLen;
+        }
+    }
+
     public class OpenTK_RenderElements : IRenderElements
     {
         public OpenTK_RenderElements(OTK.Graphics.IGraphicsContext gc, int fd,int td,int fw,int tw)
@@ -24,18 +58,21 @@ namespace NoForms.Renderers.OpenTK
         public int T2D_Draw { get; internal set; }
         public int FBO_Window { get; internal set; }
         public int T2D_Window { get; internal set; }
+        public List<RenderBufferSection> toRender = new List<RenderBufferSection>();
     }
     public class OTKDraw : IUnifiedDraw
     {
-        OpenTK_RenderElements renderer;
+        OpenTK_RenderElements r;
         public OTKDraw(OpenTK_RenderElements rel)
         {
-            renderer = rel;
+            r = rel;
         }
 
+        // FIXME the clipping dont work!!
         Stack<Rectangle> Clips = new Stack<Rectangle>();
         public void PushAxisAlignedClip(Rectangle clipRect, bool ignoreRenderOffset)
         {
+            return;
             var cr = clipRect;
             OTK.Matrix4 cm = new OTK.Matrix4();
             GL.LoadMatrix(ref cm);
@@ -47,6 +84,7 @@ namespace NoForms.Renderers.OpenTK
 
         public void PopAxisAlignedClip()
         {
+            return;
             Clips.Pop();
             ClipStackViewport();
         }
@@ -185,23 +223,21 @@ namespace NoForms.Renderers.OpenTK
             if (sp != null) start = sp.Value;
         }
 
-        void LoadBitmapIntoTexture(int texture, byte[] data)
+        void LoadBitmapIntoTexture(int texture, sdg.Bitmap sdb)
         {
+            // lock bitmap data
+            var sdbd = sdb.LockBits(new System.Drawing.Rectangle(0, 0, sdb.Width, sdb.Height),
+                    System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
             // Bind texture
             GL.BindTexture(TextureTarget.Texture2D, texture);
 
-            // Load Data
-            using (var ms = new System.IO.MemoryStream(data))
-            {
-                var sdb = new System.Drawing.Bitmap(ms);
-                var sdbd = sdb.LockBits(new System.Drawing.Rectangle(0, 0, sdb.Width, sdb.Height), 
-                    System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            // copy
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, sdbd.Width, sdbd.Height, 0,
+                PixelFormat.Bgra, PixelType.UnsignedByte, sdbd.Scan0);
 
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, sdbd.Width, sdbd.Height, 0,
-                    PixelFormat.Bgra, PixelType.UnsignedByte, sdbd.Scan0);
-
-                sdb.UnlockBits(sdbd);
-            }
+            // unlock
+            sdb.UnlockBits(sdbd);
 
             // do the mimmapthing FIXME for older cards? :/ mmmm 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
@@ -209,6 +245,15 @@ namespace NoForms.Renderers.OpenTK
 
             // Unbind Texture
             GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        void LoadBitmapIntoTexture(int texture, byte[] data)
+        {
+            // Load Data
+            using (var ms = new System.IO.MemoryStream(data))
+            {
+                var sdb = new System.Drawing.Bitmap(ms);
+                LoadBitmapIntoTexture(texture, sdb);
+            }
         }
 
         class distex : IDisposable
@@ -299,24 +344,32 @@ namespace NoForms.Renderers.OpenTK
 
         public void FillRectangle(Rectangle rect, UBrush brush)
         {
-            GL.Begin(PrimitiveType.Quads);
-            setCoordColor(brush, rect.left, rect.top);
-            GL.Vertex2(rect.left, rect.top);
-            setCoordColor(brush, rect.right, rect.top);
-            GL.Vertex2(rect.right, rect.top);
-            setCoordColor(brush, rect.right, rect.bottom);
-            GL.Vertex2(rect.right, rect.bottom);
-            setCoordColor(brush, rect.left, rect.bottom);
-            GL.Vertex2(rect.left, rect.bottom);
-            GL.End();
+            // generate sw buffer { Vx,Vy,r,g,b,a } ...
+            var c1 = getCoordColor(brush, rect.left, rect.top);
+            var c2 = getCoordColor(brush, rect.right, rect.top);
+            var c3 = getCoordColor(brush, rect.right, rect.bottom);
+            var c4 = getCoordColor(brush, rect.left, rect.bottom);
+            var data = new float[] {
+                rect.left, rect.top, c1.R, c1.G, c1.B, c1.A,
+                rect.right, rect.top, c2.R, c2.G, c2.B, c2.A,
+                rect.right, rect.bottom, c3.R, c3.G, c3.B, c3.A,
+                rect.left, rect.bottom, c4.R, c4.G, c4.B, c4.A
+            };
+            var aa = new RenderBufferSection(data, PrimitiveType.Quads, ArrayData.Vertex | ArrayData.Color);
+            r.toRender.Add(aa);
         }
 
         void setCoordColor(UBrush b, float x, float y)
         {
+            GL.Color4(getCoordColor(b, x, y));
+        }
+        OTK.Graphics.Color4 getCoordColor(UBrush b, float x, float y)
+        {
+            var ret = new OTK.Graphics.Color4();
             if (b is USolidBrush)
             {
                 var usb = b as USolidBrush;
-                GL.Color4(usb.color.r, usb.color.g, usb.color.b, usb.color.a);
+                ret.R = usb.color.r; ret.G = usb.color.g; ret.B = usb.color.b; ret.A = usb.color.a;
             }
             else if (b is ULinearGradientBrush)
             {
@@ -334,13 +387,14 @@ namespace NoForms.Renderers.OpenTK
                     cp2 = angleaxisxinterp(axisAngle, ulgb.point1.X, ulgb.point1.Y);
                     cv1 = ulgb.color2; cv2 = ulgb.color1;
                 }
-                hcolorfour(x, y, axisAngle, cp1, cp2, cv1, cv2);
+                ret = hcolorfour(x, y, axisAngle, cp1, cp2, cv1, cv2);
             }
+            return ret;
         }
-        void hcolorfour(float x, float y, float a, float cp1, float cp2, Color cv1, Color cv2)
+        OTK.Graphics.Color4 hcolorfour(float x, float y, float a, float cp1, float cp2, Color cv1, Color cv2)
         {
             float iv = onedinterp(angleaxisxinterp(a,x, y), cp1, cp2);
-            GL.Color4(
+            return new OTK.Graphics.Color4(
                     cv1.r * (1 - iv) + cv2.r * iv,
                     cv1.g * (1 - iv) + cv2.g * iv,
                     cv1.b * (1 - iv) + cv2.b * iv,
@@ -438,18 +492,42 @@ namespace NoForms.Renderers.OpenTK
             }
         }
 
+        static sdg.Font FTR(UFont uf) { return new sdg.Font(uf.name, uf.size, (uf.italic ? sdg.FontStyle.Italic : 0) | (uf.bold ? sdg.FontStyle.Bold : 0)); }
+        static GLTextStore<OTKDraw> EnsureStoredData(UText ut)
+        {
+            var GLts = ut.Retreive() as GLTextStore<OTKDraw>;
+            if (GLts.softbitbuf == null)
+            {
+                GLts.softbitbuf = new sdg.Bitmap(0, 0); // FIXME will this cause problems @ 0x0? :/
+                GLts.sbb_context = sdg.Graphics.FromImage(GLts.softbitbuf); // make context
+            }
+            return GLts;
+        }
+        static GLTextStore<OTKDraw> EnsureStoredData(UText ut, Size blitSize)
+        {
+            var GLts = ut.Retreive() as GLTextStore<OTKDraw>;
+            if (GLts.softbitbuf == null)
+            {
+                // make bitmap right size FIXME is the dipose necessary? :/
+                GLts.sbb_context.Dispose(); GLts.softbitbuf.Dispose();
+                GLts.softbitbuf = new sdg.Bitmap((int)blitSize.width, (int)blitSize.height);
+                GLts.sbb_context = sdg.Graphics.FromImage(GLts.softbitbuf);
+            }
+            return GLts; 
+        }
         // Generator for glyphruns and related text info
         GlyphRunGenerator<System.Drawing.Font> glyphRunner = new GlyphRunGenerator<System.Drawing.Font>(
-            (s, f) => // Measure Text
+            // Measure Text
+            (ut, s, f) =>
             {
-                SDGTr.tr(realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic));
+                var GLts = EnsureStoredData(ut);
+                var ms = GLts.sbb_context.MeasureString(s, f, sdg.PointF.Empty, sdg.StringFormat.GenericTypographic);
+                return new Size(ms.Width, ms.Height);
             },
-            uf => // Create Implimentation Font
-            {
-                Translate(uf);
-            }
+            // Create Implimentation Font
+            uf => FTR(uf)
             );
-
+        
         public UTextInfo GetTextInfo(UText text)
         {
             var datastore = GetTextData(text);
@@ -473,33 +551,69 @@ namespace NoForms.Renderers.OpenTK
         public void DrawText(UText textObject, NoForms.Common.Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
         {
             GLTextStore<sdg.Font> GLds  = GetTextData(textObject);
-            var tl = GLds.tinfo;
-
-            float l=float.MaxValue, t=float.MaxValue, b=float.MinValue, r=float.MinValue;
-            // Calculate the render rectangle
-            foreach (var gr in tl.glyphRuns)
+            if (GLds.texture_for_blitting == -1)
             {
-                var p1 = gr.location;
-                var p2 = new Point(p1.Y + gr.run.runSize.width, p1.Y+gr.run.runSize.height);
-                if (p1.X < l) l = p1.X;
-                if (p1.Y < t) t = p1.Y;
-                if (p2.X > r) r = p2.X;
-                if (p2.Y > b) b = p2.Y;
+                var tl = GLds.tinfo;
+                float l = float.MaxValue, t = float.MaxValue, b = float.MinValue, r = float.MinValue;
+
+                // Calculate the render rectangle
+                foreach (var gr in tl.glyphRuns)
+                {
+                    var p1 = gr.location;
+                    var p2 = new Point(p1.Y + gr.run.runSize.width, p1.Y + gr.run.runSize.height);
+                    if (p1.X < l) l = p1.X;
+                    if (p1.Y < t) t = p1.Y;
+                    if (p2.X > r) r = p2.X;
+                    if (p2.Y > b) b = p2.Y;
+                }
+                Rectangle rrect = new Rectangle(new Point(l, t), new Point(r, b), true);
+                System.Diagnostics.Debug.Assert(rrect.width > 0 && rrect.height > 0);
+
+                // ensure we have the software buffer
+                EnsureStoredData(textObject, rrect.Size);
+                // we will draw black onto transparent background, and handle brushes when rendering to blitting texture
+                GLds.sbb_context.Clear(sdg.Color.Transparent);
+                foreach (var glyphrun in tl.glyphRuns)
+                {
+                    var style = glyphrun.run.drawStyle;
+                    UFont font = style != null ? (style.fontOverride ?? textObject.font) : textObject.font;
+                    sdg.FontStyle fs = (font.bold ? sdg.FontStyle.Bold : 0) | (font.italic ? sdg.FontStyle.Italic : 0);
+                    var sdgFont = FTR(font);
+                    UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
+                    if (style != null && style.bgOverride != null)
+                        FillRectangle(new NoForms.Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
+                    GLds.sbb_context.DrawString(glyphrun.run.content, sdgFont, sdg.Brushes.Black, PTR(location + glyphrun.location), sdg.StringFormat.GenericTypographic);
+                }
+
+                // now copy into the blit mask
+                GLds.texture_for_blitting = GL.GenTexture();
+                LoadBitmapIntoTexture(GLds.texture_for_blitting, GLds.softbitbuf);
             }
 
-            // we have the textinfo data, do we need to gen the text texture?
+
+            // use blit mask to create a blitting texture, using the Util fbo (FIXME? but no multithreads...)
+            throw new NotImplementedException();
             
-            foreach (var glyphrun in tl.glyphRuns)
-            {
-                var style = glyphrun.run.drawStyle;
-                UFont font = style != null ? (style.fontOverride ?? textObject.font) : textObject.font;
-                FontStyle fs = (font.bold ? FontStyle.Bold : 0) | (font.italic ? FontStyle.Italic : 0);
-                var sdgFont = Translate(font);
-                UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
-                if (style != null && style.bgOverride != null)
-                    FillRectangle(new NoForms.Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
-                realRenderer.graphics.DrawString(glyphrun.run.content, sdgFont, CreateBrush(brsh), SDGTr.trF(location + glyphrun.location), StringFormat.GenericTypographic);
-            }
+
+            // blit the buffer (FIXME thats not blitting) FIXME needs seperate (what about masked tezture alpbas!)
+            var gs = GLds.softbitbuf.Size;
+            Rectangle rr = new Rectangle(location, new  Size(gs.Width,gs.Height));
+            GL.BlendFunc(BlendingFactorSrc.Zero, BlendingFactorDest.SrcAlpha);
+            GL.Begin(PrimitiveType.Quads);
+            GL.TexCoord2(0, 0);
+            GL.Vertex2(rr.left, rr.top);
+            GL.TexCoord2(1, 0);
+            GL.Vertex2(rr.right, rr.top);
+            GL.TexCoord2(1, 1);
+            GL.Vertex2(rr.right, rr.bottom);
+            GL.TexCoord2(0, 1);
+            GL.Vertex2(rr.left, rr.bottom);
+            GL.End();
+            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+        }
+        sdg.PointF PTR(Point pt)
+        {
+            return new sdg.PointF(pt.X, pt.Y);
         }
 
         public UTextHitInfo HitPoint(NoForms.Common.Point hitPoint, UText text)

@@ -536,6 +536,11 @@ namespace NoForms.Common
 
             return true;
         }
+        // just get cached one
+        public Object Retreive()
+        {
+            return storedObject;
+        }
         public Object Retreive<RetreiverType>(NoCacheDelegate noCacheAction, params Object[] extraInval) where RetreiverType : class
         {
             lock (validationLock)

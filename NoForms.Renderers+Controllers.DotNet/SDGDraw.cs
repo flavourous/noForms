@@ -31,7 +31,7 @@ namespace NoForms.Renderers.DotNet
         {
             realRenderer = els;
             glyphRunner = new GlyphRunGenerator<Font>(
-                (s, f) => SDGTr.tr(realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic)), // measurer
+                (uf, s, f) => SDGTr.tr(realRenderer.graphics.MeasureString(s, f, PointF.Empty, StringFormat.GenericTypographic)), // measurer
                 uf => Translate(uf) // font translator (from ufont to the template)
             );
         }

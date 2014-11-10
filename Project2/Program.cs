@@ -32,8 +32,8 @@ namespace Easy
             IPlatform plt2 = new Win32(r2, c1, wco);
             IPlatform plt3 = new WinForms(r3, c1, wco);
             IPlatform plt4 = new Win32(r4, c1, wco);
-            var nf = new mnf(plt2);
-            rdr = r2;
+            var nf = new mnf(plt4);
+            rdr = r4;
             nf.window.Run();
         }
     }
@@ -58,16 +58,16 @@ namespace Easy
             Size = new Size(1150, 600);
             Location = new Point(100, 40);
 
-            mh = new MoveHandle(this);
-            mh.Size = new Size(20, 20);
-            mh.Location = new Point(5, 5);
-            components.Add(mh);
+            //mh = new MoveHandle(this);
+            //mh.Size = new Size(20, 20);
+            //mh.Location = new Point(5, 5);
+            //components.Add(mh);
 
-            sh = new SizeHandle(this);
-            sh.Size = new Size(20, 20);
-            sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
-            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
-            components.Add(sh);
+            //sh = new SizeHandle(this);
+            //sh.Size = new Size(20, 20);
+            //sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
+            //sh.ResizeMode = Direction.SOUTH | Direction.EAST;
+            //components.Add(sh);
 
             sc = new Scribble();
             sc.Location = new Point(100, 100);
@@ -126,7 +126,9 @@ namespace Easy
             {
                 //r.DrawPath(pp, b, s);
                 s.strokeWidth = 1;
-                
+                b.color = new Color(.2f, 1, 0, 1);
+                r.FillRectangle(sc.DisplayRectangle, b);
+                return;
 
                 //foreach (var f in pth.figures)
                 //    foreach (UArc a in f.geoElements)
@@ -136,7 +138,6 @@ namespace Easy
                 //b.color = new Color(1f, (float)ssw, 0f, 0f);
                 r.DrawPath(easypth, b, s);
                 r.FillPath(pth, lg2);
-                return;
 
                 if (dr != null)
                 {
@@ -160,8 +161,7 @@ namespace Easy
                 //r.FillRectangle(new Rectangle(sc.Location, new Size(tx.width, tx.height)), b);
                 b.color = new Color(.1f, 0f, 0f, 0f);
                 r.FillRectangle(sc.DisplayRectangle, b);
-                
-                
+
 
                 float h = ((Program.rdr.currentFps)/300f)*tx.height;
                 float x = (float)ssw * (tx.width-5) + sc.Location.X;
@@ -215,7 +215,8 @@ namespace Easy
 
         void mnf_SizeChanged(Size sz)
         {
-            sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
+            
+            //sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
         }
 
     }

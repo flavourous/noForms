@@ -7,7 +7,7 @@ namespace GlyphRunLib
 {
     public class GlyphRunGenerator<FontClass>
     {
-        public delegate Size MeasureFnc(UText txt, FontClass font);
+        public delegate Size MeasureFnc(UText txt, String str, FontClass font);
         public delegate FontClass FntTranslate(UFont font);
         MeasureFnc MeasureString;
         FntTranslate Translate;
@@ -102,19 +102,19 @@ namespace GlyphRunLib
 
             float tw = 0;
             gr.content = gr.runLength > 0 ? text.text.Substring(gr.startPosition, gr.runLength) : "";
-            gr.runSize = MeasureString(gr.content, useFont);
+            gr.runSize = MeasureString(text, gr.content, useFont);
             if (bt == BreakType.word)
             {
                 // handle space spacing ;)
                 String ltx = gr.startPosition > 0 ? text.text.Substring(gr.startPosition - 1, 1) : "";
                 String rtx = gr.startPosition + length + 1 < text.text.Length ? text.text.Substring(length, 1) : "";
-                var s1 = MeasureString(ltx + gr.content + rtx, useFont);
-                var s2 = MeasureString(ltx + rtx, useFont);
+                var s1 = MeasureString(text, ltx + gr.content + rtx, useFont);
+                var s2 = MeasureString(text, ltx + rtx, useFont);
                 gr.runSize.width = s1.width - s2.width;
             }
             for (int i = 0; i < gr.content.Length; i++)
             {
-                gr.charSizes[i] = MeasureString(gr.content.Substring(i, 1), useFont);
+                gr.charSizes[i] = MeasureString(text, gr.content.Substring(i, 1), useFont);
                 tw += gr.charSizes[i].width;
             }
             float corr = gr.runSize.width / tw;

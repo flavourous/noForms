@@ -110,6 +110,7 @@ namespace NoForms.Renderers.OpenTK
             GL.ClearBuffer(ClearBuffer.Color, 0, new float[] { 0, 0, 0, 0 }); // fixme does this do anything? :/
             uDraw.PushAxisAlignedClip(new Rectangle(new Point(0,0),ReqSize), true);
             noForm.DrawBase(this, dc);
+            ProcessRenderBuffer();
             uDraw.PopAxisAlignedClip();
             
             // Intermediate render to window buffer...
@@ -210,7 +211,92 @@ namespace NoForms.Renderers.OpenTK
             currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
-    
+
+        void ProcessRenderBuffer()
+        {
+            var trlr = _backRenderer.toRender;
+            // FIXME use single VBO and offsets...but this will involve many software copy operations to make a single software array..so only do if this is slow.
+            // First push sw data to the device, remembering everybodys vbo and strides etc
+            for (int i = 0; i < trlr.Count;i++ )
+            {
+                var r = trlr[i];
+                if (r.HardwareBuffer > 0)
+                    continue;
+
+                // process a sw buffer
+                int vbo = GL.GenBuffer();
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+                GL.BufferData(
+                    BufferTarget.ArrayBuffer,
+                    (IntPtr)(r.SoftwareBuffer.Length * sizeof(float)),
+                    r.SoftwareBuffer,
+                    BufferUsageHint.StaticDraw
+                    );
+                r.HardwareBuffer = vbo;
+                r.HardwareBufferLen = r.SoftwareBuffer.Length;
+            }
+            // then we render evrythin (which might get asynced by the GL server?)
+            for (int i = 0; i < trlr.Count; i++)
+            {
+                var r = trlr[i];
+                GL.BindBuffer(BufferTarget.ArrayBuffer, r.HardwareBuffer);
+                Pointaz(r.BufferedData, true);
+                GL.DrawArrays(r.RenderAs, 0, r.HardwareBufferLen * sizeof(float)); // drawy
+                Pointaz(r.BufferedData, false);
+            }
+            GL.Flush(); // make sure not adyncd by gl server
+            // Then remove the vbos made by sw buffers 
+            for (int i = 0; i < _backRenderer.toRender.Count; i++)
+            {
+                var r = trlr[i];
+                if (r.SoftwareBuffer != null)
+                    GL.DeleteBuffer(r.HardwareBuffer);
+            }
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            _backRenderer.toRender.Clear(); // done now...
+        }
+
+        void Pointaz(ArrayData ad, bool ena)
+        {
+            int ver, col, tex, stride;
+            CSTrix(ad, out stride, out ver, out col, out tex);
+            if (ena)
+            {
+                // Point interleaved data
+                if (ver > -1)
+                {
+                    GL.EnableClientState(ArrayCap.VertexArray);
+                    GL.VertexPointer(2, VertexPointerType.Float, stride, ver);
+                }
+                if (col > -1)
+                {
+                    GL.EnableClientState(ArrayCap.ColorArray);
+                    GL.ColorPointer(4, ColorPointerType.Float, stride, col);
+                }
+                if (tex > -1)
+                {
+                    GL.EnableClientState(ArrayCap.TextureCoordArray);
+                    GL.TexCoordPointer(2, TexCoordPointerType.Float, stride, tex);
+                }
+            }
+            else
+            {
+                if (ver > -1) GL.DisableClientState(ArrayCap.VertexArray);
+                if (col > -1) GL.DisableClientState(ArrayCap.ColorArray);
+                if (tex > -1) GL.DisableClientState(ArrayCap.TextureCoordArray);
+            }
+        }
+
+        void CSTrix(ArrayData flags, out int stride, out int ver, out int col, out int tex)
+        {
+            int idx = 0;
+            stride = 0;
+            ver = col = tex = -1;
+            if ((flags & ArrayData.Vertex) != 0) { ver = idx += stride; stride += sizeof(float) * 2; }
+            if ((flags & ArrayData.Color) != 0) { col = idx += stride; stride += sizeof(float) * 4; }
+            if ((flags & ArrayData.Texture) != 0) { tex = idx += stride; stride += sizeof(float) * 2; }
+        }
+
         public void EndRender()
         {
             lock (dobs.lock_render)
