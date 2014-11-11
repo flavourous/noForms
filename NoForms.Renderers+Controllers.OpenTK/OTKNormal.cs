@@ -214,78 +214,99 @@ namespace NoForms.Renderers.OpenTK
 
         void ProcessRenderBuffer()
         {
-            var trlr = _backRenderer.toRender;
-            // FIXME use single VBO and offsets...but this will involve many software copy operations to make a single software array..so only do if this is slow.
-            // First push sw data to the device, remembering everybodys vbo and strides etc
-            for (int i = 0; i < trlr.Count;i++ )
-            {
-                var r = trlr[i];
-                if (r.HardwareBuffer > 0)
-                    continue;
+            var trlr = _backRenderer.renderData;
 
-                // process a sw buffer
-                int vbo = GL.GenBuffer();
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                GL.BufferData(
-                    BufferTarget.ArrayBuffer,
-                    (IntPtr)(r.SoftwareBuffer.Length * sizeof(float)),
-                    r.SoftwareBuffer,
-                    BufferUsageHint.StaticDraw
-                    );
-                r.HardwareBuffer = vbo;
-                r.HardwareBufferLen = r.SoftwareBuffer.Length;
-            }
+            // Push sw data to the device
+            int vboS = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vboS);
+            GL.BufferData(
+                BufferTarget.ArrayBuffer,
+                (IntPtr)(trlr.sofwareBuffer.Count * sizeof(float)),
+                trlr.sofwareBuffer.ToArray(), // FIXME one day I will avoid this copy in safe mode :/ y no expose as the internal array?? :/
+                BufferUsageHint.StaticDraw
+                );
+
             // then we render evrythin (which might get asynced by the GL server?)
-            for (int i = 0; i < trlr.Count; i++)
+            ArrayData lastPointaz = 0; // nothin
+            for (int i = 0; i < trlr.bufferInfo.Count; i++)
             {
-                var r = trlr[i];
-                GL.BindBuffer(BufferTarget.ArrayBuffer, r.HardwareBuffer);
-                Pointaz(r.BufferedData, true);
-                GL.DrawArrays(r.RenderAs, 0, r.HardwareBufferLen * sizeof(float)); // drawy
-                Pointaz(r.BufferedData, false);
+                var r = trlr.bufferInfo[i];
+                GL.BindBuffer(BufferTarget.ArrayBuffer, r.vbo == -1 ? vboS : r.vbo);
+                PointazDiffa(lastPointaz, r.dataFormat);
+                GL.DrawArrays(r.renderAs, r.offset, r.count * sizeof(float)); // drawy
             }
+         
+            // clean up
+            PointazDiffa(lastPointaz, 0);
             GL.Flush(); // make sure not adyncd by gl server
-            // Then remove the vbos made by sw buffers 
-            for (int i = 0; i < _backRenderer.toRender.Count; i++)
-            {
-                var r = trlr[i];
-                if (r.SoftwareBuffer != null)
-                    GL.DeleteBuffer(r.HardwareBuffer);
-            }
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            _backRenderer.toRender.Clear(); // done now...
+            GL.DeleteBuffer(vboS);
+            trlr.Clear();
         }
 
-        void Pointaz(ArrayData ad, bool ena)
+        void PointazDiffa(ArrayData last, ArrayData now)
         {
+            // Last pointaz
+            int lver, lcol, ltex, lstride;
+            CSTrix(last, out lstride, out lver, out lcol, out ltex);
+
+            // Want dese pointaz bozz
             int ver, col, tex, stride;
-            CSTrix(ad, out stride, out ver, out col, out tex);
-            if (ena)
+            CSTrix(now, out stride, out ver, out col, out tex);
+
+            // Enabel dem if day waznt ooon befar
+            if (ver > -1 && lver == -1)
             {
-                // Point interleaved data
-                if (ver > -1)
-                {
-                    GL.EnableClientState(ArrayCap.VertexArray);
-                    GL.VertexPointer(2, VertexPointerType.Float, stride, ver);
-                }
-                if (col > -1)
-                {
-                    GL.EnableClientState(ArrayCap.ColorArray);
-                    GL.ColorPointer(4, ColorPointerType.Float, stride, col);
-                }
-                if (tex > -1)
-                {
-                    GL.EnableClientState(ArrayCap.TextureCoordArray);
-                    GL.TexCoordPointer(2, TexCoordPointerType.Float, stride, tex);
-                }
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.VertexPointer(2, VertexPointerType.Float, stride, ver);
             }
-            else
+            if (col > -1 && lcol == -1)
             {
-                if (ver > -1) GL.DisableClientState(ArrayCap.VertexArray);
-                if (col > -1) GL.DisableClientState(ArrayCap.ColorArray);
-                if (tex > -1) GL.DisableClientState(ArrayCap.TextureCoordArray);
+                GL.EnableClientState(ArrayCap.ColorArray);
+                GL.ColorPointer(4, ColorPointerType.Float, stride, col);
             }
+            if (tex > -1 && ltex == -1)
+            {
+                GL.EnableClientState(ArrayCap.TextureCoordArray);
+                GL.TexCoordPointer(2, TexCoordPointerType.Float, stride, tex);
+            }
+
+            // Turn em off if dey aint on no moar
+            if (ver == -1 && lver > -1) GL.DisableClientState(ArrayCap.VertexArray);
+            if (col == -1 && lcol > -1) GL.DisableClientState(ArrayCap.ColorArray);
+            if (tex == -1 && ltex > -1) GL.DisableClientState(ArrayCap.TextureCoordArray);
         }
+
+        //void Pointaz(ArrayData ad, bool ena)
+        //{
+        //    int ver, col, tex, stride;
+        //    CSTrix(ad, out stride, out ver, out col, out tex);
+        //    if (ena)
+        //    {
+        //        // Point interleaved data
+        //        if (ver > -1)
+        //        {
+        //            GL.EnableClientState(ArrayCap.VertexArray);
+        //            GL.VertexPointer(2, VertexPointerType.Float, stride, ver);
+        //        }
+        //        if (col > -1)
+        //        {
+        //            GL.EnableClientState(ArrayCap.ColorArray);
+        //            GL.ColorPointer(4, ColorPointerType.Float, stride, col);
+        //        }
+        //        if (tex > -1)
+        //        {
+        //            GL.EnableClientState(ArrayCap.TextureCoordArray);
+        //            GL.TexCoordPointer(2, TexCoordPointerType.Float, stride, tex);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (ver > -1) GL.DisableClientState(ArrayCap.VertexArray);
+        //        if (col > -1) GL.DisableClientState(ArrayCap.ColorArray);
+        //        if (tex > -1) GL.DisableClientState(ArrayCap.TextureCoordArray);
+        //    }
+        //}
 
         void CSTrix(ArrayData flags, out int stride, out int ver, out int col, out int tex)
         {

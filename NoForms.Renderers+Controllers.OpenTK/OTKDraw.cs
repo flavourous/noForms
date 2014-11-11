@@ -11,35 +11,43 @@ namespace NoForms.Renderers.OpenTK
 {
     // Interleave in this order
     public enum ArrayData { Vertex = 1, Color = 2, Texture = 4 }; // FIXME normals etc, if we ever use em
-    // struct for either a vertex buffer or an array not buffered
-    public class RenderBufferSection
+    public struct RenderInfo
     {
-        public readonly float[] SoftwareBuffer;
-        public int HardwareBuffer;
-        public int HardwareBufferLen;
-        public readonly PrimitiveType RenderAs;
-        public readonly ArrayData BufferedData;
-
-        //private RenderBufferSection() { }
-
-        // Create NonBuffered Object
-        public RenderBufferSection(float[] VTBuffer, PrimitiveType renderAs, ArrayData buffered)
+        // SW buffer
+        public RenderInfo(int st, int cnt, ArrayData format, PrimitiveType renderas)
         {
-            BufferedData = buffered;
-            RenderAs = renderAs;
-            SoftwareBuffer = VTBuffer;
-            HardwareBuffer = 0;
-            HardwareBufferLen = 0;
+            offset = st;
+            count = cnt;
+            renderAs = renderas;
+            dataFormat = format;
+            vbo = -1;
         }
-
-        // Create reference to VBO
-        public RenderBufferSection(int vbo, int vboLen, PrimitiveType renderAs, ArrayData buffered)
+        // HW buffer
+        public RenderInfo(int cnt, ArrayData format, PrimitiveType renderas, int vboID)
         {
-            BufferedData = buffered;
-            RenderAs = renderAs;
-            SoftwareBuffer = null;
-            HardwareBuffer = vbo;
-            HardwareBufferLen = vboLen;
+            offset = 0;
+            count = cnt;
+            renderAs = renderas;
+            dataFormat = format;
+            vbo = vboID;
+        }
+        public readonly PrimitiveType renderAs;
+        public readonly ArrayData dataFormat;
+        public readonly int offset, count, vbo;
+    }
+    public class RenderData
+    {
+        public List<float> sofwareBuffer { get; private set; }
+        public List<RenderInfo> bufferInfo { get; private set; }
+        public RenderData()
+        {
+            sofwareBuffer = new List<float>();
+            bufferInfo = new List<RenderInfo>();
+        }
+        public void Clear()
+        {
+            sofwareBuffer.Clear();
+            bufferInfo.Clear();
         }
     }
 
@@ -52,13 +60,14 @@ namespace NoForms.Renderers.OpenTK
             FBO_Window = fw;
             T2D_Draw = td;
             T2D_Window = tw;
+            renderData = new RenderData();
         }
         public OTK.Graphics.IGraphicsContext graphicsContext { get; internal set; }
         public int FBO_Draw { get; internal set; }
         public int T2D_Draw { get; internal set; }
         public int FBO_Window { get; internal set; }
         public int T2D_Window { get; internal set; }
-        public List<RenderBufferSection> toRender = new List<RenderBufferSection>();
+        public RenderData renderData { get; private set; }
     }
     public class OTKDraw : IUnifiedDraw
     {
@@ -345,18 +354,43 @@ namespace NoForms.Renderers.OpenTK
         public void FillRectangle(Rectangle rect, UBrush brush)
         {
             // generate sw buffer { Vx,Vy,r,g,b,a } ...
+            int st = r.renderData.sofwareBuffer.Count;
+            r.renderData.sofwareBuffer.AddRange(rectData(rect, brush));
+            int len = r.renderData.sofwareBuffer.Count - st;
+            var ri = new RenderInfo(st, len, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads);
+            r.renderData.bufferInfo.Add(ri);
+        }
+        IEnumerable<float> rectData(Rectangle rect, UBrush brush)
+        {
             var c1 = getCoordColor(brush, rect.left, rect.top);
             var c2 = getCoordColor(brush, rect.right, rect.top);
             var c3 = getCoordColor(brush, rect.right, rect.bottom);
             var c4 = getCoordColor(brush, rect.left, rect.bottom);
-            var data = new float[] {
-                rect.left, rect.top, c1.R, c1.G, c1.B, c1.A,
-                rect.right, rect.top, c2.R, c2.G, c2.B, c2.A,
-                rect.right, rect.bottom, c3.R, c3.G, c3.B, c3.A,
-                rect.left, rect.bottom, c4.R, c4.G, c4.B, c4.A
-            };
-            var aa = new RenderBufferSection(data, PrimitiveType.Quads, ArrayData.Vertex | ArrayData.Color);
-            r.toRender.Add(aa);
+
+            yield return rect.left;
+            yield return rect.top;
+            yield return c1.R;
+            yield return c1.G;
+            yield return c1.B;
+            yield return c1.A;
+            yield return rect.right;
+            yield return rect.top;
+            yield return c2.R;
+            yield return c2.G;
+            yield return c2.B;
+            yield return c2.A;
+            yield return rect.right;
+            yield return rect.bottom;
+            yield return c3.R;
+            yield return c3.G;
+            yield return c3.B;
+            yield return c3.A;
+            yield return rect.left;
+            yield return rect.bottom;
+            yield return c4.R;
+            yield return c4.G;
+            yield return c4.B;
+            yield return c4.A;
         }
 
         void setCoordColor(UBrush b, float x, float y)
