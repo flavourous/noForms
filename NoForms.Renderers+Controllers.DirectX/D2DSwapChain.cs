@@ -15,6 +15,12 @@ namespace NoForms.Renderers.SharpDX
 {
     public class D2DSwapChain : IRender<IW32Win>, IDraw
     {
+        public float FPSLimit { get; set; }
+        public D2DSwapChain()
+        {
+            FPSLimit = 60;
+        }
+
         SharpDXLib.Direct3D10.Device1 device;
         SharpDXLib.Direct2D1.Factory d2dFactory = new SharpDXLib.Direct2D1.Factory();
         SharpDXLib.DXGI.Factory dxgiFactory = new SharpDXLib.DXGI.Factory();
@@ -38,7 +44,7 @@ namespace NoForms.Renderers.SharpDX
             this.w32 = w32;
 
             // Create the observer
-            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);
+            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize, () => FPSLimit);    
         }
         void HandleCreatedStuff()
         {
@@ -106,7 +112,7 @@ namespace NoForms.Renderers.SharpDX
 
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
-        public float currentFps { get; private set; }
+        public float lastFrameRenderDuration { get; private set; }
         void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
@@ -142,7 +148,7 @@ namespace NoForms.Renderers.SharpDX
             swapchain.Present(0, PresentFlags.None);
 
             //System.Threading.Thread.Sleep(1000);
-            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            lastFrameRenderDuration = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
         void Resize(Common.Size ReqSize)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using NoForms.Common;
 using System.Threading;
@@ -8,18 +9,22 @@ namespace NoForms.Common
     public delegate void RenderHandler(Region dirty, Size ReqSize);
     public delegate IEnumerable<AnimatedRect> AnimatedHandler();
     public delegate Size RequestSizeHandler();
+    public delegate float GetFPSLimit();
     public class DirtyObserver
     {
         Object ref_noForm;
         RenderHandler ref_render;
         AnimatedHandler ref_anim;
         RequestSizeHandler ref_rsh;
-        public DirtyObserver(Object nf, RenderHandler ren, AnimatedHandler ah, RequestSizeHandler rsh)
+        GetFPSLimit ref_fps;
+        // FIXME just accept some INoForm and IRender
+        public DirtyObserver(Object nf, RenderHandler ren, AnimatedHandler ah, RequestSizeHandler rsh, GetFPSLimit fpslim)
         {
             ref_noForm = nf;
             ref_render = ren;
             ref_anim = ah;
             ref_rsh = rsh;
+            ref_fps = fpslim;
         }
 
         public void StartObserving(VoidAction init = null)
@@ -40,13 +45,20 @@ namespace NoForms.Common
         Thread dthread;
         void DirtyObs(Object o)
         {
-            (o as VoidAction)();
-            while (running)
+            try
             {
-                DirtyLook();
-                Thread.Sleep(17);
+                (o as VoidAction)();
+                while (running)
+                    DirtyLook();
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Fatal exception on rendering thread");
+                Console.Write(e.ToString());
+                Environment.Exit(-1);
             }
         }
+        Stopwatch ft = new Stopwatch();
         void DirtyLook()
         {
             Region dc = null;
@@ -60,15 +72,24 @@ namespace NoForms.Common
                     dc = new Region(dirty);
                     dirty.Reset();
 
-                    ReqSize = ref_rsh(); ;
+                    ReqSize = ref_rsh();
                 }
 
             lock (lock_render)
             {
+                TimeSpan rt;
                 if (!running) return;
-                if (dc != null) ref_render(dc, ReqSize);
+                if (dc != null)
+                {
+                    ft.Start();
+                    rt = new TimeSpan((long)(TimeSpan.TicksPerSecond / ref_fps())); // FIXME overcalc
+                    ref_render(dc, ReqSize);
+                    ft.Stop();
+                    if (rt > ft.Elapsed) // use this comparison :)
+                        Thread.Sleep(rt.Subtract(ft.Elapsed));
+                    ft.Reset();
+                }
             }
         }
-
     }
 }

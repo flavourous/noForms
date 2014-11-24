@@ -14,40 +14,43 @@ namespace NoForms.Renderers.OpenTK
     public struct RenderInfo
     {
         // SW buffer
-        public RenderInfo(int st, int cnt, ArrayData format, PrimitiveType renderas)
+        public RenderInfo(int st, int cnt, ArrayData format, PrimitiveType renderas, int tex=0)
         {
             offset = st;
             count = cnt;
             renderAs = renderas;
             dataFormat = format;
             vbo = -1;
+            texture = tex;
         }
         // HW buffer
-        public RenderInfo(int cnt, ArrayData format, PrimitiveType renderas, int vboID)
+        public RenderInfo(int cnt, ArrayData format, PrimitiveType renderas, int vboID, int tex=0)
         {
             offset = 0;
             count = cnt;
             renderAs = renderas;
             dataFormat = format;
             vbo = vboID;
+            texture = tex;
         }
         public readonly PrimitiveType renderAs;
         public readonly ArrayData dataFormat;
-        public readonly int offset, count, vbo;
+        public readonly int offset, count, vbo, texture;
     }
     public class RenderData
     {
         public List<float> sofwareBuffer { get; private set; }
-        public List<RenderInfo> bufferInfo { get; private set; }
+        List<RenderInfo> _bufferInfo;
+        public List<RenderInfo> bufferInfo { get { return _bufferInfo; } }
         public RenderData()
         {
             sofwareBuffer = new List<float>();
-            bufferInfo = new List<RenderInfo>();
+            _bufferInfo = new List<RenderInfo>();
         }
         public void Clear()
         {
             sofwareBuffer.Clear();
-            bufferInfo.Clear();
+            _bufferInfo.Clear();
         }
     }
 
@@ -81,7 +84,6 @@ namespace NoForms.Renderers.OpenTK
         Stack<Rectangle> Clips = new Stack<Rectangle>();
         public void PushAxisAlignedClip(Rectangle clipRect, bool ignoreRenderOffset)
         {
-            return;
             var cr = clipRect;
             OTK.Matrix4 cm = new OTK.Matrix4();
             GL.LoadMatrix(ref cm);
@@ -93,14 +95,14 @@ namespace NoForms.Renderers.OpenTK
 
         public void PopAxisAlignedClip()
         {
-            return;
             Clips.Pop();
-            ClipStackViewport();
+            if (Clips.Count > 0) ClipStackViewport();
         }
 
         void ClipStackViewport()
         {
-            Rectangle fcr = new Rectangle(); bool started = false;
+            Rectangle fcr  = new Rectangle(); 
+            bool started = false;
             foreach (var cr in Clips)
             {
                 if (!started)
@@ -122,13 +124,8 @@ namespace NoForms.Renderers.OpenTK
                     break;
                 }
             }
-            // set up ortho
-            GL.Viewport((int)fcr.left, (int)fcr.top, (int)fcr.width, (int)fcr.height);
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(fcr.left, fcr.top, fcr.width, fcr.height, 0.0, 1.0);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
+            // scissor it!
+         //   GL.Scissor((int)fcr.left, (int)fcr.top, (int)fcr.width, (int)fcr.height);
         }
 
         public void SetRenderOffset(Point renderOffset)
@@ -140,15 +137,10 @@ namespace NoForms.Renderers.OpenTK
         {
             foreach (var f in path.figures)
             {
-                GL.Begin(PrimitiveType.Polygon);
-                setCoordColor(brush, f.startPoint.X, f.startPoint.Y);
-                GL.Vertex2(f.startPoint.X, f.startPoint.Y);
-                Point st = f.startPoint;
-                foreach (var g in f.geoElements)
-                    PlotGeoElement(ref st, g, brush);
-                setCoordColor(brush, f.startPoint.X, f.startPoint.Y);
-                GL.Vertex2(f.startPoint.X, f.startPoint.Y);
-                GL.End();
+                int st = r.renderData.sofwareBuffer.Count;
+                BufferFigureVC(f, brush, false, false);
+                int cnt = r.renderData.sofwareBuffer.Count - st;
+                r.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Polygon));
             }
         }
 
@@ -156,23 +148,28 @@ namespace NoForms.Renderers.OpenTK
         {
             foreach (var f in path.figures)
             {
-                GL.Begin(PrimitiveType.Lines);
-                setCoordColor(brush, f.startPoint.X, f.startPoint.Y);
-                GL.Vertex2(f.startPoint.X, f.startPoint.Y);
-                Point st = f.startPoint;
-                foreach (var g in f.geoElements)
-                    PlotGeoElement(ref st, g, brush);
-                if (!f.open)
-                {
-                    setCoordColor(brush, f.startPoint.X, f.startPoint.Y);
-                    GL.Vertex2(f.startPoint.X, f.startPoint.Y);
-                }
-                GL.End();
+                int st = r.renderData.sofwareBuffer.Count;
+                BufferFigureVC(f, brush, f.open, true);
+                int cnt = r.renderData.sofwareBuffer.Count - st;
+                r.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Lines));
             }
         }
 
-        void PlotGeoElement(ref Point start, UGeometryBase g, UBrush b)
+        void BufferFigureVC(UFigure f, UBrush brush, bool open, bool doublepoints)
         {
+            Point stp = f.startPoint;
+            foreach (var g in f.geoElements)
+                PlotGeoElement(ref stp, g, brush, doublepoints);
+            if (!open)
+            {
+                setVC(brush, stp.X, stp.Y);
+                setVC(brush, f.startPoint.X, f.startPoint.Y);
+            }
+        }
+
+        void PlotGeoElement(ref Point start, UGeometryBase g, UBrush b, bool doublepoints)
+        {
+            setVC(b, start.X, start.Y);
             System.Drawing.PointF[] pts = new System.Drawing.PointF[0];
             var lst = start;
             if (g is ULine)
@@ -219,16 +216,17 @@ namespace NoForms.Renderers.OpenTK
             //        }) as disParr).pts;
             //}
 
-
             else throw new NotImplementedException();
             Point? sp = null;
-            foreach (var p in pts)
+            int i = 0;
+            for (i = 0; i < pts.Length-1;i++ )
             {
+                var p = pts[i];
                 if (sp == null) sp = new Point(p.X, p.Y);
-                setCoordColor(b, p.X, p.Y);
-                GL.Vertex2(p.X, p.Y); // end last line here
-                GL.Vertex2(p.X, p.Y); // begin new line here possibly
+                setVC(b, p.X, p.Y); // end last line here
+                if(doublepoints) setVC(b, p.X, p.Y); // start of new line
             }
+            if(pts.Length>0) setVC(b, pts[i].X, pts[i].Y); // end last line here
             if (sp != null) start = sp.Value;
         }
 
@@ -271,6 +269,8 @@ namespace NoForms.Renderers.OpenTK
             {
                 tex = GL.GenTexture();
             }
+            public int width { get; private set; }
+            public int height { get; private set; }
             public int tex { get; private set; }
             public void Dispose()
             {
@@ -287,20 +287,33 @@ namespace NoForms.Renderers.OpenTK
                     LoadBitmapIntoTexture(dt.tex, bd);
                     return dt;
                 }) as distex;
-            GL.BindTexture(TextureTarget.Texture2D, rd.tex);
-            GL.Begin(PrimitiveType.Quads);
-            GL.TexCoord2(source.left, source.top);
-            GL.Vertex2(destination.left, destination.top);
-            GL.TexCoord2(source.right, source.top);
-            GL.Vertex2(destination.right, destination.top);
-            GL.TexCoord2(source.right, source.bottom);
-            GL.Vertex2(destination.right, destination.bottom);
-            GL.TexCoord2(source.left, source.bottom);
-            GL.Vertex2(destination.left, destination.bottom);
-            GL.End();
-            GL.BindTexture(TextureTarget.Texture2D, 0); // default texture.
+
+            int st = r.renderData.sofwareBuffer.Count;
+            bufferTexRect(destination,
+                new Rectangle(
+                    source.left / rd.width,
+                    source.top / rd.height,
+                    source.width / rd.width,
+                    source.height / rd.height
+                    )
+                );
+            int cnt = r.renderData.sofwareBuffer.Count - st;
+            r.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Texture, PrimitiveType.Quads));
         }
 
+        void bufferTexRect(Rectangle dest, Rectangle srcFracs)
+        {
+            r.renderData.sofwareBuffer.AddRange(
+                new float[]
+                {
+                    dest.left, dest.top, srcFracs.left, srcFracs.top,
+                    dest.right, dest.top, srcFracs.right, srcFracs.top,
+                    dest.right, dest.bottom, srcFracs.right, srcFracs.bottom,
+                    dest.left, dest.bottom, srcFracs.left, srcFracs.bottom
+                }
+                );
+        }
+        
         public void FillEllipse(Point center, float radiusX, float radiusY, UBrush brush)
         {
             GL.Begin(PrimitiveType.Polygon);
@@ -339,58 +352,46 @@ namespace NoForms.Renderers.OpenTK
 
         public void DrawRectangle(Rectangle rect, UBrush brush, UStroke stroke)
         {
-            GL.Begin(PrimitiveType.LineLoop);
-            setCoordColor(brush, rect.left, rect.top);
-            GL.Vertex2(rect.left, rect.top);
-            setCoordColor(brush, rect.right, rect.top);
-            GL.Vertex2(rect.right, rect.top);
-            setCoordColor(brush, rect.right, rect.bottom);
-            GL.Vertex2(rect.right, rect.bottom);
-            setCoordColor(brush, rect.left, rect.bottom);
-            GL.Vertex2(rect.left, rect.bottom);
-            GL.End();
+            // generate sw buffer { Vx,Vy,r,g,b,a } ...
+            int st = r.renderData.sofwareBuffer.Count;
+            bufferRectData(rect, brush);
+            int len = r.renderData.sofwareBuffer.Count - st;
+            var ri = new RenderInfo(st, len, ArrayData.Vertex | ArrayData.Color, PrimitiveType.LineLoop);
+            r.renderData.bufferInfo.Add(ri);
         }
 
         public void FillRectangle(Rectangle rect, UBrush brush)
         {
             // generate sw buffer { Vx,Vy,r,g,b,a } ...
             int st = r.renderData.sofwareBuffer.Count;
-            r.renderData.sofwareBuffer.AddRange(rectData(rect, brush));
+            bufferRectData(rect, brush);
             int len = r.renderData.sofwareBuffer.Count - st;
             var ri = new RenderInfo(st, len, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads);
             r.renderData.bufferInfo.Add(ri);
         }
-        IEnumerable<float> rectData(Rectangle rect, UBrush brush)
+        //void dr(UBrush b, float x, float y)
+        //{
+        //    GL.Vertex2(x, y);
+        //    setCoordColor(b, x, y);
+        //}
+        void bufferRectData(Rectangle rect, UBrush brush)
         {
-            var c1 = getCoordColor(brush, rect.left, rect.top);
-            var c2 = getCoordColor(brush, rect.right, rect.top);
-            var c3 = getCoordColor(brush, rect.right, rect.bottom);
-            var c4 = getCoordColor(brush, rect.left, rect.bottom);
+            setVC(brush, rect.left, rect.top);
+            setVC(brush, rect.right, rect.top);
+            setVC(brush, rect.right, rect.bottom);
+            setVC(brush, rect.left, rect.bottom);
+        }
 
-            yield return rect.left;
-            yield return rect.top;
-            yield return c1.R;
-            yield return c1.G;
-            yield return c1.B;
-            yield return c1.A;
-            yield return rect.right;
-            yield return rect.top;
-            yield return c2.R;
-            yield return c2.G;
-            yield return c2.B;
-            yield return c2.A;
-            yield return rect.right;
-            yield return rect.bottom;
-            yield return c3.R;
-            yield return c3.G;
-            yield return c3.B;
-            yield return c3.A;
-            yield return rect.left;
-            yield return rect.bottom;
-            yield return c4.R;
-            yield return c4.G;
-            yield return c4.B;
-            yield return c4.A;
+        void setVC(UBrush b, float vx, float vy)
+        {
+            var ssb = r.renderData.sofwareBuffer;
+            var cc = getCoordColor(b, vx, vy);
+            ssb.Add(vx); 
+            ssb.Add(vy);
+            ssb.Add(cc.R); 
+            ssb.Add(cc.G); 
+            ssb.Add(cc.B); 
+            ssb.Add(cc.A);
         }
 
         void setCoordColor(UBrush b, float x, float y)
@@ -455,38 +456,36 @@ namespace NoForms.Renderers.OpenTK
 
         public void DrawRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush, UStroke stroke)
         {
-            GL.Begin(PrimitiveType.LineLoop);
+            int st = r.renderData.sofwareBuffer.Count;
             RRPoints(rect, radX, radY, brush);
-            GL.End();
+            int cnt = r.renderData.sofwareBuffer.Count - st;
+            r.renderData.bufferInfo.Add(new RenderInfo(st,cnt,ArrayData.Vertex | ArrayData.Color, PrimitiveType.LineLoop));
         }
         public void FillRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush)
         {
-            GL.Begin(PrimitiveType.Polygon);
+            int st = r.renderData.sofwareBuffer.Count;
             RRPoints(rect, radX, radY, brush);
-            GL.End();
+            int cnt = r.renderData.sofwareBuffer.Count - st;
+            r.renderData.bufferInfo.Add(new RenderInfo(st,cnt,ArrayData.Vertex | ArrayData.Color, PrimitiveType.Polygon));
         }
         void RRPoints(Rectangle rect, float radX, float radY, UBrush b)
         {
             // top left arc
             ARCPoints(rect.left, rect.top + radY, 90f, 180f, radX, radY, b);
             // line to top right arc start
-            setCoordColor(b, rect.right - radX, rect.top);
-            GL.Vertex2(rect.right - radX, rect.top);
+            setVC(b, rect.right - radX, rect.top);
             //top right arc
             ARCPoints(rect.right - radX, rect.top, 90f, 0f, radX, radY, b);
             // line top bottom right arc
-            setCoordColor(b, rect.right, rect.bottom - radY);
-            GL.Vertex2(rect.right, rect.bottom - radY);
+            setVC(b, rect.right, rect.bottom - radY);
             //bottom right arc
             ARCPoints(rect.right, rect.bottom - radY, 0f, -90f, radX, radY, b);
             //line to bottom left arc
-            setCoordColor(b, rect.left + radX, rect.bottom);
-            GL.Vertex2(rect.left + radX, rect.bottom);
+            setVC(b, rect.left + radX, rect.bottom);
             //bottom left arc
             ARCPoints(rect.left + radX, rect.bottom, -90f, -180f, radX, radY, b);
             // line back to top left arc
-            setCoordColor(b, rect.left, rect.top + radY);
-            GL.Vertex2(rect.left, rect.top + radY);
+            setVC(b, rect.left, rect.top + radY);
         }
         void ARCPoints(float sx, float sy, float t1, float t2, float rx, float ry, UBrush b)
         {
@@ -502,10 +501,7 @@ namespace NoForms.Renderers.OpenTK
                 t2 = t2
             });
             foreach (var pt in e_tl)
-            {
-                setCoordColor(b, pt.X, pt.Y);
-                GL.Vertex2(pt.X, pt.Y);
-            }
+                setVC(b, pt.X, pt.Y);
         }
 
         class GLTextStore<T> : IDisposable

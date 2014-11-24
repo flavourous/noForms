@@ -13,6 +13,12 @@ namespace NoForms.Renderers.DotNet
     // Base Renderers, exposing some drawing mechanism and options
     public class SDGNormal : IRender<IWFWin>, IDraw
     {
+        public float FPSLimit { get; set; }
+        public SDGNormal()
+        {
+            FPSLimit = 60;
+        }
+
         #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
         Form winForm;
         Graphics graphics;
@@ -36,7 +42,7 @@ namespace NoForms.Renderers.DotNet
                 _uDraw = new SDGDraw(_backRenderer);
 
             // Create the observer
-            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);
+            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize, () => FPSLimit);    
         }
 
         public void BeginRender()
@@ -72,7 +78,7 @@ namespace NoForms.Renderers.DotNet
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
-        public float currentFps { get; private set; }
+        public float lastFrameRenderDuration { get; private set; }
         SolidBrush blackBack = new SolidBrush(System.Drawing.Color.FromArgb(255, 0, 0, 0));
         void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
@@ -107,7 +113,7 @@ namespace NoForms.Renderers.DotNet
                     winGr.DrawImage(buffer, sdr, sdr, GraphicsUnit.Pixel);
                 }
                 winGr.Dispose();
-            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            lastFrameRenderDuration = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
         void Resize(Common.Size ReqSize)

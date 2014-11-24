@@ -18,6 +18,12 @@ namespace NoForms.Renderers.OpenTK
         IGraphicsContext glContext;
         IWindowInfo winfo;
 
+        public float FPSLimit { get; set; }
+        public OTKNormal()
+        {
+            FPSLimit = 60;
+        }
+
         public void Init(IW32Win initObj, NoForm nf)
         {
             // do the form
@@ -26,7 +32,7 @@ namespace NoForms.Renderers.OpenTK
             this.w32 = initObj;
 
             // Create the observer
-            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);    
+            dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize, () => FPSLimit);    
         }
 
         public void BeginRender()
@@ -54,8 +60,9 @@ namespace NoForms.Renderers.OpenTK
                 int T2D_Window = GL.GenTexture();
 
                 // saveem
-                _backRenderer = new OpenTK_RenderElements(glContext, FBO_Draw, FBO_Window, T2D_Draw, T2D_Window);
+                _backRenderer = new OpenTK_RenderElements(glContext, FBO_Draw, T2D_Draw, FBO_Window, T2D_Window);
                 _uDraw = new OTKDraw(_backRenderer);
+                vboS = GL.GenBuffer();
             });
 
             noForm_LocationChanged(noForm.Location);
@@ -107,19 +114,15 @@ namespace NoForms.Renderers.OpenTK
             GL.LoadIdentity();
 
             // draw on fbo
-            GL.ClearBuffer(ClearBuffer.Color, 0, new float[] { 0, 0, 0, 0 }); // fixme does this do anything? :/
-            uDraw.PushAxisAlignedClip(new Rectangle(new Point(0,0),ReqSize), true);
             noForm.DrawBase(this, dc);
             ProcessRenderBuffer();
-            uDraw.PopAxisAlignedClip();
-            
+
             // Intermediate render to window buffer...
             GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, _backRenderer.FBO_Window);
             GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, _backRenderer.T2D_Window, 0);
 
             // Alpha...
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+            GL.Disable(EnableCap.Blend); // we just want to emplace.
 
             // set up ortho
             GL.Viewport(0, 0, (int)w, (int)h);
@@ -129,26 +132,13 @@ namespace NoForms.Renderers.OpenTK
 
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
-            
-            
+
             // Texture mapping...
             GL.Enable(EnableCap.Texture2D);
-
-            // set up ortho
-            GL.Viewport(0, 0, (int)w, (int)h);
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(0.0, w, 0.0, h, 0.0, 1.0);
-
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-
-            //GL.Clear(ClearBufferMask.ColorBufferBit);
 
             // Draw the Color Texture - only parts of it!!
             GL.BindTexture(TextureTarget.Texture2D, _backRenderer.T2D_Draw);
             GL.Color4(1f, 1f, 1f, 1f);
-            GL.Disable(EnableCap.Blend); // we just want to emplace.
             GL.Begin(PrimitiveType.Quads);
 
             foreach (var d in dc.AsRectangles())
@@ -208,39 +198,46 @@ namespace NoForms.Renderers.OpenTK
             // Swap buffers on window FBO
             glContext.SwapBuffers();
 
-            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            lastFrameRenderDuration = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
         }
 
+        int vboS;
         void ProcessRenderBuffer()
         {
+            GL.Enable(EnableCap.ScissorTest);
+            GL.Scissor(20, 20, 100, 100);
             var trlr = _backRenderer.renderData;
 
             // Push sw data to the device
-            int vboS = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vboS);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
                 (IntPtr)(trlr.sofwareBuffer.Count * sizeof(float)),
                 trlr.sofwareBuffer.ToArray(), // FIXME one day I will avoid this copy in safe mode :/ y no expose as the internal array?? :/
-                BufferUsageHint.StaticDraw
+                BufferUsageHint.StreamDraw
                 );
 
             // then we render evrythin (which might get asynced by the GL server?)
             ArrayData lastPointaz = 0; // nothin
+            int lastvbo = -1, lasttex = -1; //an impossible one to start
             for (int i = 0; i < trlr.bufferInfo.Count; i++)
             {
                 var r = trlr.bufferInfo[i];
-                GL.BindBuffer(BufferTarget.ArrayBuffer, r.vbo == -1 ? vboS : r.vbo);
+                if(lastvbo != r.vbo)
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, r.vbo == -1 ? vboS : r.vbo);
                 PointazDiffa(lastPointaz, r.dataFormat);
+                lastPointaz = r.dataFormat;
+                //if(lasttex!=r.texture)
+                //    GL.BindTexture(TextureTarget.Texture2D, r.texture);
                 GL.DrawArrays(r.renderAs, r.offset, r.count * sizeof(float)); // drawy
+                lastvbo = r.vbo; lasttex = r.texture;
             }
          
             // clean up
             PointazDiffa(lastPointaz, 0);
-            GL.Flush(); // make sure not adyncd by gl server
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.DeleteBuffer(vboS);
+            //GL.BindTexture(TextureTarget.Texture2D, 0);
             trlr.Clear();
         }
 
@@ -335,12 +332,17 @@ namespace NoForms.Renderers.OpenTK
         }
 
         Stopwatch renderTime = new Stopwatch();
-        public float currentFps { get; private set; }
+        public float lastFrameRenderDuration { get; private set; }
 
         public event Action<Size> RenderSizeChanged;
 
         public void Dispose()
         {
+            GL.DeleteBuffer(vboS);
+            GL.DeleteFramebuffer(_backRenderer.FBO_Draw);
+            GL.DeleteFramebuffer(_backRenderer.FBO_Window);
+            GL.DeleteTexture(_backRenderer.T2D_Draw);
+            GL.DeleteTexture(_backRenderer.T2D_Window);
         }
 
         OTKDraw _uDraw;
@@ -358,5 +360,7 @@ namespace NoForms.Renderers.OpenTK
         {
             get { throw new NotImplementedException(); }
         }
+
+
     }
 }

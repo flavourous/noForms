@@ -18,7 +18,11 @@ namespace NoForms
         void EndRender();
         NoForm noForm { get; set; }
         void Dirty(Rectangle rect);
-        float currentFps { get; }
+        /// <summary>
+        /// Time spent in last rendering pass, not including any frame rate limiting.
+        /// </summary>
+        float lastFrameRenderDuration { get; }
         event Action<Size> RenderSizeChanged;
+        float FPSLimit { get; set; }
     }
 }

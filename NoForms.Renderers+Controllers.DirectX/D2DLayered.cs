@@ -15,6 +15,8 @@ namespace NoForms.Renderers.SharpDX
 {
     public class D2DLayered : IRender<IW32Win>, IDraw
     {
+
+
         #region IRender - Bulk of class, providing rendering control (specialised to particular IWindow)
         SharpDXLib.Direct3D10.Device1 device;
         SharpDXLib.Direct2D1.Factory d2dFactory = new SharpDXLib.Direct2D1.Factory();
@@ -30,8 +32,10 @@ namespace NoForms.Renderers.SharpDX
         DirtyObserver dobs;
         public void Dirty(Common.Rectangle dr) { dobs.Dirty(dr); }
 
+        public float FPSLimit { get; set; }
         public D2DLayered()
         {
+            FPSLimit = 60;
             device = new SharpDXLib.Direct3D10.Device1(DriverType.Hardware, DeviceCreationFlags.BgraSupport, SharpDXLib.Direct3D10.FeatureLevel.Level_10_1);
             someDC = Win32Util.GetDC(IntPtr.Zero); // not sure what this exactly does... root dc perhaps...
         }
@@ -66,7 +70,7 @@ namespace NoForms.Renderers.SharpDX
                 _uDraw = new D2DDraw(_backRenderer);
 
                 // Create the observer
-                dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize);
+                dobs = new DirtyObserver(noForm, RenderPass, () => noForm.DirtyAnimated, () => noForm.ReqSize, () => FPSLimit);    
             }
         }
 
@@ -115,7 +119,7 @@ namespace NoForms.Renderers.SharpDX
         // object because IRender could be anything, gdi, opengl etc...
         public NoForm noForm { get; set; }
         Stopwatch renderTime = new Stopwatch();
-        public float currentFps { get; private set; }
+        public float lastFrameRenderDuration { get; private set; }
         void RenderPass(Common.Region dc, Common.Size ReqSize)
         {
             renderTime.Start();
@@ -170,7 +174,7 @@ namespace NoForms.Renderers.SharpDX
                 surface.ReleaseDC();
                 dxdc.Dispose();
             }
-            currentFps = 1f / (float)renderTime.Elapsed.TotalSeconds;
+            lastFrameRenderDuration = 1f / (float)renderTime.Elapsed.TotalSeconds;
             renderTime.Reset();
 
         }

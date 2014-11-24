@@ -15,6 +15,43 @@ using NoForms.Renderers.SharpDX;
 using NoForms.Controllers.DotNet;
 using NoForms.Renderers.OpenTK;
 
+// Global for immediate debugging
+public static class Debuggers
+{
+    public static Object D1(params Object[] toDebug)
+    {
+        var ore = toDebug[0] as OpenTK_RenderElements;
+        for (int b = 0; b < ore.renderData.bufferInfo.Count;b++ )
+        {
+            var bi = ore.renderData.bufferInfo[b];
+            if (bi.renderAs == OpenTK.Graphics.OpenGL.PrimitiveType.Quads && bi.dataFormat == (ArrayData)3)
+            {
+                Console.Write("Alpha Data ["+b+"]: ");
+                for (int i = bi.offset + 5; i < bi.offset + bi.count; i += 6)
+                    Console.Write(ore.renderData.sofwareBuffer[i] + ", ");
+                Console.WriteLine();
+            }
+        }
+        return 1;
+    }
+    public static Object D2(params Object[] toDebug)
+    {
+        return null;
+    }
+    public static Object D3(params Object[] toDebug)
+    {
+        return null;
+    }
+    public static Object D4(params Object[] toDebug)
+    {
+        return null;
+    }
+    public static Object D5(params Object[] toDebug)
+    {
+        return null;
+    }
+}
+
 namespace Easy
 {
     class Program
@@ -37,6 +74,8 @@ namespace Easy
             nf.window.Run();
         }
     }
+
+    
 
     class mnf : NoForm
     {
@@ -124,30 +163,30 @@ namespace Easy
 
             sc.draw += (r, b, s) =>
             {
-                //r.DrawPath(pp, b, s);
+                r.DrawPath(pp, b, s);
                 s.strokeWidth = 1;
                 b.color = new Color(.2f, 1, 0, 1);
                 r.FillRectangle(sc.DisplayRectangle, b);
-                return;
 
                 //foreach (var f in pth.figures)
                 //    foreach (UArc a in f.geoElements)
                 //        a.resolution = 0.01f + (float)ssw * 0.1f;
 
                 double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0) / 2.0;
-                //b.color = new Color(1f, (float)ssw, 0f, 0f);
-                r.DrawPath(easypth, b, s);
-                r.FillPath(pth, lg2);
+                b.color = new Color(1f, 0f, 0f, 0f);
 
-                if (dr != null)
-                {
-                    dr.area.left = oleft + (float)ssw * 50f;
-                    if (sw.Elapsed.TotalSeconds > 50)
-                    {
-                        EndDirty(id);
-                        dr = null;
-                    }
-                }
+                //r.FillPath(pth, lg2);
+                r.DrawPath(easypth, b, s);
+                return;
+                //if (dr != null)
+                //{
+                //    dr.area.left = oleft + (float)ssw * 50f;
+                //    if (sw.Elapsed.TotalSeconds > 50)
+                //    {
+                //        EndDirty(id);
+                //        dr = null;
+                //    }
+                //}
 
                 //var ti = (r as NoForms.Renderers.SDGDraw).GetSDGTextInfo(tx);
                 //float ws = 0;
@@ -163,7 +202,7 @@ namespace Easy
                 r.FillRectangle(sc.DisplayRectangle, b);
 
 
-                float h = ((Program.rdr.currentFps)/300f)*tx.height;
+                float h = ((Program.rdr.lastFrameRenderDuration)/300f)*tx.height;
                 float x = (float)ssw * (tx.width-5) + sc.Location.X;
                 ors[ri] = new Rectangle(x, sc.Location.Y +  tx.height - h, 5, h);
                 for(int ii=100;ii>=0;ii--)
@@ -186,6 +225,7 @@ namespace Easy
                 //}
 
                 //r.DrawText(tx, sc.Location, b, UTextDrawOptions.None, false);
+                return;
             };
             sc.Clicked += p => Size = new Size(Size.width + 10, Size.height+10);
             components.Add(sc);
