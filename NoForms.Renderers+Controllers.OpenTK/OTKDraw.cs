@@ -84,6 +84,7 @@ namespace NoForms.Renderers.OpenTK
         Stack<Rectangle> Clips = new Stack<Rectangle>();
         public void PushAxisAlignedClip(Rectangle clipRect, bool ignoreRenderOffset)
         {
+            return;
             var cr = clipRect;
             OTK.Matrix4 cm = new OTK.Matrix4();
             GL.LoadMatrix(ref cm);
@@ -95,12 +96,14 @@ namespace NoForms.Renderers.OpenTK
 
         public void PopAxisAlignedClip()
         {
+            return;
             Clips.Pop();
             if (Clips.Count > 0) ClipStackViewport();
         }
 
         void ClipStackViewport()
         {
+            return;
             Rectangle fcr  = new Rectangle(); 
             bool started = false;
             foreach (var cr in Clips)
@@ -226,8 +229,16 @@ namespace NoForms.Renderers.OpenTK
                 setVC(b, p.X, p.Y); // end last line here
                 if(doublepoints) setVC(b, p.X, p.Y); // start of new line
             }
-            if(pts.Length>0) setVC(b, pts[i].X, pts[i].Y); // end last line here
-            if (sp != null) start = sp.Value;
+            if (pts.Length > 0)
+            {
+                if (sp == null) sp = new Point(pts[i].X, pts[i].Y);
+                setVC(b, pts[i].X, pts[i].Y); // end last line here
+            }
+            if (sp != null)
+            {
+                start.X = sp.Value.X;
+                start.Y = sp.Value.Y;
+            }
         }
 
         void LoadBitmapIntoTexture(int texture, sdg.Bitmap sdb)

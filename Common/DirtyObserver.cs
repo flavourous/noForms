@@ -45,18 +45,18 @@ namespace NoForms.Common
         Thread dthread;
         void DirtyObs(Object o)
         {
-            try
-            {
+            //try
+            //{
                 (o as VoidAction)();
                 while (running)
                     DirtyLook();
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine("Fatal exception on rendering thread");
-                Console.Write(e.ToString());
-                Environment.Exit(-1);
-            }
+            //}
+            //catch(Exception e)
+            //{
+            //    Console.WriteLine("Fatal exception on rendering thread");
+            //    Console.Write(e.ToString());
+            //    Environment.Exit(-1);
+            //}
         }
         Stopwatch ft = new Stopwatch();
         void DirtyLook()

@@ -26,7 +26,7 @@ public static class Debuggers
             var bi = ore.renderData.bufferInfo[b];
             if (bi.renderAs == OpenTK.Graphics.OpenGL.PrimitiveType.Quads && bi.dataFormat == (ArrayData)3)
             {
-                Console.Write("Alpha Data ["+b+"]: ");
+                Console.Write("Alpha Data [" + b + "]: ");
                 for (int i = bi.offset + 5; i < bi.offset + bi.count; i += 6)
                     Console.Write(ore.renderData.sofwareBuffer[i] + ", ");
                 Console.WriteLine();
@@ -97,16 +97,16 @@ namespace Easy
             Size = new Size(1150, 600);
             Location = new Point(100, 40);
 
-            //mh = new MoveHandle(this);
-            //mh.Size = new Size(20, 20);
-            //mh.Location = new Point(5, 5);
-            //components.Add(mh);
+            mh = new MoveHandle(this);
+            mh.Size = new Size(20, 20);
+            mh.Location = new Point(5, 5);
+            components.Add(mh);
 
-            //sh = new SizeHandle(this);
-            //sh.Size = new Size(20, 20);
-            //sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
-            //sh.ResizeMode = Direction.SOUTH | Direction.EAST;
-            //components.Add(sh);
+            sh = new SizeHandle(this);
+            sh.Size = new Size(20, 20);
+            sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
+            sh.ResizeMode = Direction.SOUTH | Direction.EAST;
+            components.Add(sh);
 
             sc = new Scribble();
             sc.Location = new Point(100, 100);
@@ -115,13 +115,13 @@ namespace Easy
             UPath pth = new UPath(), easypth = new UPath();
             UFigure fig;
 
+                fig = new UFigure(sc.Location, false, true);
+                fig.geoElements.Add(new UBeizer(sc.Location + new Point(20, -20), sc.Location + new Point(60, 30), sc.Location + new Point(100, 0)) { resolution = 1 });
+                easypth.figures.Add(fig);
+
             for (float i = 0; i < 100; i += 100)
             {
                 var p1 = sc.Location + new Point(200, 200);
-                fig = new UFigure(sc.Location, false, true);
-                //fig.geoElements.Add(new UEasyArc(-160,160f, new Size(100, 50), true, true, i));
-                fig.geoElements.Add(new UBeizer(sc.Location + new Point(20, -20), sc.Location + new Point(60, 30), sc.Location + new Point(100, 0)));
-                easypth.figures.Add(fig);
                 fig = new UFigure(p1, true, true);
                 fig.geoElements.Add(new UArc(p1 += new Point(0, 50), new Size(200, 50), true, true, i));
                 fig.geoElements.Add(new UArc(p1 += new Point(0, 50), new Size(150, 50), true, false, i));
@@ -160,10 +160,17 @@ namespace Easy
 
             // ((x1 + x2)/2 + x3/2) * n-1/n = (x1+x2+x3)/3
 
+            var lb = new ULinearGradientBrush()
+            {
+                color1 = new Color(1,1,0,0),
+                color2 = new Color(1,0,0,1),
+                point1 = new Point(0,0),
+                point2 = new Point(300,0)
+            };
 
             sc.draw += (r, b, s) =>
             {
-                r.DrawPath(pp, b, s);
+                //r.DrawPath(pp, b, s);
                 s.strokeWidth = 1;
                 b.color = new Color(.2f, 1, 0, 1);
                 r.FillRectangle(sc.DisplayRectangle, b);
@@ -177,7 +184,6 @@ namespace Easy
 
                 //r.FillPath(pth, lg2);
                 r.DrawPath(easypth, b, s);
-                return;
                 //if (dr != null)
                 //{
                 //    dr.area.left = oleft + (float)ssw * 50f;
@@ -256,7 +262,7 @@ namespace Easy
         void mnf_SizeChanged(Size sz)
         {
             
-            //sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
+            sh.Location = new Point(Size.width - sh.Size.width - 5, Size.height - sh.Size.height - 5);
         }
 
     }
