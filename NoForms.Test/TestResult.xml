@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--This file represents the results of running a test suite-->
+<test-results name="C:\cygwin\home\David\noForms\NoForms.Test\bin\Debug\NoForms.Test.dll" total="1" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2014-12-08" time="19:01:08">
+  <environment nunit-version="2.6.2.12296" clr-version="2.0.50727.8009" os-version="Microsoft Windows NT 6.2.9200.0" platform="Win32NT" cwd="C:\cygwin\home\David\noForms\NoForms.Test" machine-name="TOPCAT" user="David" user-domain="TOPCAT" />
+  <culture-info current-culture="en-GB" current-uiculture="en-GB" />
+  <test-suite type="Assembly" name="C:\cygwin\home\David\noForms\NoForms.Test\bin\Debug\NoForms.Test.dll" executed="True" result="Failure" success="False" time="0.278" asserts="0">
+    <results>
+      <test-suite type="Namespace" name="NoForms" executed="True" result="Failure" success="False" time="0.219" asserts="0">
+        <results>
+          <test-suite type="Namespace" name="Test" executed="True" result="Failure" success="False" time="0.218" asserts="0">
+            <results>
+              <test-suite type="TestFixture" name="GlShitTests" executed="True" result="Failure" success="False" time="0.213" asserts="0">
+                <results>
+                  <test-case name="NoForms.Test.GlShitTests.RenderInfoWorks" executed="True" result="Failure" success="False" time="0.175" asserts="1">
+                    <failure>
+                      <message><![CDATA[  Expected: 1
+  But was:  2
+]]></message>
+                      <stack-trace><![CDATA[at NoForms.Test.GlShitTests.RenderInfoWorks() in c:\cygwin\home\David\noForms\NoForms.Test\GlShitTests.cs:line 14
+]]></stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
