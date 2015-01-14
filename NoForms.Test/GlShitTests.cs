@@ -128,11 +128,139 @@ namespace NoForms.Test
             // reset
             buf.ResetBuffer();
         }
+
+        [Test]
+        public void RenderQuadsAndLinesVC()
+        {
+            List<float[]> dt = new List<float[]> { new float[0], new float[0], new float[0], new float[0] };
+            List<PrimitiveType> dtp = new List<PrimitiveType> { PrimitiveType.Quads, PrimitiveType.Lines, PrimitiveType.Quads, PrimitiveType.Lines };
+
+            // few quads
+            rd.bufferInfo.Add(new RenderInfo(0, 4 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[0] = new float[] 
+            {
+                93, 57,  0.1f, 0.8f, 0.3f, 0.4f,     21, 36,  0.5f, 0.4f, 0.6f, 0.7f,     95, 54,  0.4f, 0.7f, 0.4f, 0.5f,     70, 35,  0.1f, 0.2f, 0.1f, 0.9f,     
+                64, 93,  0.6f, 0.3f, 0.6f, 0.8f,     85, 38,  0.5f, 0.7f, 0.4f, 0.2f,     23, 67,  0.4f, 0.6f, 0.8f, 0.4f,     18, 28,  0.5f, 0.6f, 0.4f, 0.5f,     
+                76, 68,  0.5f, 0.5f, 0.1f, 0.7f,     57, 73,  0.4f, 0.3f, 0.1f, 0.3f,     81, 87,  0.7f, 0.8f, 0.5f, 0.2f,     22, 27,  0.1f, 0.1f, 0.5f, 0.7f,     
+            });
+
+            // few lines
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 3 * 2 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Lines));
+            rd.sofwareBuffer.AddRange(dt[1] = new float[]
+            {
+                17, 55,  0.5f, 1.0f, 0.3f, 0.1f,     42, 10,  0.8f, 0.4f, 0.4f, 0.4f,     
+                89, 06,  0.3f, 0.6f, 0.9f, 0.0f,     11, 19,  0.6f, 0.8f, 0.4f, 0.7f,     
+                26, 05,  0.5f, 0.1f, 0.1f, 0.4f,     33, 06,  0.7f, 0.8f, 0.8f, 0.2f,     
+            });
+
+            // few more quads
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 4 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[2] = new float[]
+            {
+                81, 52,  0.3f, 1.0f, 0.9f, 0.6f,     98, 40,  0.5f, 0.7f, 0.2f, 0.2f,     74, 19,  0.2f, 0.7f, 0.4f, 0.5f,     17, 81,  0.8f, 0.0f, 0.4f, 0.9f,     
+                97, 65,  0.4f, 0.3f, 0.2f, 0.2f,     71, 39,  1.0f, 0.4f, 0.5f, 0.2f,     15, 19,  0.6f, 0.7f, 0.5f, 0.4f,     17, 17,  0.9f, 0.2f, 0.9f, 0.5f,     
+                28, 97,  0.8f, 0.3f, 0.6f, 0.3f,     18, 79,  0.2f, 0.4f, 1.0f, 0.2f,     15, 67,  0.2f, 0.2f, 1.0f, 0.8f,     21, 36,  0.7f, 1.0f, 0.6f, 0.2f,     
+            });
+
+            // few more lines
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 3 * 2 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Lines));
+            rd.sofwareBuffer.AddRange(dt[3] = new float[] 
+            {
+                73, 21,  0.7f, 0.7f, 0.3f, 0.8f,     95, 25,  0.9f, 0.1f, 0.8f, 0.8f,     
+                23, 52,  0.3f, 0.8f, 0.4f, 0.4f,     95, 47,  0.4f, 0.7f, 0.2f, 0.4f,     
+                89, 81,  0.7f, 0.5f, 0.7f, 0.5f,     14, 48,  0.1f, 0.3f, 0.6f, 0.6f,     
+            });
+
+            // process buffer!
+            rp.ProcessRenderBuffer(rd);
+
+            // assertion timeees
+            for (int i = 0; i < 4; i++)
+            {
+                var p = buf.renderlist[i];
+                var pd = dt[i];
+                Assert.AreEqual(p.pt, dtp[i]);
+                int pdi = 0;
+                for (int j = 0; j < p.data.Length; j++)
+                    foreach (float fl in lvcr(p.data[j]))
+                        Assert.AreEqual(fl, pd[pdi++]);
+            }
+
+            // reset
+            buf.ResetBuffer();
+        }
+
+        [Test]
+        public void RenderQuads_VCMixed()
+        {
+            List<float[]> dt = new List<float[]> { new float[0], new float[0], new float[0], new float[0] };
+            List<PrimitiveType> dtp = new List<PrimitiveType> { PrimitiveType.Quads, PrimitiveType.Quads, PrimitiveType.Quads, PrimitiveType.Quads};
+
+            // few quads
+            rd.bufferInfo.Add(new RenderInfo(0, 4 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[0] = new float[] 
+            {
+                93, 57,  0.1f, 0.8f, 0.3f, 0.4f,     21, 36,  0.5f, 0.4f, 0.6f, 0.7f,     95, 54,  0.4f, 0.7f, 0.4f, 0.5f,     70, 35,  0.1f, 0.2f, 0.1f, 0.9f,     
+                64, 93,  0.6f, 0.3f, 0.6f, 0.8f,     85, 38,  0.5f, 0.7f, 0.4f, 0.2f,     23, 67,  0.4f, 0.6f, 0.8f, 0.4f,     18, 28,  0.5f, 0.6f, 0.4f, 0.5f,     
+                76, 68,  0.5f, 0.5f, 0.1f, 0.7f,     57, 73,  0.4f, 0.3f, 0.1f, 0.3f,     81, 87,  0.7f, 0.8f, 0.5f, 0.2f,     22, 27,  0.1f, 0.1f, 0.5f, 0.7f,     
+            });
+
+            // few quads
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 4 * 3 * 2, ArrayData.Vertex, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[1] = new float[] 
+            {
+                64, 20,      55, 54,      43, 07,      79, 43,      
+                54, 72,      71, 30,      28, 41,      00, 02,      
+                98, 86,      46, 95,      23, 64,      81, 97,      
+            });
+
+
+            // few more quads
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 4 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[2] = new float[]
+            {
+                81, 52,  0.3f, 1.0f, 0.9f, 0.6f,     98, 40,  0.5f, 0.7f, 0.2f, 0.2f,     74, 19,  0.2f, 0.7f, 0.4f, 0.5f,     17, 81,  0.8f, 0.0f, 0.4f, 0.9f,     
+                97, 65,  0.4f, 0.3f, 0.2f, 0.2f,     71, 39,  1.0f, 0.4f, 0.5f, 0.2f,     15, 19,  0.6f, 0.7f, 0.5f, 0.4f,     17, 17,  0.9f, 0.2f, 0.9f, 0.5f,     
+                28, 97,  0.8f, 0.3f, 0.6f, 0.3f,     18, 79,  0.2f, 0.4f, 1.0f, 0.2f,     15, 67,  0.2f, 0.2f, 1.0f, 0.8f,     21, 36,  0.7f, 1.0f, 0.6f, 0.2f,     
+            });
+
+            // few quads more
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 4 * 3 * 2, ArrayData.Vertex, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[3] = new float[] 
+            {
+                77, 91,      20, 29,      45, 29,      49, 96,      
+                91, 78,      49, 45,      76, 48,      27, 57,      
+                87, 51,      22, 43,      93, 61,      51, 02,      
+            });
+
+            // process buffer!
+            rp.ProcessRenderBuffer(rd);
+
+            // assertion timeees
+            for (int i = 0; i < 4; i++)
+            {
+                var p = buf.renderlist[i];
+                var pd = dt[i];
+                Assert.AreEqual(p.pt, dtp[i]);
+                int pdi = 0;
+                for (int j = 0; j < p.data.Length; j++)
+                {
+                    getdel gd = p.data[j].c == null ? new getdel(lvr) : new getdel(lvcr);
+                    foreach (float fl in gd(p.data[j]))
+                        Assert.AreEqual(fl, pd[pdi++]);
+                }
+            }
+
+            // reset
+            buf.ResetBuffer();
+        }
+
+        delegate IEnumerable<float> getdel(MockGLBuffer.rend rd);
         IEnumerable<float> lvr(MockGLBuffer.rend rd)
         {
             return new float[] { rd.v.x, rd.v.y };
         }
-        IEnumerable<float> lvtr(MockGLBuffer.rend rd)
+        IEnumerable<float> lvcr(MockGLBuffer.rend rd)
         {
             return new float[] { rd.v.x, rd.v.y, rd.c.a, rd.c.r, rd.c.g, rd.c.b };
         }

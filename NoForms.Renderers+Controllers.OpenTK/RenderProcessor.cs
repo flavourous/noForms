@@ -96,25 +96,32 @@ namespace NoForms.Renderers.OpenTK
 
             // then we render evrythin (which might get asynced by the GL server?)
             ArrayData lastPointaz = 0;// nothing
+            ArrayData lastUsedPointaz = 0;
             PrimitiveType lastPrimitive = 0; // doesnt matter 
             int rlen = 0; int lastvbo = -1; int laststride = 0;
             for (int i = 0; i < trlr.bufferInfo.Count; i++)
             {
                 // Get info
                 var r = trlr.bufferInfo[i];
-                int stride = PointazDiffa(lastPointaz, r.dataFormat);
-                int vbo = r.vbo == -1 ? soft_vbo_by_stride[stride] : r.vbo;
-                if (r.vbo != -1) rendervboheads[r.vbo] = 0;
 
-                // Have we hit flush condition? (differnt primitive, or arraydata to last time...etc...uuugh)
-                if (rendervboheads.ContainsKey(vbo) && (lastPointaz != r.dataFormat || lastPrimitive != r.renderAs || lastvbo != vbo))
+                // Want dese pointaz bozz
+                int ver, col, tex, stride;
+                CSTrix(r.dataFormat, out stride, out ver, out col, out tex);
+
+                // get this vbo, init render head
+                int vbo = r.vbo == -1 ? soft_vbo_by_stride[stride] : r.vbo;
+                if (!rendervboheads.ContainsKey(vbo)) rendervboheads[vbo] = 0;
+
+                // Have we hit flush condition? for previous one (lookbehind) (differnt primitive, or arraydata to last time...etc...uuugh)
+                if (i > 0 && (lastPointaz != r.dataFormat || lastPrimitive != r.renderAs || lastvbo != vbo))
                 {
                     buffer.BindBuffer(BufferTarget.ArrayBuffer, lastvbo);
+                    PointazDiffa(lastUsedPointaz, lastPointaz);
+                    lastUsedPointaz = lastPointaz;
                     buffer.DrawArrays(lastPrimitive, rendervboheads[lastvbo] / laststride, rlen / laststride); // drawy
                     rendervboheads[lastvbo] += rlen;
                     rlen = 0;
                 }
-                if (!rendervboheads.ContainsKey(vbo)) rendervboheads[vbo] = 0;
                 rlen += r.count;
 
                 lastPointaz = r.dataFormat; lastPrimitive = r.renderAs; lastvbo = vbo; laststride = stride;
@@ -122,6 +129,7 @@ namespace NoForms.Renderers.OpenTK
             if (lastvbo > -1) // render last bufferchunky
             {
                 buffer.BindBuffer(BufferTarget.ArrayBuffer, lastvbo);
+                PointazDiffa(lastUsedPointaz, lastPointaz);
                 buffer.DrawArrays(lastPrimitive, rendervboheads[lastvbo] / laststride, rlen / laststride); // drawy
             }
 
@@ -132,7 +140,7 @@ namespace NoForms.Renderers.OpenTK
         }
 
         // TODO use glinterleavedarrays possibly
-        int PointazDiffa(ArrayData last, ArrayData now)
+        void PointazDiffa(ArrayData last, ArrayData now)
         {
             var sf = sizeof(float);
 
@@ -145,28 +153,19 @@ namespace NoForms.Renderers.OpenTK
             CSTrix(now, out stride, out ver, out col, out tex);
 
             // Enabel dem if day waznt ooon befar
-            if (ver > -1 && lver == -1)
-            {
-                buffer.ArrayEnabled(ArrayCap.VertexArray, true);
-                buffer.SetPointer(ArrayCap.VertexArray, 2, stride * sf, ver * sf);
-            }
-            if (col > -1 && lcol == -1)
-            {
-                buffer.ArrayEnabled(ArrayCap.ColorArray, true);
-                buffer.SetPointer(ArrayCap.ColorArray, 4, stride * sf, col * sf);
-            }
-            if (tex > -1 && ltex == -1)
-            {
-                buffer.ArrayEnabled(ArrayCap.TextureCoordArray, true);
-                buffer.SetPointer(ArrayCap.TextureCoordArray, 2, stride * sf, tex * sf);
-            }
+            if (ver > -1 && lver == -1) buffer.ArrayEnabled(ArrayCap.VertexArray, true);
+            if (col > -1 && lcol == -1) buffer.ArrayEnabled(ArrayCap.ColorArray, true);
+            if (tex > -1 && ltex == -1) buffer.ArrayEnabled(ArrayCap.TextureCoordArray, true);
+
+            // Configah sum pointerz if dey on (caz strdez couldah changes)
+            if (ver > -1) buffer.SetPointer(ArrayCap.VertexArray, 2, stride * sf, ver * sf);
+            if (col > -1) buffer.SetPointer(ArrayCap.ColorArray, 4, stride * sf, col * sf);
+            if (tex > -1) buffer.SetPointer(ArrayCap.TextureCoordArray, 2, stride * sf, tex * sf);
 
             // Turn em off if dey aint on no moar
             if (ver == -1 && lver > -1) buffer.ArrayEnabled(ArrayCap.VertexArray, false);
             if (col == -1 && lcol > -1) buffer.ArrayEnabled(ArrayCap.ColorArray, false);
             if (tex == -1 && ltex > -1) buffer.ArrayEnabled(ArrayCap.TextureCoordArray, false);
-
-            return stride;
         }
 
         // TODO use glinterleavedarrays possibly

@@ -12,7 +12,7 @@ namespace NoForms.Test
         {
             //OTKRenderTests t = new OTKRenderTests();
             //t.SetUp();
-            //t.RenderQuadsAndLinesV();
+            //t.RenderQuads_VCMixed();
             //return;
             
             String nunit = "C:\\Program Files (x86)\\NUnit 2.6.2\\bin\\nunit.exe";
