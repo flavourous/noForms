@@ -10,10 +10,10 @@ namespace NoForms.Test
     {
         public static void Main()
         {
-            //OTKRenderTests t = new OTKRenderTests();
-            //t.SetUp();
-            //t.RenderQuads_VCMixed();
-            //return;
+            var t = new OTK.OTKDrawPath();
+            t.SetUp();
+            t.OneFigureOneLine();
+            return;
             
             String nunit = "C:\\Program Files (x86)\\NUnit 2.6.2\\bin\\nunit.exe";
             var asm = Assembly.GetExecutingAssembly();

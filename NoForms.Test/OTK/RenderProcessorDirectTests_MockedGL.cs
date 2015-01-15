@@ -5,11 +5,10 @@ using NUnit.Framework;
 using OpenTK.Graphics.OpenGL;
 using NoForms.Renderers.OpenTK;
 
-namespace NoForms.Test
+namespace NoForms.Test.OTK
 {
-    
     [TestFixture]
-    public class OTKRenderTests
+    public class RenderProcessorDirectTests_MockedGL
     {
         RenderData rd;
         MockGLBuffer buf;
@@ -18,6 +17,7 @@ namespace NoForms.Test
         public void SetUp()
         {
             rd = new Renderers.OpenTK.RenderData();
+
             buf = new MockGLBuffer();
             rp = new RenderProcessor(buf);
         }
@@ -119,10 +119,10 @@ namespace NoForms.Test
                 var p = buf.renderlist[i];
                 var pd = dt[i];
                 Assert.AreEqual(p.pt, dtp[i]);
-                int pdi = 0;
-                for (int j = 0; j < p.data.Length; j++)
-                    foreach (float fl in lvr(p.data[j]))
-                        Assert.AreEqual(fl, pd[pdi++]);
+                    int pdi = 0;
+                    for (int j = 0; j < p.data.Length; j++)
+                        foreach (float fl in TUtil.lvr(p.data[j]))
+                            Assert.AreEqual(fl, pd[pdi++]);
             }
 
             // reset
@@ -182,7 +182,7 @@ namespace NoForms.Test
                 Assert.AreEqual(p.pt, dtp[i]);
                 int pdi = 0;
                 for (int j = 0; j < p.data.Length; j++)
-                    foreach (float fl in lvcr(p.data[j]))
+                    foreach (float fl in TUtil.lvcr(p.data[j]))
                         Assert.AreEqual(fl, pd[pdi++]);
             }
 
@@ -245,7 +245,7 @@ namespace NoForms.Test
                 int pdi = 0;
                 for (int j = 0; j < p.data.Length; j++)
                 {
-                    getdel gd = p.data[j].c == null ? new getdel(lvr) : new getdel(lvcr);
+                    getdel gd = p.data[j].c == null ? new getdel(TUtil.lvr) : new getdel(TUtil.lvcr);
                     foreach (float fl in gd(p.data[j]))
                         Assert.AreEqual(fl, pd[pdi++]);
                 }
@@ -255,128 +255,91 @@ namespace NoForms.Test
             buf.ResetBuffer();
         }
 
-        delegate IEnumerable<float> getdel(MockGLBuffer.rend rd);
-        IEnumerable<float> lvr(MockGLBuffer.rend rd)
+        [Test]
+        public void RenderQuadsAndLines_VCMixed()
         {
-            return new float[] { rd.v.x, rd.v.y };
+            List<float[]> dt = new List<float[]> { new float[0], new float[0], new float[0], new float[0], new float[0], new float[0] };
+            List<PrimitiveType> dtp = new List<PrimitiveType> { PrimitiveType.Quads, PrimitiveType.Lines, PrimitiveType.Quads, PrimitiveType.Lines, PrimitiveType.Quads, PrimitiveType.Lines };
+
+            // Quads V
+            rd.bufferInfo.Add(new RenderInfo(0, 4 * 3 * 2, ArrayData.Vertex, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[0] = new float[] 
+            {
+                54, 08,      69, 16,      26, 47,      42, 64,      
+                35, 72,      51, 24,      61, 61,      69, 18,      
+                43, 44,      31, 41,      99, 44,      76, 67,      
+            });
+
+            // Lines VC
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 2 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Lines));
+            rd.sofwareBuffer.AddRange(dt[1] = new float[] 
+            {
+                25, 78,  0.3f, 0.4f, 0.4f, 0.9f,     67, 86,  0.9f, 0.2f, 0.1f, 0.7f,     
+                81, 46,  0.1f, 0.5f, 0.9f, 0.9f,     70, 81,  0.4f, 0.1f, 0.7f, 0.4f,     
+                41, 86,  0.2f, 0.4f, 0.2f, 0.1f,     44, 59,  1.0f, 0.1f, 0.9f, 0.6f,     
+            });
+
+
+            // Quads VC
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 4 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[2] = new float[]
+            {
+                94, 12,  0.8f, 0.9f, 1.0f, 0.3f,     44, 20,  0.9f, 0.0f, 0.2f, 0.7f,     56, 42,  0.6f, 0.1f, 0.1f, 0.6f,     51, 27,  0.9f, 0.8f, 0.2f, 0.6f,     
+                89, 73,  0.0f, 0.7f, 0.1f, 0.4f,     32, 62,  0.8f, 0.5f, 0.1f, 0.8f,     55, 54,  0.5f, 0.2f, 0.2f, 0.6f,     63, 25,  0.1f, 0.2f, 0.7f, 0.5f,     
+                40, 10,  0.1f, 0.7f, 0.1f, 0.0f,     94, 13,  0.9f, 0.2f, 0.0f, 0.3f,     24, 74,  0.1f, 0.5f, 0.7f, 0.6f,     88, 01,  0.4f, 0.8f, 0.6f, 0.6f,     
+            });
+
+            // Lines V
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 2 * 3 * 2, ArrayData.Vertex, PrimitiveType.Lines));
+            rd.sofwareBuffer.AddRange(dt[3] = new float[] 
+            {
+                02, 48,      48, 17,      
+                28, 67,      28, 33,      
+                65, 27,      58, 99,      
+            });
+            // Quads VC
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 4 * 3 * 6, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads));
+            rd.sofwareBuffer.AddRange(dt[4] = new float[]
+            {
+                54, 56,  0.1f, 0.5f, 0.4f, 0.6f,     19, 64,  0.0f, 0.1f, 0.9f, 0.6f,     37, 91,  0.9f, 1.0f, 0.9f, 0.6f,     28, 34,  0.8f, 0.0f, 0.8f, 0.6f,     
+                06, 67,  0.5f, 0.5f, 0.9f, 0.5f,     77, 65,  0.9f, 0.7f, 0.7f, 0.2f,     93, 54,  0.5f, 0.6f, 0.4f, 1.0f,     66, 52,  0.7f, 0.6f, 0.5f, 0.7f,     
+                97, 97,  0.6f, 0.5f, 0.9f, 0.2f,     94, 51,  0.8f, 0.5f, 0.5f, 0.7f,     08, 72,  0.7f, 0.5f, 0.3f, 0.2f,     70, 66,  0.2f, 0.7f, 0.0f, 0.4f,     
+            });
+
+            // Lines VC
+            rd.bufferInfo.Add(new RenderInfo(rd.sofwareBuffer.Count, 2 * 3 * 6, ArrayData.Vertex, PrimitiveType.Lines));
+            rd.sofwareBuffer.AddRange(dt[5] = new float[] 
+            {
+                14, 56,  1.0f, 0.0f, 0.5f, 0.3f,     45, 25,  0.2f, 0.4f, 0.4f, 0.0f,     
+                68, 96,  0.8f, 0.7f, 0.7f, 0.9f,     06, 82,  0.8f, 0.6f, 0.8f, 0.6f,     
+                85, 99,  0.8f, 0.1f, 0.4f, 0.9f,     07, 99,  0.3f, 0.1f, 0.0f, 0.7f,     
+            });
+
+            // process buffer!
+            rp.ProcessRenderBuffer(rd);
+
+            // assertion timeees
+            for (int i = 0; i < 6; i++)
+            {
+                var p = buf.renderlist[i];
+                var pd = dt[i];
+                Assert.AreEqual(p.pt, dtp[i]);
+                int pdi = 0;
+                for (int j = 0; j < p.data.Length; j++)
+                {
+                    getdel gd = p.data[j].c == null ? new getdel(TUtil.lvr) : new getdel(TUtil.lvcr);
+                    foreach (float fl in gd(p.data[j]))
+                        Assert.AreEqual(fl, pd[pdi++]);
+                }
+            }
+
+            // reset
+            buf.ResetBuffer();
         }
-        IEnumerable<float> lvcr(MockGLBuffer.rend rd)
-        {
-            return new float[] { rd.v.x, rd.v.y, rd.c.a, rd.c.r, rd.c.g, rd.c.b };
-        }
+
+        
     }
 
-    class MockGLBuffer : IGLBuffer
-    {
-        public void ResetBuffer()
-        {
-            buffers = new Dictionary<int, float[]> { { 0, new float[0] } };
-            renderlist.Clear();
-            enables.Clear();
-            pointers.Clear();
-        }
-
-        Dictionary<int, float[]> buffers = new Dictionary<int, float[]> { { 0, new float[0] } };
-        public int GenBuffer()
-        {
-            int i = 1;
-            while (buffers.ContainsKey(i)) i++;
-            buffers[i] = new float[0];
-            return i;
-        }
-        public void DeleteBuffer(int buf)
-        {
-            buffers.Remove(buf);
-        }
-
-        int activeBuffer = 0;
-        public void BufferData(OpenTK.Graphics.OpenGL.BufferTarget targ, IntPtr length, float[] data, OpenTK.Graphics.OpenGL.BufferUsageHint hint)
-        {
-            if (!buffers.ContainsKey(activeBuffer)) throw new ArgumentException();
-            buffers[activeBuffer] = data;
-        }
-
-        public void BindBuffer(OpenTK.Graphics.OpenGL.BufferTarget targ, int buf)
-        {
-            if (!buffers.ContainsKey(activeBuffer)) throw new ArgumentException();
-            activeBuffer = buf;
-        }
-
-        public Dictionary<PrimitiveType, int> primsizes = new Dictionary<PrimitiveType, int> 
-        { 
-            { PrimitiveType.Quads, 4 }, 
-            { PrimitiveType.Lines, 2 } 
-        };
-
-        public class ver { public float x, y;}
-        public class col { public float r, g, b, a;}
-        public class tex { public float u, v;}
-        public class rend
-        {
-            public ver v; public col c; public tex t;
-            public override string ToString()
-            {
-                return
-                    (v == null ? "" : ("v:" + v.x + "," + v.y + " ")) +
-                    (c == null ? "" : ("c:" + c.a + "," + c.r + "," + c.g + "," + c.b + " ")) +
-                    (t == null ? "" : ("t:" + t.u + "," + t.v + " "));
-            }
-        }
-        public class pol { public rend[] data; public PrimitiveType pt;}
-        public List<pol> renderlist = new List<pol>();
-        public void DrawArrays(OpenTK.Graphics.OpenGL.PrimitiveType pt, int st, int len)
-        {
-            int sf = sizeof(float);
-            float[] ab = buffers[activeBuffer];
-
-            bool ev = enables.ContainsKey(ArrayCap.VertexArray);
-            bool ec = enables.ContainsKey(ArrayCap.ColorArray);
-            bool et = enables.ContainsKey(ArrayCap.TextureCoordArray);
-            int vi = ev ? pointers[ArrayCap.VertexArray].offset / sf : 0;
-            int ci = ec ? pointers[ArrayCap.ColorArray].offset / sf : 0;
-            int ti = et ? pointers[ArrayCap.TextureCoordArray].offset / sf : 0;
-            int vs = ev ? pointers[ArrayCap.VertexArray].stride / sf : 0;
-            int cs = ec ? pointers[ArrayCap.ColorArray].stride / sf : 0;
-            int ts = et ? pointers[ArrayCap.TextureCoordArray].stride / sf : 0;
-            vi += vs * st; ci += cs * st; ti += ts * st;
-            List<rend> data = new List<rend>();
-            for (int i = 0; i < len; i++) // index only for counting loop.
-            {
-                ver v = null; col c = null; tex t = null;
-                if (ev)
-                {
-                    v = new ver() { x = ab[vi], y = ab[vi + 1] };
-                    vi += vs;
-                }
-                if (ec)
-                {
-                    c = new col() { a = ab[ci], r = ab[ci + 1], g = ab[ci + 2], b = ab[ci + 3] };
-                    ci += cs;
-                }
-                if (et)
-                {
-                    t = new tex() { u = ab[ti], v = ab[ti + 1] };
-                    ti += ts;
-                }
-                data.Add(new rend() { v = v, c = c, t = t });
-            }
-            renderlist.Add(new pol() { pt = pt, data = data.ToArray() });
-        }
-
-        Dictionary<ArrayCap, Object> enables = new Dictionary<ArrayCap, Object>();
-        public void ArrayEnabled(OpenTK.Graphics.OpenGL.ArrayCap type, bool enabled)
-        {
-            if (!enabled) enables.Remove(type);
-            else if (enables.ContainsKey(type)) throw new ArgumentException();
-            else enables.Add(type, new object());
-        }
-
-        public struct vpoint { public int size, offset, stride; }
-        Dictionary<ArrayCap, vpoint> pointers = new Dictionary<ArrayCap, vpoint>();
-        public void SetPointer(OpenTK.Graphics.OpenGL.ArrayCap type, int nel, int stride, int offset)
-        {
-            pointers[type] = new vpoint() { size = nel, stride = stride, offset = offset };
-        }
-    }
+    
 
 }

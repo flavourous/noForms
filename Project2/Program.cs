@@ -182,7 +182,8 @@ namespace Easy
                 double ssw = (Math.Sin(sw.ElapsedMilliseconds / 1000.0) + 1.0) / 2.0;
                 b.color = new Color(1f, 0f, 0f, 0f);
 
-                //r.FillPath(pth, lg2);
+                r.FillPath(pth, lg2);
+                r.DrawPath(pth, b, s);
                 r.DrawPath(easypth, b, s);
                 //if (dr != null)
                 //{

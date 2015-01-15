@@ -61,9 +61,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GlShitTests.cs" />
+    <Compile Include="OTK\MockGLBuffer.cs" />
+    <Compile Include="OTK\OTKDrawPath.cs" />
+    <Compile Include="OTK\RenderProcessorDirectTests_MockedGL.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
