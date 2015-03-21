@@ -10,9 +10,13 @@ namespace NoForms.Test
     {
         public static void Main()
         {
-            var t = new OTK.OTKDrawPath();
+            //var t = new OTK.OTKDrawPath();
+            //t.SetUp();
+            //t.PlotGeoElementStartpointisend();
+            //return;
+            var t = new OTK.TextRenderMockTests();
             t.SetUp();
-            t.OneFigureOneLine();
+            t.DrawSimpleString();
             return;
             
             String nunit = "C:\\Program Files (x86)\\NUnit 2.6.2\\bin\\nunit.exe";

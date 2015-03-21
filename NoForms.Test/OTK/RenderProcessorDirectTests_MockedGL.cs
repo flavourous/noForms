@@ -121,7 +121,7 @@ namespace NoForms.Test.OTK
                 Assert.AreEqual(p.pt, dtp[i]);
                     int pdi = 0;
                     for (int j = 0; j < p.data.Length; j++)
-                        foreach (float fl in TUtil.lvr(p.data[j]))
+                        foreach (float fl in p.data[j].ToArray())
                             Assert.AreEqual(fl, pd[pdi++]);
             }
 
@@ -182,7 +182,7 @@ namespace NoForms.Test.OTK
                 Assert.AreEqual(p.pt, dtp[i]);
                 int pdi = 0;
                 for (int j = 0; j < p.data.Length; j++)
-                    foreach (float fl in TUtil.lvcr(p.data[j]))
+                    foreach (float fl in p.data[j].ToArray())
                         Assert.AreEqual(fl, pd[pdi++]);
             }
 
@@ -245,8 +245,7 @@ namespace NoForms.Test.OTK
                 int pdi = 0;
                 for (int j = 0; j < p.data.Length; j++)
                 {
-                    getdel gd = p.data[j].c == null ? new getdel(TUtil.lvr) : new getdel(TUtil.lvcr);
-                    foreach (float fl in gd(p.data[j]))
+                    foreach (float fl in p.data[j].ToArray())
                         Assert.AreEqual(fl, pd[pdi++]);
                 }
             }
@@ -327,8 +326,7 @@ namespace NoForms.Test.OTK
                 int pdi = 0;
                 for (int j = 0; j < p.data.Length; j++)
                 {
-                    getdel gd = p.data[j].c == null ? new getdel(TUtil.lvr) : new getdel(TUtil.lvcr);
-                    foreach (float fl in gd(p.data[j]))
+                    foreach (float fl in p.data[j].ToArray())
                         Assert.AreEqual(fl, pd[pdi++]);
                 }
             }

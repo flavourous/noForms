@@ -120,7 +120,7 @@ namespace NoForms.Renderers.SharpDX
             Resize(ReqSize);
 
             Win32Util.Size w32Size = new Win32Util.Size((int)ReqSize.width, (int)ReqSize.height);
-            Win32Util.SetWindowSize(w32Size, winHandle);
+            Win32Util.SetWindowSize(w32Size, winHandle); // FIXME blocks when closing->endrender event is locked...
 
             // Allow noform size to change as requested..like a layout hook (truncating layout passes with the render passes for performance)
             RenderSizeChanged(ReqSize);

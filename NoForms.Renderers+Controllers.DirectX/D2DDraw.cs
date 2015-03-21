@@ -16,7 +16,7 @@ namespace NoForms.Renderers.SharpDX
         }
         public SharpDXLib.Direct2D1.RenderTarget renderTarget { get; internal set; }
     }
-    class D2DDraw : IUnifiedDraw
+    public class D2DDraw : IUnifiedDraw
     {
         // FIXME this should go somewere in the d2d renderelements...
         private static SharpDXLib.DirectWrite.Factory _dwFact;

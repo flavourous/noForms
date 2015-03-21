@@ -41,10 +41,6 @@
     <Compile Include="WinForms_Platform.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\NoForms.Common.csproj">
-      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>NoForms.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NoForms\NoForms.csproj">
       <Project>{4cd83a41-3030-45b4-9d85-2017560d9568}</Project>
       <Name>NoForms</Name>

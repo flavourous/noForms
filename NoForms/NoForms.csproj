@@ -15,27 +15,26 @@
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common\IComponent_Collection.cs" />
@@ -45,6 +44,15 @@
     <Compile Include="Common\Interfaces\IUnifiedDraw.cs" />
     <Compile Include="Common\Interfaces\IWindow.cs" />
     <Compile Include="Common\Interfaces\UnifiedEffects.cs" />
+    <Compile Include="Common\Animation.cs" />
+    <Compile Include="Common\Common.cs" />
+    <Compile Include="Common\CursorEnum.cs" />
+    <Compile Include="Common\DirtyObserver.cs" />
+    <Compile Include="Common\GeometryLib\Bezier.cs" />
+    <Compile Include="Common\GeometryLib\Ellipse.cs" />
+    <Compile Include="Common\GlyphRunLib\GlyphRun.cs" />
+    <Compile Include="Common\KeysEnum.cs" />
+    <Compile Include="Common\ObsCollection.cs" />
     <Compile Include="ComponetBase\Container.cs" />
     <Compile Include="ComponetBase\IComponent.cs" />
     <Compile Include="ComponetBase\Component.cs" />
@@ -54,15 +62,13 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\NoForms.Common.csproj">
-      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>NoForms.Common</Name>
-    </ProjectReference>
+    <Content Include="Common\GeometryLib\GDI_Test_Code.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

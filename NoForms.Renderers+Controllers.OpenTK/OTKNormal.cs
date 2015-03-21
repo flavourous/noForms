@@ -54,6 +54,12 @@ namespace NoForms.Renderers.OpenTK
         }
 
 
+
+
+        public void BindTexture(TextureTarget tt, int tex)
+        {
+            GL.BindTexture(tt, tex);
+        }
     }
     public class OTKNormal : IRender<IW32Win>, IDraw
     {
@@ -133,7 +139,7 @@ namespace NoForms.Renderers.OpenTK
             foreach (var tex in new int[] { _backRenderer.T2D_Draw, _backRenderer.T2D_Window })
             {
                 GL.BindTexture(TextureTarget.Texture2D, tex); // bind to texture, set things,
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, (int)w, (int)h, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)w, (int)h, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
@@ -146,6 +152,7 @@ namespace NoForms.Renderers.OpenTK
             GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, _backRenderer.T2D_Draw, 0);
 
             // Alpha...
+            GL.Enable(EnableCap.Texture2D);
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
@@ -196,6 +203,7 @@ namespace NoForms.Renderers.OpenTK
                 double l = d.left; double r = d.right;
                 double t = d.top; double b = d.bottom;
 
+                //FIXME lazy...use drawarrays
                 GL.TexCoord2(fl, ft);
                 GL.Vertex2(l, t);
                 GL.TexCoord2(fr, ft);
@@ -227,6 +235,7 @@ namespace NoForms.Renderers.OpenTK
             GL.Color4(1f, 1f, 1f, 1f);
             GL.Disable(EnableCap.Blend); // we just want to emplace.
 
+            //FIXME lazy also...
             GL.Begin(PrimitiveType.Quads);
             GL.TexCoord2(0f, 1f);
             GL.Vertex2(0.0, 0.0);

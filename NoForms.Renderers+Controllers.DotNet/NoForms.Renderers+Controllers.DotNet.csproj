@@ -43,10 +43,6 @@
     <Compile Include="WinForms_Controller.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\NoForms.Common.csproj">
-      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>NoForms.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NoForms.Platforms.DOTNET\NoForms.Platforms.DotNet.csproj">
       <Project>{8feee775-cdb8-42db-a589-824f799e2321}</Project>
       <Name>NoForms.Platforms.DotNet</Name>

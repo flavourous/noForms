@@ -54,10 +54,6 @@
     <Compile Include="Translators.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\NoForms.Common.csproj">
-      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>NoForms.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NoForms.Platforms.WIN32\NoForms.Platforms.Win32.csproj">
       <Project>{336d599d-c09b-42d5-a820-a0778f559526}</Project>
       <Name>NoForms.Platforms.Win32</Name>

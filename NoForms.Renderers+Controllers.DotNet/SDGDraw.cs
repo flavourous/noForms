@@ -225,13 +225,13 @@ namespace NoForms.Renderers.DotNet
         {
             // Link to invalidation of brush, once.
             //  the cache of the pen is stored in the stroke.
-            NoFormsAction inval = delegate { };
+            VoidAction inval = delegate { };
             inval = () =>
             {
                 s.Invalidate();
-                b.invalidated -= inval;
+                b.changed -= inval;
             };
-            b.invalidated += inval;
+            b.changed += inval;
 
             // FIXME advanced features not used!
             Pen ret;

@@ -137,6 +137,7 @@ namespace NoFormsSDK
                 if (sendMe == null)
                 {
                     textLayoutNeedsUpdate = true;
+                    Dirty(DisplayRectangle);
                     return;
                 }
                 else textLayoutNeedsUpdate = false;
@@ -576,6 +577,7 @@ namespace NoFormsSDK
                     caretPos = htInfo.charPos + extra;
                 }
             }));
+            Dirty(DisplayRectangle);
         }
         bool mouseSelect = false;
         public override void MouseUpDown(Point location, MouseButton mb, ButtonState mbs, bool inComponent, bool amClipped)
@@ -589,6 +591,7 @@ namespace NoFormsSDK
                         Point tfPoint = new Point(location.X - Location.X + roX, location.Y - Location.Y + roY);
                         var hti = rt.uDraw.HitPoint(tfPoint, data);
                         int extra = 0;
+                        // FIXME presumably directx is fucky here; my own glyphrunner thinks such a request is mental.  I've patched it to deal with out of bounds requests...ugh.
                         if (hti.charPos == data.text.Length - 1 && hti.leading) extra++;
                         caretPos = hti.charPos + extra;
                         focusManager.FocusSet(this, inComponent);
@@ -600,6 +603,7 @@ namespace NoFormsSDK
                     mouseSelect = false;
                 }
             }));
+            Dirty(DisplayRectangle);
         }
     }
 }

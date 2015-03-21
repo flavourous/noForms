@@ -1,21 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0DBD0F40-91A7-4102-AA1C-C838F8BB38C4}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AAB11512-0285-4727-BC82-B261A38EC220}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Project1</RootNamespace>
-    <AssemblyName>Project1</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <RootNamespace>NoForms.Example</RootNamespace>
+    <AssemblyName>NoForms.Example</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -25,8 +22,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -34,17 +31,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\NoForms.Common.csproj">
-      <Project>{0b373db2-bd85-454a-b739-6021dd47c917}</Project>
-      <Name>NoForms.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NoForms.Platforms.DOTNET\NoForms.Platforms.DotNet.csproj">
       <Project>{8feee775-cdb8-42db-a589-824f799e2321}</Project>
       <Name>NoForms.Platforms.DotNet</Name>
@@ -53,29 +43,33 @@
       <Project>{336d599d-c09b-42d5-a820-a0778f559526}</Project>
       <Name>NoForms.Platforms.Win32</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NoForms.Renderers+Controllers.DirectX\NoForms.Renderers+Controllers.SharpDX.csproj">
-      <Project>{59316107-45a5-4064-b180-4d61dfa9792f}</Project>
-      <Name>NoForms.Renderers+Controllers.SharpDX</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NoForms.Renderers+Controllers.DotNet\NoForms.Renderers+Controllers.DotNet.csproj">
       <Project>{a390c6ca-dbc2-4bc4-be52-d113434f59e1}</Project>
       <Name>NoForms.Renderers+Controllers.DotNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NoForms.Renderers+Controllers.OpenTK\NoForms.Renderers+Controllers.OpenTK.csproj">
+      <Project>{5420d61f-e864-4aa6-aa45-5f8b2f5e66de}</Project>
+      <Name>NoForms.Renderers+Controllers.OpenTK</Name>
     </ProjectReference>
     <ProjectReference Include="..\NoFormsSDK\NoFormsSDK.csproj">
       <Project>{b4545332-c870-4e26-8f5c-ead5ae49c8b8}</Project>
       <Name>NoFormsSDK</Name>
     </ProjectReference>
     <ProjectReference Include="..\NoForms\NoForms.csproj">
-      <Project>{4CD83A41-3030-45B4-9D85-2017560D9568}</Project>
+      <Project>{4cd83a41-3030-45b4-9d85-2017560d9568}</Project>
       <Name>NoForms</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="OpenTK">
+      <HintPath>..\OpenTK\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <Compile Include="Program.cs" />
+    <Compile Include="textfieldy.cs" />
+    <Compile Include="textaligny.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

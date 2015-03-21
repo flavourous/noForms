@@ -10,18 +10,22 @@ namespace NoForms.Common // hmm cant think of a namespace, needs renders and con
         {
             RECT r = new RECT();
             GetWindowRect(hWnd, out r);
-            return new Size(r.right - r.left, r.bottom - r.top);
+            return new Size(r.Right - r.Reft, r.Bottom - r.Top);
         }
         static public Point GetWindowLocation(IntPtr hWnd)
         {
             RECT r = new RECT();
             GetWindowRect(hWnd, out r);
-            return new Point(r.left, r.top);
+            return new Point(r.Reft, r.Top);
         }
         static public void SetWindowSize(Size sz, IntPtr hWnd)
         {
             var loc = GetWindowLocation(hWnd);
-            SetWindowPos(hWnd, IntPtr.Zero, loc.x, loc.y, sz.cx, sz.cy,SetWindowPosFlags.SHOWWINDOW);
+            RECT desire = new RECT() { Reft = loc.x, Top = loc.y, Right = loc.x + sz.cx, Bottom = loc.y + sz.cy };
+            int dwstyle = GetWindowLong(hWnd, GWL_STYLE);
+            bool menu = GetMenu(hWnd) != IntPtr.Zero;
+            var suc = AdjustWindowRect(ref desire, (UInt32)dwstyle, menu);
+            SetWindowPos(hWnd, IntPtr.Zero, loc.x, loc.y, desire.Right-desire.Reft, desire.Bottom-desire.Top,SetWindowPosFlags.SHOWWINDOW);
         }
         static public void SetWindowLocation(Point loc, IntPtr hWnd)  
         {
@@ -49,15 +53,18 @@ namespace NoForms.Common // hmm cant think of a namespace, needs renders and con
         }
 
         [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr GetMenu(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
         static extern bool SetWindowPos(IntPtr hWnd, IntPtr hIns, int X, int Y, int cx, int cy, SetWindowPosFlags flags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern Boolean AdjustWindowRect(ref RECT lprect, UInt32 dwstyle, bool menu);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
+            public int Reft, Top, Right, Bottom;
         }
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -121,6 +128,7 @@ namespace NoForms.Common // hmm cant think of a namespace, needs renders and con
         }
 
         public const int GWL_EXSTYLE = (-20);
+        public const int GWL_STYLE = (-16);
         public const int WS_EX_LAYERED = 0x80000;
         public const int AC_SRC_OVER = 0x00;
         public const int AC_SRC_ALPHA = 0x01;

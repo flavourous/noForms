@@ -1,0 +1,11 @@
+#!/bin/bash
+rm -rf deploy
+mkdir deploy
+
+for f in `ls | grep NoForms.Platforms; ls | grep NoForms.Renderers+Controllers; echo NoFormsSDK`;
+do p=`ls $f | grep csproj`;
+msbuild.exe `cygpath -w $PWD/$f/$p` /t:build /p:Configuration=Release /p:Platform=AnyCpu /p:OutDir="`cygpath -w $PWD/deploy`"
+done;
+
+tar -cf deploy.tar deploy/*.dll
+rm -rf deploy

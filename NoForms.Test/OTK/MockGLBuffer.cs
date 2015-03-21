@@ -61,6 +61,30 @@ namespace NoForms.Test.OTK
                     (c == null ? "" : ("c:" + c.a + "," + c.r + "," + c.g + "," + c.b + " ")) +
                     (t == null ? "" : ("t:" + t.u + "," + t.v + " "));
             }
+            public float[] ToArray()
+            {
+                int nd = (v==null ? 0 : 2)+(c==null ? 0 : 4)+(t==null ? 0 : 2);
+                float[] ret = new float[nd];
+                int rc = 0;
+                if (v != null)
+                {
+                    ret[rc++] = v.x;
+                    ret[rc++] = v.y;
+                }
+                if (c != null)
+                {
+                    ret[rc++] = c.a;
+                    ret[rc++] = c.r;
+                    ret[rc++] = c.g;
+                    ret[rc++] = c.b;
+                }
+                if (t != null)
+                {
+                    ret[rc++] = t.u;
+                    ret[rc++] = t.v;
+                }
+                return ret;
+            }
         }
         public class pol { public rend[] data; public PrimitiveType pt;}
         public List<pol> renderlist = new List<pol>();
@@ -116,6 +140,13 @@ namespace NoForms.Test.OTK
         public void SetPointer(OpenTK.Graphics.OpenGL.ArrayCap type, int nel, int stride, int offset)
         {
             pointers[type] = new vpoint() { size = nel, stride = stride, offset = offset };
+        }
+
+        Dictionary<TextureTarget, List<int>> texturesbound = new Dictionary<TextureTarget, List<int>>();
+        public void BindTexture(TextureTarget tt, int tex)
+        {
+            texturesbound[tt].Add(tex);
+            GL.BindTexture(tt, tex);
         }
     }
 }

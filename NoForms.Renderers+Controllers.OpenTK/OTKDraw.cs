@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using sdg = System.Drawing;
 using GlyphRunLib;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace NoForms.Renderers.OpenTK
             vbo = -1;
             texture = tex;
         }
-        // HW buffer
+        // HW buffer FIXME miiight want to use offset?
         public RenderInfo(int cnt, ArrayData format, PrimitiveType renderas, int vboID, int tex=0)
         {
             offset = 0;
@@ -74,10 +75,10 @@ namespace NoForms.Renderers.OpenTK
     }
     public class OTKDraw : IUnifiedDraw
     {
-        OpenTK_RenderElements r;
+        OpenTK_RenderElements rel;
         public OTKDraw(OpenTK_RenderElements rel)
         {
-            r = rel;
+            this.rel = rel;
         }
 
         // FIXME the clipping dont work!!
@@ -140,10 +141,10 @@ namespace NoForms.Renderers.OpenTK
         {
             foreach (var f in path.figures)
             {
-                int st = r.renderData.sofwareBuffer.Count;
+                int st = rel.renderData.sofwareBuffer.Count;
                 BufferFigureVC(f, brush, false, false);
-                int cnt = r.renderData.sofwareBuffer.Count - st;
-                r.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Polygon));
+                int cnt = rel.renderData.sofwareBuffer.Count - st;
+                rel.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Polygon));
             }
         }
 
@@ -151,10 +152,10 @@ namespace NoForms.Renderers.OpenTK
         {
             foreach (var f in path.figures)
             {
-                int st = r.renderData.sofwareBuffer.Count;
+                int st = rel.renderData.sofwareBuffer.Count;
                 BufferFigureVC(f, brush, f.open, true);
-                int cnt = r.renderData.sofwareBuffer.Count - st;
-                r.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Lines));
+                int cnt = rel.renderData.sofwareBuffer.Count - st;
+                rel.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Lines));
             }
         }
 
@@ -170,7 +171,7 @@ namespace NoForms.Renderers.OpenTK
             }
         }
 
-        void PlotGeoElement(ref Point start, UGeometryBase g, UBrush b, bool doublepoints)
+        public void PlotGeoElement(ref Point start, UGeometryBase g, UBrush b, bool doublepoints)
         {
             setVC(b, start.X, start.Y);
             System.Drawing.PointF[] pts = new System.Drawing.PointF[0];
@@ -225,13 +226,13 @@ namespace NoForms.Renderers.OpenTK
             for (i = 0; i < pts.Length-1;i++ )
             {
                 var p = pts[i];
-                if (sp == null) sp = new Point(p.X, p.Y);
+                sp = new Point(p.X, p.Y);
                 setVC(b, p.X, p.Y); // end last line here
                 if(doublepoints) setVC(b, p.X, p.Y); // start of new line
             }
             if (pts.Length > 0)
             {
-                if (sp == null) sp = new Point(pts[i].X, pts[i].Y);
+                sp = new Point(pts[i].X, pts[i].Y);
                 setVC(b, pts[i].X, pts[i].Y); // end last line here
             }
             if (sp != null)
@@ -241,8 +242,37 @@ namespace NoForms.Renderers.OpenTK
             }
         }
 
-        void LoadBitmapIntoTexture(int texture, sdg.Bitmap sdb)
+        // uses low quality setpixel
+        sdg.Bitmap SaveTextureIntoBitmap(int texture, int width, int height)
         {
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            int texSize = width * height * 4;
+            IntPtr pin = Marshal.AllocHGlobal(texSize);
+            GL.GetTexImage(TextureTarget.Texture2D, 0, PixelFormat.Rgba, PixelType.Byte, pin);
+            byte[] pinback = new byte[texSize];
+            Marshal.Copy(pin, pinback, 0, texSize);
+            Marshal.FreeHGlobal(pin);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+
+            sdg.Bitmap bm = new sdg.Bitmap(width, height);
+            int p = 0;
+            for (int j = 0; j < height; j++)
+            {
+                for (int i = 0; i < width; i++)
+                {
+                    bm.SetPixel(i, j, sdg.Color.FromArgb(pinback[p + 3], pinback[p], pinback[p + 1], pinback[p + 2]));
+                    p += 4;
+                }
+            }
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+            return bm;
+        }
+
+        sdg.Size LoadBitmapIntoTexture(int texture, sdg.Bitmap sdb)
+        {
+            //sdb.Save("test.png", sdg.Imaging.ImageFormat.Png);
+            //System.Diagnostics.Process.Start("test.png");
+
             // lock bitmap data
             var sdbd = sdb.LockBits(new System.Drawing.Rectangle(0, 0, sdb.Width, sdb.Height),
                     System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -263,14 +293,16 @@ namespace NoForms.Renderers.OpenTK
 
             // Unbind Texture
             GL.BindTexture(TextureTarget.Texture2D, 0);
+
+            return sdb.Size;
         }
-        void LoadBitmapIntoTexture(int texture, byte[] data)
+        sdg.Size LoadBitmapIntoTexture(int texture, byte[] data)
         {
             // Load Data
             using (var ms = new System.IO.MemoryStream(data))
             {
                 var sdb = new System.Drawing.Bitmap(ms);
-                LoadBitmapIntoTexture(texture, sdb);
+                return LoadBitmapIntoTexture(texture, sdb);
             }
         }
 
@@ -280,8 +312,8 @@ namespace NoForms.Renderers.OpenTK
             {
                 tex = GL.GenTexture();
             }
-            public int width { get; private set; }
-            public int height { get; private set; }
+            public int width { get; set; }
+            public int height { get; set; }
             public int tex { get; private set; }
             public void Dispose()
             {
@@ -295,11 +327,13 @@ namespace NoForms.Renderers.OpenTK
                 {
                     var bd = bitmap.bitmapData ?? System.IO.File.ReadAllBytes(bitmap.bitmapFile);
                     var dt = new distex();
-                    LoadBitmapIntoTexture(dt.tex, bd);
+                    var sz = LoadBitmapIntoTexture(dt.tex, bd);
+                    dt.width = sz.Width;
+                    dt.height = sz.Height;
                     return dt;
                 }) as distex;
 
-            int st = r.renderData.sofwareBuffer.Count;
+            int st = rel.renderData.sofwareBuffer.Count;
             bufferTexRect(destination,
                 new Rectangle(
                     source.left / rd.width,
@@ -308,19 +342,23 @@ namespace NoForms.Renderers.OpenTK
                     source.height / rd.height
                     )
                 );
-            int cnt = r.renderData.sofwareBuffer.Count - st;
-            r.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Texture, PrimitiveType.Quads));
+            int cnt = rel.renderData.sofwareBuffer.Count - st;
+            rel.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Texture | ArrayData.Color, PrimitiveType.Quads, rd.tex));
+
+            //var bm = SaveTextureIntoBitmap(rd.tex, rd.width, rd.height);
+            //bm.Save("test.png",sdg.Imaging.ImageFormat.Png);
+            //System.Diagnostics.Process.Start("test.png");
         }
 
         void bufferTexRect(Rectangle dest, Rectangle srcFracs)
         {
-            r.renderData.sofwareBuffer.AddRange(
+            rel.renderData.sofwareBuffer.AddRange(
                 new float[]
                 {
-                    dest.left, dest.top, srcFracs.left, srcFracs.top,
-                    dest.right, dest.top, srcFracs.right, srcFracs.top,
-                    dest.right, dest.bottom, srcFracs.right, srcFracs.bottom,
-                    dest.left, dest.bottom, srcFracs.left, srcFracs.bottom
+                    dest.left, dest.top,1,1,1,1, srcFracs.left, srcFracs.top,
+                    dest.right, dest.top,1,1,1,1, srcFracs.right, srcFracs.top,
+                    dest.right, dest.bottom,1,1,1,1, srcFracs.right, srcFracs.bottom,
+                    dest.left, dest.bottom,1,1,1,1, srcFracs.left, srcFracs.bottom
                 }
                 );
         }
@@ -364,21 +402,21 @@ namespace NoForms.Renderers.OpenTK
         public void DrawRectangle(Rectangle rect, UBrush brush, UStroke stroke)
         {
             // generate sw buffer { Vx,Vy,r,g,b,a } ...
-            int st = r.renderData.sofwareBuffer.Count;
+            int st = rel.renderData.sofwareBuffer.Count;
             bufferRectData(rect, brush);
-            int len = r.renderData.sofwareBuffer.Count - st;
+            int len = rel.renderData.sofwareBuffer.Count - st;
             var ri = new RenderInfo(st, len, ArrayData.Vertex | ArrayData.Color, PrimitiveType.LineLoop);
-            r.renderData.bufferInfo.Add(ri);
+            rel.renderData.bufferInfo.Add(ri);
         }
 
         public void FillRectangle(Rectangle rect, UBrush brush)
         {
             // generate sw buffer { Vx,Vy,r,g,b,a } ...
-            int st = r.renderData.sofwareBuffer.Count;
+            int st = rel.renderData.sofwareBuffer.Count;
             bufferRectData(rect, brush);
-            int len = r.renderData.sofwareBuffer.Count - st;
+            int len = rel.renderData.sofwareBuffer.Count - st;
             var ri = new RenderInfo(st, len, ArrayData.Vertex | ArrayData.Color, PrimitiveType.Quads);
-            r.renderData.bufferInfo.Add(ri);
+            rel.renderData.bufferInfo.Add(ri);
         }
         //void dr(UBrush b, float x, float y)
         //{
@@ -395,7 +433,7 @@ namespace NoForms.Renderers.OpenTK
 
         void setVC(UBrush b, float vx, float vy)
         {
-            var ssb = r.renderData.sofwareBuffer;
+            var ssb = rel.renderData.sofwareBuffer;
             var cc = getCoordColor(b, vx, vy);
             ssb.Add(vx); 
             ssb.Add(vy);
@@ -467,17 +505,17 @@ namespace NoForms.Renderers.OpenTK
 
         public void DrawRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush, UStroke stroke)
         {
-            int st = r.renderData.sofwareBuffer.Count;
+            int st = rel.renderData.sofwareBuffer.Count;
             RRPoints(rect, radX, radY, brush);
-            int cnt = r.renderData.sofwareBuffer.Count - st;
-            r.renderData.bufferInfo.Add(new RenderInfo(st,cnt,ArrayData.Vertex | ArrayData.Color, PrimitiveType.LineLoop));
+            int cnt = rel.renderData.sofwareBuffer.Count - st;
+            rel.renderData.bufferInfo.Add(new RenderInfo(st,cnt,ArrayData.Vertex | ArrayData.Color, PrimitiveType.LineLoop));
         }
         public void FillRoundedRectangle(Rectangle rect, float radX, float radY, UBrush brush)
         {
-            int st = r.renderData.sofwareBuffer.Count;
+            int st = rel.renderData.sofwareBuffer.Count;
             RRPoints(rect, radX, radY, brush);
-            int cnt = r.renderData.sofwareBuffer.Count - st;
-            r.renderData.bufferInfo.Add(new RenderInfo(st,cnt,ArrayData.Vertex | ArrayData.Color, PrimitiveType.Polygon));
+            int cnt = rel.renderData.sofwareBuffer.Count - st;
+            rel.renderData.bufferInfo.Add(new RenderInfo(st,cnt,ArrayData.Vertex | ArrayData.Color, PrimitiveType.Polygon));
         }
         void RRPoints(Rectangle rect, float radX, float radY, UBrush b)
         {
@@ -523,31 +561,39 @@ namespace NoForms.Renderers.OpenTK
             // Cached when any hit,measure or draw method fires.
             public sdg.Graphics sbb_context = null;
             public sdg.Bitmap softbitbuf = null;
+            public Point renderOffset;
 
             // Cached when DrawText is called (the software bitmap also gets enlarged to correct size...FIXME keep that? :/)
             public int texture_for_blitting = -1; // i.e. not created yet
 
             public void Dispose()
             {
-                throw new NotImplementedException();
+                // FIXME this dont really need disposing like others...we can usually reuse the soft and hard buffers? maybe?
+                if (texture_for_blitting != -1)
+                {
+                    if (sbb_context != null) sbb_context.Dispose();
+                    if (softbitbuf != null) softbitbuf.Dispose();
+                    GL.DeleteTexture(texture_for_blitting);
+                    texture_for_blitting = -1;
+                }
             }
         }
 
         static sdg.Font FTR(UFont uf) { return new sdg.Font(uf.name, uf.size, (uf.italic ? sdg.FontStyle.Italic : 0) | (uf.bold ? sdg.FontStyle.Bold : 0)); }
-        static GLTextStore<OTKDraw> EnsureStoredData(UText ut)
+        static GLTextStore<sdg.Font> EnsureStoredData(UText ut)
         {
-            var GLts = ut.Retreive() as GLTextStore<OTKDraw>;
+            var GLts = ut.Retreive() as GLTextStore<sdg.Font>;
             if (GLts.softbitbuf == null)
             {
-                GLts.softbitbuf = new sdg.Bitmap(0, 0); // FIXME will this cause problems @ 0x0? :/
+                GLts.softbitbuf = new sdg.Bitmap(1, 1); // FIXME will this cause problems @ 0x0? :/
                 GLts.sbb_context = sdg.Graphics.FromImage(GLts.softbitbuf); // make context
             }
             return GLts;
         }
-        static GLTextStore<OTKDraw> EnsureStoredData(UText ut, Size blitSize)
+        static GLTextStore<sdg.Font> EnsureStoredData(UText ut, Size blitSize)
         {
-            var GLts = ut.Retreive() as GLTextStore<OTKDraw>;
-            if (GLts.softbitbuf == null)
+            var GLts = ut.Retreive() as GLTextStore<sdg.Font>;
+            if (GLts.softbitbuf == null || (GLts.softbitbuf.Size.Width != blitSize.width && GLts.softbitbuf.Size.Height != blitSize.height))
             {
                 // make bitmap right size FIXME is the dipose necessary? :/
                 GLts.sbb_context.Dispose(); GLts.softbitbuf.Dispose();
@@ -592,16 +638,21 @@ namespace NoForms.Renderers.OpenTK
         public void DrawText(UText textObject, NoForms.Common.Point location, UBrush defBrush, UTextDrawOptions opt, bool clientRendering)
         {
             GLTextStore<sdg.Font> GLds  = GetTextData(textObject);
+            //when uninitialised, all members wll be null/-1.  we need to run a pass of the generator thing
             if (GLds.texture_for_blitting == -1)
             {
-                var tl = GLds.tinfo;
+                var tl = GLds.tinfo = glyphRunner.GetTextInfo(textObject);
                 float l = float.MaxValue, t = float.MaxValue, b = float.MinValue, r = float.MinValue;
+
+                // if empty
+                if (tl.glyphRuns.Count == 0)
+                    return;
 
                 // Calculate the render rectangle
                 foreach (var gr in tl.glyphRuns)
                 {
                     var p1 = gr.location;
-                    var p2 = new Point(p1.Y + gr.run.runSize.width, p1.Y + gr.run.runSize.height);
+                    var p2 = new Point(p1.X + gr.run.runSize.width, p1.Y + gr.run.runSize.height);
                     if (p1.X < l) l = p1.X;
                     if (p1.Y < t) t = p1.Y;
                     if (p2.X > r) r = p2.X;
@@ -611,8 +662,9 @@ namespace NoForms.Renderers.OpenTK
                 System.Diagnostics.Debug.Assert(rrect.width > 0 && rrect.height > 0);
 
                 // ensure we have the software buffer
-                EnsureStoredData(textObject, rrect.Size);
+                EnsureStoredData(textObject, new Size(r-l,b-t));
                 // we will draw black onto transparent background, and handle brushes when rendering to blitting texture
+                GLds.renderOffset = new Point(l, t);
                 GLds.sbb_context.Clear(sdg.Color.Transparent);
                 foreach (var glyphrun in tl.glyphRuns)
                 {
@@ -623,7 +675,8 @@ namespace NoForms.Renderers.OpenTK
                     UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
                     if (style != null && style.bgOverride != null)
                         FillRectangle(new NoForms.Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
-                    GLds.sbb_context.DrawString(glyphrun.run.content, sdgFont, sdg.Brushes.Black, PTR(location + glyphrun.location), sdg.StringFormat.GenericTypographic);
+                    // render at 0,0 because we cropped to the minimum drawing area of glyphs...
+                    GLds.sbb_context.DrawString(glyphrun.run.content, sdgFont, sdg.Brushes.Black, PTR(glyphrun.location-GLds.renderOffset), sdg.StringFormat.GenericTypographic);
                 }
 
                 // now copy into the blit mask
@@ -631,26 +684,18 @@ namespace NoForms.Renderers.OpenTK
                 LoadBitmapIntoTexture(GLds.texture_for_blitting, GLds.softbitbuf);
             }
 
+            
 
             // use blit mask to create a blitting texture, using the Util fbo (FIXME? but no multithreads...)
-            throw new NotImplementedException();
-            
+            //throw new NotImplementedException();
 
             // blit the buffer (FIXME thats not blitting) FIXME needs seperate (what about masked tezture alpbas!)
             var gs = GLds.softbitbuf.Size;
-            Rectangle rr = new Rectangle(location, new  Size(gs.Width,gs.Height));
-            GL.BlendFunc(BlendingFactorSrc.Zero, BlendingFactorDest.SrcAlpha);
-            GL.Begin(PrimitiveType.Quads);
-            GL.TexCoord2(0, 0);
-            GL.Vertex2(rr.left, rr.top);
-            GL.TexCoord2(1, 0);
-            GL.Vertex2(rr.right, rr.top);
-            GL.TexCoord2(1, 1);
-            GL.Vertex2(rr.right, rr.bottom);
-            GL.TexCoord2(0, 1);
-            GL.Vertex2(rr.left, rr.bottom);
-            GL.End();
-            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+            Rectangle rr = new Rectangle(location+GLds.renderOffset, new Size(gs.Width, gs.Height));
+            int st = rel.renderData.sofwareBuffer.Count;
+            bufferTexRect(rr, new Rectangle(0,0,1,1));
+            int cnt = rel.renderData.sofwareBuffer.Count - st;
+            rel.renderData.bufferInfo.Add(new RenderInfo(st, cnt, ArrayData.Vertex | ArrayData.Color | ArrayData.Texture, PrimitiveType.Quads, GLds.texture_for_blitting));
         }
         sdg.PointF PTR(Point pt)
         {

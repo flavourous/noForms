@@ -15,6 +15,7 @@ namespace NoForms.Renderers.OpenTK
         void DeleteBuffer(int buf);
         void BufferData(BufferTarget targ, IntPtr length, float[] data, BufferUsageHint hint);
         void BindBuffer(BufferTarget targ, int buf);
+        void BindTexture(TextureTarget tt, int tex);
         void DrawArrays(PrimitiveType pt, int st, int len);
         void ArrayEnabled(ArrayCap type, bool enabled);
         void SetPointer(ArrayCap type, int nel, int stride, int offset);
@@ -98,6 +99,7 @@ namespace NoForms.Renderers.OpenTK
             ArrayData lastPointaz = 0;// nothing
             ArrayData lastUsedPointaz = 0;
             PrimitiveType lastPrimitive = 0; // doesnt matter 
+            int lastTexta = 0;
             int rlen = 0; int lastvbo = -1; int laststride = 0;
             for (int i = 0; i < trlr.bufferInfo.Count; i++)
             {
@@ -113,25 +115,28 @@ namespace NoForms.Renderers.OpenTK
                 if (!rendervboheads.ContainsKey(vbo)) rendervboheads[vbo] = 0;
 
                 // Have we hit flush condition? for previous one (lookbehind) (differnt primitive, or arraydata to last time...etc...uuugh)
-                if (i > 0 && (lastPointaz != r.dataFormat || lastPrimitive != r.renderAs || lastvbo != vbo))
+                if (i > 0 && (lastPointaz != r.dataFormat || lastPrimitive != r.renderAs || lastvbo != vbo || lastTexta != r.texture))
                 {
                     buffer.BindBuffer(BufferTarget.ArrayBuffer, lastvbo);
                     PointazDiffa(lastUsedPointaz, lastPointaz);
                     lastUsedPointaz = lastPointaz;
+                    buffer.BindTexture(TextureTarget.Texture2D, lastTexta);
                     buffer.DrawArrays(lastPrimitive, rendervboheads[lastvbo] / laststride, rlen / laststride); // drawy
                     rendervboheads[lastvbo] += rlen;
                     rlen = 0;
                 }
                 rlen += r.count;
 
-                lastPointaz = r.dataFormat; lastPrimitive = r.renderAs; lastvbo = vbo; laststride = stride;
+                lastPointaz = r.dataFormat; lastPrimitive = r.renderAs; lastvbo = vbo; laststride = stride; lastTexta = r.texture;
             }
             if (lastvbo > -1) // render last bufferchunky
             {
                 buffer.BindBuffer(BufferTarget.ArrayBuffer, lastvbo);
                 PointazDiffa(lastUsedPointaz, lastPointaz);
+                buffer.BindTexture(TextureTarget.Texture2D, lastTexta);
                 buffer.DrawArrays(lastPrimitive, rendervboheads[lastvbo] / laststride, rlen / laststride); // drawy
             }
+            buffer.BindTexture(TextureTarget.Texture2D, 0);
 
             // clean up
             PointazDiffa(lastPointaz, 0);
@@ -171,12 +176,11 @@ namespace NoForms.Renderers.OpenTK
         // TODO use glinterleavedarrays possibly
         void CSTrix(ArrayData flags, out int stride, out int ver, out int col, out int tex)
         {
-            int idx = 0;
             stride = 0;
             ver = col = tex = -1;
-            if ((flags & ArrayData.Vertex) != 0) { ver = idx += stride; stride += 2; }
-            if ((flags & ArrayData.Color) != 0) { col = idx += stride; stride += 4; }
-            if ((flags & ArrayData.Texture) != 0) { tex = idx += stride; stride += 2; }
+            if ((flags & ArrayData.Vertex) != 0) {ver = stride; stride +=2;}
+            if ((flags & ArrayData.Color) != 0) {col  = stride; stride+=4; }
+            if ((flags & ArrayData.Texture) != 0) {tex = stride; stride+=2; }
         }
     }
 }

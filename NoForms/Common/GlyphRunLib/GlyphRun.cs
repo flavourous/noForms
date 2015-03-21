@@ -107,7 +107,7 @@ namespace GlyphRunLib
             {
                 // handle space spacing ;)
                 String ltx = gr.startPosition > 0 ? text.text.Substring(gr.startPosition - 1, 1) : "";
-                String rtx = gr.startPosition + length + 1 < text.text.Length ? text.text.Substring(length, 1) : "";
+                String rtx = gr.startPosition + length < text.text.Length ? text.text.Substring(length, 1) : "";
                 var s1 = MeasureString(text, ltx + gr.content + rtx, useFont);
                 var s2 = MeasureString(text, ltx + rtx, useFont);
                 gr.runSize.width = s1.width - s2.width;
@@ -134,7 +134,7 @@ namespace GlyphRunLib
 
         IEnumerable<int> AllIndexes(String s, String c)
         {
-            int res = 0;
+            int res = -1;
             do
             {
                 res = s.IndexOf(c, res + 1);
@@ -150,7 +150,7 @@ namespace GlyphRunLib
 
             // Create a mask to determine which indexes count...
             int[] styleMask = new int[textLen];
-            for (int i = 0; i < messy.Count; i++) styleMask[i] = -1;
+            for (int i = 0; i < textLen; i++) styleMask[i] = -1;
             for (var sri = 0; sri < messy.Count; sri++)
             {
                 var sr = messy[sri];
@@ -295,12 +295,12 @@ namespace GlyphRunLib
             float lastXShift = GetShift(text.width, (currX + (lastGr == null ? 0 :lastGr.runSize.width)), text.halign);
             currX = 0;
             // resolving the glyphruns of the final line
-            do
+            for(;lglst<ret.glyphRuns.Count;lglst++)
             {
                 var igr = ret.glyphRuns[lglst];
                 igr.location.Y = currY - igr.run.runSize.height;
                 igr.location.X += lastXShift;
-            } while (++lglst < ret.glyphRuns.Count);
+            }
 
             float yAlignShifty = GetShift(text.height, currY, text.valign);
 
@@ -405,6 +405,11 @@ namespace GlyphRunLib
             for (hitGlyphChar = 0; hitGlyphChar < hgr.charSizes.Length; hitGlyphChar++)
                 if (hx >= cx && hx < (cx += hgr.charSizes[hitGlyphChar].width))
                     break;
+
+            // we went all way to end...so come back
+            if (hitGlyphChar == hgr.charSizes.Length) hitGlyphChar--;
+
+            // add on the x inside this glyphrun
             charPos += hitGlyphChar;
             cx -= hgr.charSizes[hitGlyphChar].width; // reset to start of char.
 
@@ -425,18 +430,27 @@ namespace GlyphRunLib
             for (g = 0; g < ti.glyphRuns.Count; g++)
                 if ((cc += ti.glyphRuns[g].run.runLength) > pos)
                     break;
-            cc -= ti.glyphRuns[g].run.runLength;
+            if (g == ti.glyphRuns.Count) g--;
+            Point retloc = new Point(0, 0);
+            if (g > 0)
+            {
+                retloc = ti.glyphRuns[g].location;
+                float cx = 0;
+                int i=0;
+                cc -= ti.glyphRuns[g].run.runLength;
 
-            // Get x-location of hit char in glyph
-            float cx = 0;
-            int i;
-            for (i = 0; i < pos - cc; i++)
-                cx += ti.glyphRuns[g].run.charSizes[i].width;
-            if (trailing)
-                cx -= ti.glyphRuns[g].run.charSizes[i].width;
+                // Get x-location of hit char in glyph
+                for (i = 0; i < pos - cc; i++)
+                    cx += ti.glyphRuns[g].run.charSizes[i].width;
+                if (i == ti.glyphRuns[g].run.charSizes.Length) i--;
+                if (trailing)
+                    cx -= ti.glyphRuns[g].run.charSizes[i].width;
 
-            // Get any y-offset of hit char in the glyph and return
-            return ti.glyphRuns[g].location + new NoForms.Common.Point(cx, ti.glyphRuns[g].run.runSize.height - ti.glyphRuns[g].run.charSizes[i].height);
+                // Get any y-offset of hit char in the glyph and return
+                retloc += new Point(cx, ti.glyphRuns[g].run.runSize.height - ti.glyphRuns[g].run.charSizes[i].height);
+            }
+            // return retloc
+            return retloc;
         }
         public IEnumerable<NoForms.Common.Rectangle> HitTextRange(UTextGlyphingInfo ti, int start, int length, NoForms.Common.Point offset)
         {
