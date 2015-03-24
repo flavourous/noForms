@@ -67,7 +67,11 @@ namespace GlyphRunLib
             }
 
             // Sort those breaks... FIXME sorting is slow
-            breaks.Sort((a, b) => a.location.CompareTo(b.location));
+            breaks.Sort((a, b) =>
+            {
+                var lb = a.location.CompareTo(b.location);
+                return lb == 0 ? a.content.Length.CompareTo(b.content.Length) : lb;
+            });
 
             // build glyphruns from the breaks...
             foreach (var tr in breaks)
@@ -82,6 +86,7 @@ namespace GlyphRunLib
                 // cpos set to after the break
                 cpos = tr.location + tr.content.Length;
             }
+
             // possible last glyphrun
             if (cpos < text.text.Length)
                 yield return BuildGlyphRun(cpos, text.text.Length - cpos, cstyle, text, BreakType.none);

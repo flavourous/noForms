@@ -100,7 +100,7 @@ namespace NoFormsSDK
         public UBrush borderBrush = new USolidBrush() { color = new Color(0) };
         public UStroke borderStroke = new UStroke() { strokeWidth = 1f };
         public UBrush caretBrush = new USolidBrush() { color = new Color(0) };
-        public UStroke caretStroke = new UStroke() { strokeWidth = 1f };
+        public UStroke caretStroke = new UStroke() { strokeWidth = 2f };
         public UBrush textBrush = new USolidBrush() { color = new Color(0) };
         Point caret1 = new Point(0.5f, 0.5f);
         Point caret2 = new Point(0.5f, 0.5f);
@@ -121,16 +121,16 @@ namespace NoFormsSDK
             rt.uDraw.DrawRectangle(DisplayRectangle.Inflated(new Thickness(-.5f)), borderBrush, borderStroke);
             rt.uDraw.PushAxisAlignedClip(DisplayRectangle,false);
 
-            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left - roX, PaddedRectangle.top - roY), defBrush, UTextDrawOptions.None, true);
+            rt.uDraw.DrawText(data, new Point(PaddedRectangle.left , PaddedRectangle.top ), defBrush, UTextDrawOptions.None, true);
             if (focusManager.FocusGet(this)) rt.uDraw.DrawLine(caret1, caret2, caretBrush, caretStroke);
 
             rt.uDraw.PopAxisAlignedClip();
         }
 
-        float roX = 0, roY = 0;
         bool textLayoutNeedsUpdate = false;
         private void UpdateTextLayout(IDraw sendMe = null)
         {
+            float roX = 0, roY = 0;
             Object passageLocker = new Object();
             lock (passageLocker)
             {
@@ -212,7 +212,7 @@ namespace NoFormsSDK
 
         public void KeyDown(Keys key)
         {
-                if (!focusManager.FocusGet(this)) return;
+               if (!focusManager.FocusGet(this)) return;
                 MKeys(key, true);
                 if (alt) return;
 
@@ -485,7 +485,7 @@ namespace NoFormsSDK
                     break;
                 } 
             }
-            if (myLineNum == linelens.Length)
+            if (myLineNum == linelens.Length && myLineNum > 0)
             {
                 lineNum = myLineNum - 1;
                 linePos = linelens[lineNum];
@@ -570,7 +570,7 @@ namespace NoFormsSDK
             {
                 if (mouseSelect && inComponent && !amClipped)
                 {
-                    Point tfPoint = new Point(location.X - Location.X + roX, location.Y - Location.Y + roY);
+                    Point tfPoint = new Point(location.X - Location.X + padding.left, location.Y - Location.Y + padding.left);
                     UTextHitInfo htInfo = rt.uDraw.HitPoint(tfPoint, data);
                     int extra = 0;
                     if (htInfo.charPos == data.text.Length - 1 && htInfo.leading) extra++;
@@ -588,7 +588,7 @@ namespace NoFormsSDK
                 {
                     if (inComponent && !amClipped)
                     {
-                        Point tfPoint = new Point(location.X - Location.X + roX, location.Y - Location.Y + roY);
+                        Point tfPoint = new Point(location.X - Location.X + padding.left, location.Y - Location.Y + padding.top);
                         var hti = rt.uDraw.HitPoint(tfPoint, data);
                         int extra = 0;
                         // FIXME presumably directx is fucky here; my own glyphrunner thinks such a request is mental.  I've patched it to deal with out of bounds requests...ugh.

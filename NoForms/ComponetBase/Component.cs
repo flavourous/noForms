@@ -12,12 +12,12 @@ namespace NoForms.ComponentBase
             set
             {
                 parent = value;
-                if(fm == null)
-                    focusManager = IComponent_Util.GetTopLevelComponent(parent).focusManager;
+                var tlc = IComponent_Util.GetTopLevelComponent(parent);
+                fm = tlc is Component ? (tlc as Component).fm : tlc.focusManager;
                 IComponent_Util.OnAllChildren(this, c =>
                 {
                     var cc = c as Component; // we can maintain our own and subtypes.
-                    if (cc != null && cc.fm == null) cc.focusManager = focusManager;
+                    if (cc != null && cc.fm == null) cc.focusManager = fm; // private member one,not the colleasced one.
                 });
                 Dirty(DisplayRectangle);
             }

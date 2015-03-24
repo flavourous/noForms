@@ -672,9 +672,7 @@ namespace NoForms.Renderers.OpenTK
                     UFont font = style != null ? (style.fontOverride ?? textObject.font) : textObject.font;
                     sdg.FontStyle fs = (font.bold ? sdg.FontStyle.Bold : 0) | (font.italic ? sdg.FontStyle.Italic : 0);
                     var sdgFont = FTR(font);
-                    UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
-                    if (style != null && style.bgOverride != null)
-                        FillRectangle(new NoForms.Common.Rectangle(glyphrun.location, glyphrun.run.runSize), style.bgOverride);
+
                     // render at 0,0 because we cropped to the minimum drawing area of glyphs...
                     GLds.sbb_context.DrawString(glyphrun.run.content, sdgFont, sdg.Brushes.Black, PTR(glyphrun.location-GLds.renderOffset), sdg.StringFormat.GenericTypographic);
                 }
@@ -684,7 +682,14 @@ namespace NoForms.Renderers.OpenTK
                 LoadBitmapIntoTexture(GLds.texture_for_blitting, GLds.softbitbuf);
             }
 
-            
+            // draw background...
+            foreach (var glyphrun in GLds.tinfo.glyphRuns)
+            {
+                var style = glyphrun.run.drawStyle;
+                UBrush brsh = style != null ? (style.fgOverride ?? defBrush) : defBrush;
+                if (style != null && style.bgOverride != null)
+                    FillRectangle(new NoForms.Common.Rectangle(location + glyphrun.location + GLds.renderOffset, glyphrun.run.runSize), style.bgOverride);
+            }
 
             // use blit mask to create a blitting texture, using the Util fbo (FIXME? but no multithreads...)
             //throw new NotImplementedException();

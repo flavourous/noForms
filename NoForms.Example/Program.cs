@@ -12,7 +12,7 @@ namespace NoForms.Example
     {
         static void Main()
         {
-            RunForm<TextFieldDemoSlashTest>();
+            RunForm<Highlightytesttesty>();
         }
         static void RunForm<T>() where T : NoForm
         {
