@@ -597,7 +597,7 @@ namespace NoForms.Renderers.OpenTK
             {
                 // make bitmap right size FIXME is the dipose necessary? :/
                 GLts.sbb_context.Dispose(); GLts.softbitbuf.Dispose();
-                GLts.softbitbuf = new sdg.Bitmap((int)blitSize.width, (int)blitSize.height);
+                GLts.softbitbuf = new sdg.Bitmap((int)blitSize.width +1, (int)blitSize.height +1);
                 GLts.sbb_context = sdg.Graphics.FromImage(GLts.softbitbuf);
             }
             return GLts; 
@@ -654,9 +654,13 @@ namespace NoForms.Renderers.OpenTK
                     var p1 = gr.location;
                     var p2 = new Point(p1.X + gr.run.runSize.width, p1.Y + gr.run.runSize.height);
                     if (p1.X < l) l = p1.X;
+                    if (p2.X < l) l = p2.X;
                     if (p1.Y < t) t = p1.Y;
+                    if (p2.Y < t) t = p2.Y;
                     if (p2.X > r) r = p2.X;
+                    if (p1.X > r) r = p1.X;
                     if (p2.Y > b) b = p2.Y;
+                    if (p1.Y > b) b = p1.Y;
                 }
                 Rectangle rrect = new Rectangle(new Point(l, t), new Point(r, b), true);
                 System.Diagnostics.Debug.Assert(rrect.width > 0 && rrect.height > 0);

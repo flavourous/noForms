@@ -55,10 +55,9 @@ namespace NoForms.Example
         {
             Size = new Size(300, 300);
             TFc tc = new TFc() { Size = new Size(400, 200) };
-            Textfield tf = new Textfield() { Size = new Size(300, 50), layout = Textfield.LayoutStyle.OneLine};
+            Textfield tf = new Textfield() { Size = new Size(300, 50), layout = Textfield.LayoutStyle.OneLine, Location = new Point(30,100)};
             tc.components.Add(tf);
             components.Add(tc);
-            
         }
         ULinearGradientBrush usb2 = new ULinearGradientBrush()
         {
